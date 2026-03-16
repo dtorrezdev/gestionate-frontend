@@ -6,7 +6,6 @@ import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { RippleModule } from 'primeng/ripple';
 import { ToastModule } from 'primeng/toast';
-import { BreadcrumbModule } from 'primeng/breadcrumb';
 import { ToolbarModule } from 'primeng/toolbar';
 import { RatingModule } from 'primeng/rating';
 import { InputTextModule } from 'primeng/inputtext';
@@ -19,7 +18,7 @@ import { TagModule } from 'primeng/tag';
 import { InputIconModule } from 'primeng/inputicon';
 import { IconFieldModule } from 'primeng/iconfield';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { Product, ProductService } from "../../services/producto.service";
+import { Product, ProductService } from "../../../venta/services/producto.service";
 
 interface Column {
     field: string;
@@ -42,7 +41,6 @@ interface ExportColumn {
         RippleModule,
         ToastModule,
         ToolbarModule,
-        BreadcrumbModule,
         RatingModule,
         InputTextModule,
         TextareaModule,
@@ -57,123 +55,96 @@ interface ExportColumn {
     ],
     standalone: true,
     template: `
-    <div class="card">
-        <div class="font-semibold text-xl mb-4">Gestion de Venta Productos</div>
-        <p-breadcrumb [model]="breadcrumbItems" [home]="breadcrumbHome"></p-breadcrumb>
-    </div>
+    <p-toolbar styleClass="mb-6">
+        <ng-template #start>
+            <p-button label="New" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="openNew()" />
+            <p-button severity="secondary" label="Delete" icon="pi pi-trash" outlined (onClick)="deleteSelectedProducts()" [disabled]="!selectedProducts || !selectedProducts.length" />
+        </ng-template>
 
-    <!-- <div class="flex mt-8"> -->
-    <div class="card flex flex-col gap-6 w-full mb-0">
-        <div class="font-semibold text-xl">Formulario Venta</div>
-        <div class="flex flex-col md:flex-row gap-6">
-            <div class="flex gap-2 w-full">
-                <label for="cliente">Cliente: </label>
-                <p-select id="cliente" [(ngModel)]="dropdownItem" [options]="dropdownItems" optionLabel="name" placeholder="Select One client" class="w-full"></p-select>
-            </div>
-            <div class="flex gap-2 w-full">
-                <p-button label="Nuevo Cliente" />
-            </div>
-        </div>
+        <ng-template #end>
+            <p-button label="Export" icon="pi pi-upload" severity="secondary" (onClick)="exportCSV()" />
+        </ng-template>
+    </p-toolbar>
 
-        <div class="flex flex-col md:flex-row gap-6">
-            <div class="flex flex-wrap gap-2 w-full">
-                <label for="state">Productos</label>
-                <p-select
-                    id="state"
-                    [(ngModel)]="dropdownItem"
-                    [options]="dropdownItems"
-                    optionLabel="name"
-                    placeholder="Select One" class="w-full">
-                </p-select>
-            </div>
-            <div class="flex gap-2 w-full">
-                <label for="cantidad">cantidad</label>
-                <input pInputText id="zip" type="text" />
-            </div>
-            <div class="flex gap-2 w-full">
-                <p-button label="Agregar" />
-            </div>
-        </div>
-    </div>
-    <!-- </div> -->
     <p-table
         #dt
         [value]="products()"
         [rows]="10"
         [columns]="cols"
+        [paginator]="true"
+        [globalFilterFields]="['name', 'country.name', 'representative.name', 'status']"
         [tableStyle]="{ 'min-width': '75rem' }"
+        [(selection)]="selectedProducts"
         [rowHover]="true"
         dataKey="id"
+        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
         [showCurrentPageReport]="true"
+        [rowsPerPageOptions]="[10, 20, 30]"
         >
-        <ng-template #caption>
-            <div class="flex items-center justify-between">
-                <h5 class="pl-1">Detalle venta</h5>
-            </div>
-        </ng-template>
-        <ng-template #header>
-            <tr>
-                <th style="width: 3rem">
-                    <p-tableHeaderCheckbox />
-                </th>
-                <th style="min-width: 16rem">Code</th>
-                <th pSortableColumn="name" style="min-width:16rem">
-                    Name
-                    <p-sortIcon field="name" />
-                </th>
-                <th>Image</th>
-                <th pSortableColumn="price" style="min-width: 8rem">
-                    Price
-                    <p-sortIcon field="price" />
-                </th>
-                <th pSortableColumn="category" style="min-width:10rem">
-                    Category
-                    <p-sortIcon field="category" />
-                </th>
-                <th pSortableColumn="rating" style="min-width: 12rem">
-                    Reviews
-                    <p-sortIcon field="rating" />
-                </th>
-                <th pSortableColumn="inventoryStatus" style="min-width: 12rem">
-                    Status
-                    <p-sortIcon field="inventoryStatus" />
-                </th>
-                <th style="min-width: 12rem"></th>
-            </tr>
-        </ng-template>
-        <ng-template #body let-product>
-            <tr>
-                <td style="width: 3rem">
-                    <p-tableCheckbox [value]="product" />
-                </td>
-                <td style="min-width: 12rem">{{ product.code }}</td>
-                <td style="min-width: 16rem">{{ product.name }}</td>
-                <td>
-                    <img [src]="'https://primefaces.org/cdn/primeng/images/demo/product/' + product.image" [alt]="product.name" style="width: 64px" class="rounded" />
-                </td>
-                <td>{{ product.price | currency: 'USD' }}</td>
-                <td>{{ product.category }}</td>
-                <td>
-                    <p-rating [(ngModel)]="product.rating" [readonly]="true" />
-                </td>
-                <td>
-                    <p-tag [value]="product.inventoryStatus" [severity]="getSeverity(product.inventoryStatus)" />
-                </td>
-                <td>
-                    <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" (click)="editProduct(product)" />
-                    <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" (click)="deleteProduct(product)" />
-                </td>
-            </tr>
-        </ng-template>
-    </p-table>
-
-    <div class="card flex flex-col gap-4">
-        <div class="flex flex-wrap gap-2">
-            <p-button label="Guardar" />
-            <p-button label="Preventa" severity="info" />
-            <p-button label="Cancelar" severity="secondary" />
+    <ng-template #caption>
+        <div class="flex items-center justify-between">
+            <h5 class="m-0">Manage Products</h5>
+            <p-iconfield>
+                <p-inputicon styleClass="pi pi-search" />
+                <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Search..." />
+            </p-iconfield>
         </div>
-    </div>
+    </ng-template>
+    <ng-template #header>
+        <tr>
+            <th style="width: 3rem">
+                <p-tableHeaderCheckbox />
+            </th>
+            <th style="min-width: 16rem">Code</th>
+            <th pSortableColumn="name" style="min-width:16rem">
+                Name
+                <p-sortIcon field="name" />
+            </th>
+            <th>Image</th>
+            <th pSortableColumn="price" style="min-width: 8rem">
+                Price
+                <p-sortIcon field="price" />
+            </th>
+            <th pSortableColumn="category" style="min-width:10rem">
+                Category
+                <p-sortIcon field="category" />
+            </th>
+            <th pSortableColumn="rating" style="min-width: 12rem">
+                Reviews
+                <p-sortIcon field="rating" />
+            </th>
+            <th pSortableColumn="inventoryStatus" style="min-width: 12rem">
+                Status
+                <p-sortIcon field="inventoryStatus" />
+            </th>
+            <th style="min-width: 12rem"></th>
+        </tr>
+    </ng-template>
+    <ng-template #body let-product>
+        <tr>
+            <td style="width: 3rem">
+                <p-tableCheckbox [value]="product" />
+            </td>
+            <td style="min-width: 12rem">{{ product.code }}</td>
+            <td style="min-width: 16rem">{{ product.name }}</td>
+            <td>
+                <img [src]="'https://primefaces.org/cdn/primeng/images/demo/product/' + product.image" [alt]="product.name" style="width: 64px" class="rounded" />
+            </td>
+            <td>{{ product.price | currency: 'USD' }}</td>
+            <td>{{ product.category }}</td>
+            <td>
+                <p-rating [(ngModel)]="product.rating" [readonly]="true" />
+            </td>
+            <td>
+                <p-tag [value]="product.inventoryStatus" [severity]="getSeverity(product.inventoryStatus)" />
+            </td>
+            <td>
+                <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" (click)="editProduct(product)" />
+                <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" (click)="deleteProduct(product)" />
+            </td>
+        </tr>
+    </ng-template>
+    </p-table>
 
     <p-dialog [(visible)]="productDialog" [style]="{ width: '450px' }" header="Product Details" [modal]="true">
     <ng-template #content>
@@ -238,17 +209,9 @@ interface ExportColumn {
     <p-confirmdialog [style]="{ width: '450px' }" />
 
     `,
-    styles: `
-        .mb-0 {
-            margin-bottom: 0;
-        }
-        .pl-1 {
-            padding-left: 1.5rem;
-        }
-    `,
     providers: [MessageService, ProductService, ConfirmationService]
 })
-export class VentaPage implements OnInit {
+export class PresentacionPage implements OnInit {
 
     productDialog: boolean = false;
 
@@ -268,19 +231,6 @@ export class VentaPage implements OnInit {
 
     cols!: Column[];
 
-    // MenuBar BreadcrumbModule
-    breadcrumbHome = { icon: 'pi pi-home', to: '/' };
-    breadcrumbItems = [{ label: 'Ventas' }, { label: 'New Venta' }, { label: 'Accessories/ Products' }];
-
-    // Formulario aDvanced
-    dropdownItems = [
-        { name: 'Option 1', code: 'Option 1' },
-        { name: 'Option 2', code: 'Option 2' },
-        { name: 'Option 3', code: 'Option 3' }
-    ];
-
-    dropdownItem = null;
-
     constructor(
         private productService: ProductService,
         private messageService: MessageService,
@@ -297,8 +247,7 @@ export class VentaPage implements OnInit {
 
     loadDemoData() {
         this.productService.getProducts().then((data) => {
-            const products = data.slice(1, 5);
-            this.products.set(products);
+            this.products.set(data);
         });
 
         this.statuses = [

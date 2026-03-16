@@ -167,7 +167,7 @@ export class AppMenu {
                     {
                         label: 'Documentation',
                         icon: 'pi pi-fw pi-book',
-                        routerLink: ['/documentation']
+                        routerLink: ['/producto/presentacion']
                     },
                     {
                         label: 'View Source',
