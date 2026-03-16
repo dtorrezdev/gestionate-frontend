@@ -20,6 +20,7 @@ import { InputIconModule } from 'primeng/inputicon';
 import { IconFieldModule } from 'primeng/iconfield';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { Product, ProductService } from "../../services/producto.service";
+import { RouterModule } from '@angular/router';
 
 interface Column {
     field: string;
@@ -53,18 +54,18 @@ interface ExportColumn {
         TagModule,
         InputIconModule,
         IconFieldModule,
-        ConfirmDialogModule
+        ConfirmDialogModule,
+        RouterModule
     ],
     standalone: true,
     template: `
     <div class="card">
-        <div class="font-semibold text-xl mb-4">Gestion de Venta Productos</div>
+        <div class="font-semibold text-xl mb-4">Add Venta Productos</div>
         <p-breadcrumb [model]="breadcrumbItems" [home]="breadcrumbHome"></p-breadcrumb>
     </div>
 
-    <!-- <div class="flex mt-8"> -->
     <div class="card flex flex-col gap-6 w-full mb-0">
-        <div class="font-semibold text-xl">Formulario Venta</div>
+        <div class="font-semibold text-xl">Orden Venta N-2312</div>
         <div class="flex flex-col md:flex-row gap-6">
             <div class="flex gap-2 w-full">
                 <label for="cliente">Cliente: </label>
@@ -95,7 +96,7 @@ interface ExportColumn {
             </div>
         </div>
     </div>
-    <!-- </div> -->
+
     <p-table
         #dt
         [value]="products()"
@@ -171,7 +172,7 @@ interface ExportColumn {
         <div class="flex flex-wrap gap-2">
             <p-button label="Guardar" />
             <p-button label="Preventa" severity="info" />
-            <p-button label="Cancelar" severity="secondary" />
+            <p-button label="Cancelar" severity="secondary" [routerLink]="'/venta'" />
         </div>
     </div>
 
@@ -236,7 +237,6 @@ interface ExportColumn {
     </p-dialog>
 
     <p-confirmdialog [style]="{ width: '450px' }" />
-
     `,
     styles: `
         .mb-0 {
@@ -296,9 +296,8 @@ export class VentaPage implements OnInit {
     }
 
     loadDemoData() {
-        this.productService.getProducts().then((data) => {
-            const products = data.slice(1, 5);
-            this.products.set(products);
+        this.productService.getProductsMini().then((data) => {
+            this.products.set(data);
         });
 
         this.statuses = [
