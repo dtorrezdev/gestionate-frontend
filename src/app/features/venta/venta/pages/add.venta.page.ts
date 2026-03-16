@@ -33,7 +33,6 @@ interface ExportColumn {
     dataKey: string;
 }
 
-
 @Component({
     imports: [
         CommonModule,
@@ -63,7 +62,7 @@ interface ExportColumn {
         <div class="font-semibold text-xl mb-4">Add Venta Productos</div>
         <p-breadcrumb [model]="breadcrumbItems" [home]="breadcrumbHome"></p-breadcrumb>
     </div>
-
+    <!-- <div class="md:w-1/1"> -->
     <div class="card flex flex-col gap-6 w-full mb-0">
         <div class="font-semibold text-xl">Orden Venta N-2312</div>
         <div class="flex flex-col md:flex-row gap-6">
@@ -96,7 +95,7 @@ interface ExportColumn {
             </div>
         </div>
     </div>
-
+    <!-- </div> -->
     <p-table
         #dt
         [value]="products()"
@@ -248,7 +247,7 @@ interface ExportColumn {
     `,
     providers: [MessageService, ProductService, ConfirmationService]
 })
-export class VentaPage implements OnInit {
+export class AddVentaPage implements OnInit {
 
     productDialog: boolean = false;
 

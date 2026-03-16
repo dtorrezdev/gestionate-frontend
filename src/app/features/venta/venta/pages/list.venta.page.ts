@@ -1,4 +1,4 @@
-import { Component, signal, ViewChild } from "@angular/core";
+import { Component, OnInit, signal, ViewChild } from "@angular/core";
 import { BreadcrumbModule } from "primeng/breadcrumb";
 import { Venta, VentaService } from "../../services/venta.service";
 import { Table, TableModule } from "primeng/table";
@@ -149,7 +149,7 @@ interface ExportColumn {
     providers: [VentaService]
 
 })
-export class ListVentaPage {
+export class ListVentaPage implements OnInit {
 
     ventas = signal<Venta[]>([]);
 
