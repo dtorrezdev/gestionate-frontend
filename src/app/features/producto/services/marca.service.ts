@@ -1,7 +1,6 @@
 import { HttpClient, HttpHeaders } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { CommonResponse, ListResponse } from "../../venta/cliente/dto/interface";
-import { ClienteOutput } from "../../venta/cliente/dto/cliente.output";
 import { MarcaInput } from "../marca/dto/marca.input";
 import { MarcaOutput } from "../marca/dto/marca.output";
 
