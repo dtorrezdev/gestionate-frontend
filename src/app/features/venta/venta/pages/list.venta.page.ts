@@ -50,7 +50,7 @@ interface ExportColumn {
     ],
     standalone: true,
     template: `
-    <div class="card mb-0">
+    <div class="card mb-0 pb-1">
         <div class="font-semibold text-xl mb-4">Listado de Ventas</div>
         <p-breadcrumb [model]="breadcrumbItems" [home]="breadcrumbHome"></p-breadcrumb>
     </div>
@@ -131,13 +131,13 @@ interface ExportColumn {
         </tr>
     </ng-template>
     </p-table>
-
-
-
     `,
     styles: `
         .mb-0 {
             margin-bottom: 0;
+        }
+        .pb-1 {
+            padding-bottom: 1rem;
         }
         .n-border {
             border: none;

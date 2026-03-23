@@ -165,15 +165,29 @@ export class AppMenu {
                 label: 'Productos',
                 items: [
                     {
-                        label: 'Documentation',
-                        icon: 'pi pi-fw pi-book',
+                        label: 'Marcas',
+                        icon: 'pi pi-fw pi-tags',
+                        routerLink: ['/producto/marca']
+                    },
+                    {
+                        label: 'Prod Base',
+                        icon: 'pi pi-fw pi-sitemap',
+                        routerLink: ['/producto/producto-base']
+                    },
+                    {
+                        label: 'Prod Presentacion',
+                        icon: 'pi pi-fw pi-th-large',
                         routerLink: ['/producto/presentacion']
                     },
                     {
-                        label: 'View Source',
+                        label: 'Categoria',
+                        icon: 'pi pi-fw pi-tag',
+                        routerLink: ['/producto/categoria']
+                    },
+                    {
+                        label: 'Unidad Medida',
                         icon: 'pi pi-fw pi-github',
-                        url: 'https://github.com/primefaces/sakai-ng',
-                        target: '_blank'
+                        routerLink: ['/producto/unidad-medida']
                     }
                 ]
             },

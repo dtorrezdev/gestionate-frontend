@@ -1,8 +1,9 @@
 import { Component, signal, ViewChild } from "@angular/core";
+import { email, form, FormField, maxLength, minLength, required } from '@angular/forms/signals';
 import { BreadcrumbModule } from "primeng/breadcrumb";
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
-import { Cliente, ClienteService } from "../../services/cliente.service";
+import { ClienteService } from "../../services/cliente.service";
 import { CommonModule } from "@angular/common";
 import { RouterModule } from "@angular/router";
 import { ConfirmDialogModule } from "primeng/confirmdialog";
@@ -21,6 +22,8 @@ import { RippleModule } from "primeng/ripple";
 import { Table, TableModule } from "primeng/table";
 import { FormsModule } from "@angular/forms";
 import { MessageService } from "primeng/api";
+import { ClienteOutput } from "../dto/cliente.output";
+import { ClienteInput } from "../dto/cliente.input";
 
 interface Column {
     field: string;
@@ -39,15 +42,12 @@ interface ExportColumn {
         InputTextModule,
         ButtonModule,
         CommonModule,
-        CommonModule,
         TableModule,
         FormsModule,
         RippleModule,
         ToastModule,
         ToolbarModule,
-        BreadcrumbModule,
         RatingModule,
-        InputTextModule,
         TextareaModule,
         SelectModule,
         RadioButtonModule,
@@ -58,10 +58,11 @@ interface ExportColumn {
         IconFieldModule,
         ConfirmDialogModule,
         RouterModule,
+        FormField
     ],
     standalone: true,
     template: `
-    <div class="card mb-0">
+    <div class="card mb-0 pb-1">
         <div class="font-semibold text-xl mb-4">Listar Cliente</div>
         <p-breadcrumb
             [model]="breadcrumbItems"
@@ -97,18 +98,16 @@ interface ExportColumn {
         </ng-template>
         <ng-template #header>
             <tr>
-                <th style="width: 3rem">
-                    <p-tableHeaderCheckbox />
-                </th>
                 <th style="min-width: 5rem">Code</th>
-                <th pSortableColumn="nombre" style="min-width:16rem">
-                    Nombre
-                    <p-sortIcon field="nombre" />
-                </th>
                 <th pSortableColumn="ci" style="min-width: 8rem">
                     CI
                     <p-sortIcon field="ci" />
                 </th>
+                <th pSortableColumn="nombre" style="min-width:16rem">
+                    Nombre
+                    <p-sortIcon field="nombre" />
+                </th>
+
                 <th pSortableColumn="celular" style="min-width:8rem">
                     Celular
                     <p-sortIcon field="celular" />
@@ -118,12 +117,9 @@ interface ExportColumn {
         </ng-template>
         <ng-template #body let-cliente>
             <tr>
-                <td style="width: 3rem">
-                    <p-tableCheckbox [value]="cliente" />
-                </td>
                 <td style="min-width: 5rem">{{ cliente.id }}</td>
-                <td style="min-width: 16rem">{{ cliente.nombre }}</td>
                 <td style="min-width: 8rem">{{ cliente.ci }}</td>
+                <td style="min-width: 16rem">{{ cliente.nombre }}</td>
                 <td style="min-width: 8rem">{{ cliente.celular }}</td>
                 <td style="min-width: 8rem">
                     <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" />
@@ -134,31 +130,54 @@ interface ExportColumn {
     </p-table>
 
     <p-dialog [(visible)]="clienteDialog" [style]="{ width: '450px' }" header="Nuevo Cliente" [modal]="true">
-    <ng-template #content>
-        <div class="flex flex-col gap-6">
-            <div>
-                <label for="nombre" class="block font-bold mb-3">Nombre</label>
-                <input type="text" pInputText id="nombre" [(ngModel)]="cliente.nombre" required autofocus fluid />
-                <small class="text-red-500" *ngIf="submitted && !cliente.nombre">Nombre is required.</small>
-            </div>
-            <div>
-                <label for="ci" class="block font-bold mb-3">CI</label>
-                <input type="text" pInputText id="ci" [(ngModel)]="cliente.ci" required fluid />
-                <small class="text-red-500" *ngIf="submitted && !cliente.ci">CI is required.</small>
-            </div>
 
-            <div>
-                <label for="celular" class="block font-bold mb-3">Celular</label>
-                <input type="text" pInputText id="celular" [(ngModel)]="cliente.celular" required fluid />
-                <small class="text-red-500" *ngIf="submitted && !cliente.celular">Celular is required.</small>
-            </div>
-        </div>
-    </ng-template>
+        <ng-template #content>
+            <form (submit)="saveCliente($event)" action="POST">
+            <div class="flex flex-col gap-6">
+                <div>
+                    <label for="nombre" class="block font-bold mb-3">Nombre</label>
+                    <input type="text" pInputText id="nombre" [formField]="clienteForm.nombre" autofocus fluid />
+                    @if(clienteForm.nombre().touched() && clienteForm.nombre().invalid()) {
+                        @for(error of clienteForm.nombre().errors(); track error.kind) {
+                            <small class="text-red-500">{{error.message}}</small>
+                        }
+                    }
+                </div>
+                <div>
+                    <label for="ci" class="block font-bold mb-3">CI</label>
+                    <input type="text" pInputText id="ci" [formField]="clienteForm.ci" fluid />
+                    @if(clienteForm.ci().touched() && clienteForm.ci().invalid()) {
+                        @for(error of clienteForm.ci().errors(); track error.kind) {
+                            <small class="text-red-500">{{error.message}}</small>
+                        }
+                    }
+                </div>
 
-        <ng-template #footer>
-            <p-button label="Cancel" icon="pi pi-times" text (click)="hideDialog()" />
-            <p-button label="Save" icon="pi pi-check" (click)="saveCliente()" />
+                <div>
+                    <label for="celular" class="block font-bold mb-3">Celular</label>
+                    <input type="text" pInputText id="celular" [formField]="clienteForm.celular" fluid />
+                    @if(clienteForm.celular().touched() && clienteForm.celular().invalid()) {
+                        @for(error of clienteForm.celular().errors(); track error.kind) {
+                            <small class="text-red-500">{{error.message}}</small>
+                        }
+                    }
+                </div>
+            </div>
+                    <!-- p-dialog-footer -->
+            <div class="p-dialog-footer mt-1 pb-0">
+                <p-button label="Cancel" icon="pi pi-times" text (click)="hideDialog()" />
+                <p-button label="Save" type="submit"  icon="pi pi-check" [disabled]="clienteForm().invalid()" />
+            </div>
+            </form>
+
         </ng-template>
+        <!-- <ng-template #footer>
+            <p-button label="Cancel" icon="pi pi-times" text (click)="hideDialog()" />
+            <p-button label="Save" type="submit"  icon="pi pi-check" [disabled]="clienteForm().invalid()" />
+        </ng-template> -->
+
+
+
     </p-dialog>
 
 
@@ -189,19 +208,44 @@ interface ExportColumn {
             margin-bottom: 0;
         }
 
+        .pb-0 {
+            padding-bottom: 0;
+        }
+
+        .pb-1 {
+            padding-bottom: 1rem;
+        }
+
         .n-border {
             border: none;
         }
         .n-border-r {
             border-radius: 0;
         }
+
+        .mt-1 {
+            margin-top: 1.5rem;
+        }
+
+
     `,
     providers: [ClienteService, MessageService]
 })
 export class ClientePage {
 
-    clientes = signal<Cliente[]>([]);
-    cliente!: Cliente;
+    clientes = signal<ClienteOutput[]>([]);
+
+    cliente = signal<ClienteInput>(
+        ClienteInput.getInstance()
+    );
+
+    clienteForm = form(this.cliente, (schemaPath) => {
+        required(schemaPath.ci, { message: 'El CI es requerido.' });
+        required(schemaPath.nombre, { message: 'El nombre es requerido.' });
+        required(schemaPath.celular, { message: 'El celular es requerido.' });
+        minLength(schemaPath.celular, 1, { message: 'El celular debe ser minimum 8 digitos' });
+        maxLength(schemaPath.celular, 8, { message: 'El celular debe ser maximo 8 digitos' });
+    });
 
     // modal Dialog
     clienteDialog: boolean = false;
@@ -214,7 +258,7 @@ export class ClientePage {
 
     // MenuBar BreadcrumbModule
     breadcrumbHome = { icon: 'pi pi-home', to: '/' };
-    breadcrumbItems = [{ label: 'Clientes' }, { label: 'Listado' }, { label: 'All' }];
+    breadcrumbItems = [{ label: 'Cliente' }, { label: 'Listar' }, { label: 'Todo' }];
 
 
     constructor(
@@ -227,14 +271,15 @@ export class ClientePage {
     }
 
     loadDemoData() {
-        this.clienteService.getClientes().then((data) => {
-            this.clientes.set(data);
-        });
+        this.clienteService.getAllCliente()
+            .subscribe(items =>
+                this.clientes.set(items.data.content)
+            );
 
         this.cols = [
             { field: 'id', header: 'ID', customExportHeader: 'Cliente Code' },
-            { field: 'nombre', header: 'Nombre' },
             { field: 'ci', header: 'CI' },
+            { field: 'nombre', header: 'Nombre' },
             { field: 'celuar', header: 'Celular' }
         ];
 
@@ -242,31 +287,41 @@ export class ClientePage {
     }
 
     openNew() {
-        this.cliente = {};
+        // this.cliente = ClienteInput.getInstance();
         this.submitted = false;
         this.clienteDialog = true;
     }
 
-    editProduct(cliente: Cliente) {
-        this.cliente = { ...cliente };
+    editProduct(cliente: ClienteInput) {
+        // this.cliente = { ...cliente };
         this.clienteDialog = true;
     }
 
     hideDialog() {
         this.clienteDialog = false;
-        this.submitted = false;
     }
 
-    saveCliente() {
-        this.submitted = true;
-        this.messageService.add({
-            severity: 'success',
-            summary: 'Successful',
-            detail: 'Cliente Creado',
-            life: 3000
-        });
+    saveCliente(evt: Event) {
+        evt.preventDefault();
+        // this.submitted = true;
+        console.log('formCliente: ', this.clienteForm().value());
+
         this.clienteDialog = false;
-        this.cliente = {};
+
+        this.clienteService.saveCliente(
+            this.clienteForm().value()
+        ).subscribe(item => {
+            console.log('created successfully ', item);
+            this.messageService.add({
+                severity: 'success',
+                summary: 'Successful',
+                detail: 'Cliente Creado',
+                life: 3000
+            });
+            this.clienteForm().reset(ClienteInput.getInstance());
+        });
+
+        // this.cliente = ClienteInput.getInstance();
 
     }
 }

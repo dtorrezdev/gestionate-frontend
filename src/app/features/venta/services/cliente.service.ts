@@ -1,79 +1,30 @@
-import { HttpClient } from "@angular/common/http";
+import { HttpClient, HttpHeaders } from "@angular/common/http";
 import { Injectable } from "@angular/core";
+import { CommonResponse, ListResponse } from "../cliente/dto/interface";
+import { ClienteOutput } from "../cliente/dto/cliente.output";
+import { ClienteInput } from "../cliente/dto/cliente.input";
 
-export interface Cliente {
-    id?: string,
-    nombre?: string,
-    ci?: string,
-    celular?: string,
-}
 
 @Injectable()
 export class ClienteService {
 
+    private readonly _API: string = 'http://localhost:8080/modulobase/api/v1/clientes';
+    private readonly _TOKEN: string = 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJyb2wiOiJTdXBlciBBZG1pbmlzdHJhZG9yIiwic3ViIjoiYWRtaW4iLCJpYXQiOjE3NzQyOTc5NDEsImV4cCI6MTc3NDMwNTE0MX0.wfswq5o1JX36EnIFIR1CjYaFW_hqxvx7lVv_b_6NJxg';
+
     constructor(private http: HttpClient) { }
 
-    private getClientesData() {
-        return [
-            {
-                id: '1099',
-                nombre: 'Rediff Main WIll McEncroe',
-                ci: '328992389',
-                celular: '73492312'
-            },
-            {
-                id: '10100',
-                nombre: 'Rediff Main WIll McEncroe',
-                ci: '328992389',
-                celular: '73492312'
-            },
-            {
-                id: '10101',
-                nombre: 'Rediff Main WIll McEncroe',
-                ci: '328992389',
-                celular: '73492312'
-            },
-            {
-                id: '10102',
-                nombre: 'Rediff Main WIll McEncroe',
-                ci: '328992389',
-                celular: '73492312'
-            },
-            {
-                id: '10103',
-                nombre: 'Rediff Main WIll McEncroe',
-                ci: '328992389',
-                celular: '73492312'
-            },
-            {
-                id: '10104',
-                nombre: 'Rediff Main WIll McEncroe',
-                ci: '328992389',
-                celular: '73492312'
-            },
-            {
-                id: '10105',
-                nombre: 'Rediff Main WIll McEncroe',
-                ci: '328992389',
-                celular: '73492312'
-            },
-            {
-                id: '10106',
-                nombre: 'Rediff Main WIll McEncroe',
-                ci: '328992389',
-                celular: '73492312'
-            },
-            {
-                id: '10107',
-                nombre: 'Rediff Main WIll McEncroe',
-                ci: '328992389',
-                celular: '73492312'
-            },
-        ];
+    getAllCliente() {
+        let headers = new HttpHeaders();
+        headers = headers.set('Content-Type', 'application/json');
+        headers = headers.set('Authorization', this._TOKEN);
+        return this.http.get<CommonResponse<ListResponse<ClienteOutput>>>(this._API, { headers: headers });
     }
 
-    getClientes() {
-        return Promise.resolve(this.getClientesData());
+    saveCliente(data: ClienteInput) {
+        let headers = new HttpHeaders();
+        headers = headers.set('Content-Type', 'application/json');
+        headers = headers.set('Authorization', this._TOKEN);
+        return this.http.post(this._API, data, { headers });
     }
 
 }
