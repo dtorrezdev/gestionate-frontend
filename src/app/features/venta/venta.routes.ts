@@ -5,9 +5,9 @@ import { ListVentaPage } from "./venta/pages/list.venta.page";
 import { ClientePage } from "./cliente/pages/cliente.page";
 
 export default [
-    { path: '', component: ListVentaPage },
-    { path: 'add', component: AddVentaPage },
-    { path: 'cliente', component: ClientePage },
-    { path: 'pago', component: Pago },
+    { path: '', loadComponent: () => import('./venta/pages/list.venta.page').then(v => v.ListVentaPage) },
+    { path: 'add', loadComponent: () => import('./venta/pages/add.venta.page').then(v => v.AddVentaPage) },
+    { path: 'cliente', loadComponent: () => import('./cliente/pages/cliente.page').then(c => c.ClientePage) },
+    { path: 'pago', loadComponent: () => import('./pages').then(p => p.Pago) },
     { path: '**', redirectTo: '/about' }
 ] as Routes;
