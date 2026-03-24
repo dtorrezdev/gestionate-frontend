@@ -18,7 +18,7 @@ import { TagModule } from 'primeng/tag';
 import { InputIconModule } from 'primeng/inputicon';
 import { IconFieldModule } from 'primeng/iconfield';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { Product, ProductService } from "../../../venta/services/producto.service";
+import { Product, ProductService } from "../../services/producto.service";
 
 interface Column {
     field: string;

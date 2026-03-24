@@ -1,5 +1,6 @@
-import { HttpClient } from "@angular/common/http";
+import { HttpClient, HttpHeaders } from "@angular/common/http";
 import { Injectable } from "@angular/core";
+import { VentaInput } from "../venta/dto/venta.input";
 
 export interface Venta {
     id: string,
@@ -14,6 +15,9 @@ export interface Venta {
 
 @Injectable()
 export class VentaService {
+
+    private readonly _API: string = 'http://localhost:8080/modulobase/api/v1/ventas';
+    private readonly _TOKEN: string = 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJyb2wiOiJTdXBlciBBZG1pbmlzdHJhZG9yIiwic3ViIjoiYWRtaW4iLCJpYXQiOjE3NzQzODM5NzUsImV4cCI6MTc3NDM5MTE3NX0.V-NSsx0tv5dh8H01fnNfRQyuwIhUBcLPlcRjqg18dB8';
 
     constructor(private http: HttpClient) { }
 
@@ -126,6 +130,13 @@ export class VentaService {
 
     getVentas() {
         return Promise.resolve(this.getVentasData());
+    }
+
+    saveVenta(venta: VentaInput) {
+        let headers = new HttpHeaders();
+        headers = headers.set('Content-Type', 'application/json');
+        headers = headers.set('Authorization', this._TOKEN);
+        return this.http.post(this._API, JSON.stringify(venta), { headers });
     }
 
 }

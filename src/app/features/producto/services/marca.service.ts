@@ -9,7 +9,7 @@ import { MarcaOutput } from "../marca/dto/marca.output";
 export class MarcaService {
 
     private readonly _API: string = 'http://localhost:8080/modulobase/api/v1/marcas';
-    private readonly _TOKEN: string = 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJyb2wiOiJTdXBlciBBZG1pbmlzdHJhZG9yIiwic3ViIjoiYWRtaW4iLCJpYXQiOjE3NzQzMDc3MTksImV4cCI6MTc3NDMxNDkxOX0.Fe5wk5PVneXyJWV7FLTVlR3Ex-zYMEoqvNEArsOLD-E';
+    private readonly _TOKEN: string = 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJyb2wiOiJTdXBlciBBZG1pbmlzdHJhZG9yIiwic3ViIjoiYWRtaW4iLCJpYXQiOjE3NzQzODM5NzUsImV4cCI6MTc3NDM5MTE3NX0.V-NSsx0tv5dh8H01fnNfRQyuwIhUBcLPlcRjqg18dB8';
 
     constructor(private http: HttpClient) { }
 

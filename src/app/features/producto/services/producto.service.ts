@@ -1,5 +1,8 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { CommonResponse, ListResponse } from '../../venta/cliente/dto/interface';
+import { ClienteOutput } from '../../venta/cliente/dto/cliente.output';
+import { PresentacionOuput } from '../presentacion/dto/presentacion.output';
 
 interface InventoryStatus {
     label: string;
@@ -21,6 +24,10 @@ export interface Product {
 
 @Injectable()
 export class ProductService {
+
+    private readonly _API: string = 'http://localhost:8080/modulobase/api/v1/producto_presentacion';
+    private readonly _TOKEN: string = 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJyb2wiOiJTdXBlciBBZG1pbmlzdHJhZG9yIiwic3ViIjoiYWRtaW4iLCJpYXQiOjE3NzQzODM5NzUsImV4cCI6MTc3NDM5MTE3NX0.V-NSsx0tv5dh8H01fnNfRQyuwIhUBcLPlcRjqg18dB8';
+
     getProductsData() {
         return [
             {
@@ -1256,6 +1263,14 @@ export class ProductService {
     ];
 
     constructor(private http: HttpClient) { }
+
+    getAllProdutos() {
+        let headers = new HttpHeaders();
+        headers = headers.set('Content-Type', 'application/json');
+        headers = headers.set('Authorization', this._TOKEN);
+
+        return this.http.get<ListResponse<PresentacionOuput>>(`${this._API}?codigo=&nombre&descripcion`, { headers: headers });
+    }
 
     getProductsMini() {
         return Promise.resolve(this.getProductsData().slice(0, 5));
