@@ -22,17 +22,6 @@ import { ConfirmDialogModule } from "primeng/confirmdialog";
 import { RouterModule } from "@angular/router";
 import { VentaOutput } from "../dto/venta.output";
 
-interface Column {
-    field: string;
-    header: string;
-    customExportHeader?: string;
-}
-
-interface ExportColumn {
-    title: string;
-    dataKey: string;
-}
-
 @Component({
     imports: [
         BreadcrumbModule,
@@ -69,7 +58,6 @@ interface ExportColumn {
         #dt
         [value]="ventas()"
         [rows]="10"
-        [columns]="cols"
         [globalFilterFields]="['id', 'cliente', 'nit', 'vendedor']"
         [tableStyle]="{ 'min-width': '75rem' }"
         [rowHover]="true"
@@ -158,10 +146,6 @@ export class ListVentaPage implements OnInit {
 
     @ViewChild('dt') dt!: Table;
 
-    exportColumns!: ExportColumn[];
-
-    cols!: Column[];
-
     // MenuBar BreadcrumbModule
     breadcrumbHome = { icon: 'pi pi-home', to: '/' };
     breadcrumbItems = [{ label: 'Ventas' }, { label: 'Listar Venta' }, { label: 'all' }];
@@ -181,15 +165,6 @@ export class ListVentaPage implements OnInit {
                 this.ventas.set(ventas);
             });
 
-        this.cols = [
-            { field: 'code', header: 'Code', customExportHeader: 'Product Code' },
-            { field: 'name', header: 'Name' },
-            { field: 'image', header: 'Image' },
-            { field: 'price', header: 'Price' },
-            { field: 'category', header: 'Category' }
-        ];
-
-        this.exportColumns = this.cols.map((col) => ({ title: col.header, dataKey: col.field }));
     }
 
     onGlobalFilter(table: Table, event: Event) {

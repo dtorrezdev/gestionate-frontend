@@ -1,25 +1,13 @@
 import { Component, inject, OnInit, signal, ViewChild } from '@angular/core';
-import { ConfirmationService, MessageService } from 'primeng/api';
-import { Table, TableModule } from 'primeng/table';
+import { TableModule } from 'primeng/table';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
-import { RippleModule } from 'primeng/ripple';
-import { ToastModule } from 'primeng/toast';
 import { BreadcrumbModule } from 'primeng/breadcrumb';
-import { ToolbarModule } from 'primeng/toolbar';
-import { RatingModule } from 'primeng/rating';
-import { InputTextModule } from 'primeng/inputtext';
-import { TextareaModule } from 'primeng/textarea';
 import { SelectModule } from 'primeng/select';
-import { RadioButtonModule } from 'primeng/radiobutton';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { DialogModule } from 'primeng/dialog';
 import { TagModule } from 'primeng/tag';
-import { InputIconModule } from 'primeng/inputicon';
-import { IconFieldModule } from 'primeng/iconfield';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { Product, ProductService } from "../../../producto/services/producto.service";
+import { ProductService } from "../../../producto/services/producto.service";
 import { RouterModule } from '@angular/router';
 import { ClienteService } from '../../services/cliente.service';
 import { ClienteOption } from '../../cliente/dto/cliente.option';
@@ -28,39 +16,18 @@ import { PresentacionOuput } from '../../../producto/presentacion/dto/presentaci
 import { VentaService } from '../../services/venta.service';
 import { VentaInput } from '../dto/venta.input';
 
-interface Column {
-    field: string;
-    header: string;
-    customExportHeader?: string;
-}
-
-interface ExportColumn {
-    title: string;
-    dataKey: string;
-}
-
 @Component({
     imports: [
         CommonModule,
         TableModule,
         FormsModule,
         ButtonModule,
-        RippleModule,
-        ToastModule,
-        ToolbarModule,
         BreadcrumbModule,
-        RatingModule,
-        InputTextModule,
-        TextareaModule,
         SelectModule,
-        RadioButtonModule,
         InputNumberModule,
-        DialogModule,
         TagModule,
-        InputIconModule,
-        IconFieldModule,
-        ConfirmDialogModule,
-        RouterModule
+        RouterModule,
+        ReactiveFormsModule
     ],
     standalone: true,
     template: `
@@ -100,7 +67,7 @@ interface ExportColumn {
             </div>
             <div class="flex gap-2 w-full">
                 <label for="cantidad">cantidad</label>
-                <input pInputText id="zip" type="text" [(ngModel)]="cantidad"  />
+                <p-inputnumber inputId="cantidad" [(ngModel)]="cantidad" />
             </div>
             <div class="flex gap-2 w-full">
                 <p-button label="Agregar" icon="pi pi-plus" (onClick)="addDetalle()"  />
@@ -112,7 +79,6 @@ interface ExportColumn {
         #dt
         [value]="products()"
         [rows]="10"
-        [columns]="cols"
         [tableStyle]="{ 'min-width': '75rem' }"
         [rowHover]="true"
         dataKey="id"
@@ -167,7 +133,7 @@ interface ExportColumn {
                 </td>
                 <td style="min-width: 8rem;">
                     <!-- <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" (click)="editProduct(product)" /> -->
-                    <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" (click)="deleteProduct(product)" />
+                    <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" />
                 </td>
             </tr>
         </ng-template>
@@ -185,68 +151,6 @@ interface ExportColumn {
             <p-button label="Cancelar" severity="secondary" [routerLink]="'/venta'" />
         </div>
     </div>
-
-    <!-- <p-dialog [(visible)]="productDialog" [style]="{ width: '450px' }" header="Product Details" [modal]="true">
-        <ng-template #content>
-            <div class="flex flex-col gap-6">
-                <img [src]="'https://primefaces.org/cdn/primeng/images/demo/product/' + product.image" [alt]="product.image" class="block m-auto pb-4" *ngIf="product.image" />
-                <div>
-                    <label for="name" class="block font-bold mb-3">Name</label>
-                    <input type="text" pInputText id="name" [(ngModel)]="product.name" required autofocus fluid />
-                    <small class="text-red-500" *ngIf="submitted && !product.name">Name is required.</small>
-                </div>
-                <div>
-                    <label for="description" class="block font-bold mb-3">Description</label>
-                    <textarea id="description" pTextarea [(ngModel)]="product.description" required rows="3" cols="20" fluid></textarea>
-                </div>
-
-                <div>
-                    <label for="inventoryStatus" class="block font-bold mb-3">Inventory Status</label>
-                    <p-select [(ngModel)]="product.inventoryStatus" inputId="inventoryStatus" [options]="statuses" optionLabel="label" optionValue="label" placeholder="Select a Status" fluid />
-                </div>
-
-                <div>
-                    <span class="block font-bold mb-4">Category</span>
-                    <div class="grid grid-cols-12 gap-4">
-                        <div class="flex items-center gap-2 col-span-6">
-                            <p-radiobutton id="category1" name="category" value="Accessories" [(ngModel)]="product.category" />
-                            <label for="category1">Accessories</label>
-                        </div>
-                        <div class="flex items-center gap-2 col-span-6">
-                            <p-radiobutton id="category2" name="category" value="Clothing" [(ngModel)]="product.category" />
-                            <label for="category2">Clothing</label>
-                        </div>
-                        <div class="flex items-center gap-2 col-span-6">
-                            <p-radiobutton id="category3" name="category" value="Electronics" [(ngModel)]="product.category" />
-                            <label for="category3">Electronics</label>
-                        </div>
-                        <div class="flex items-center gap-2 col-span-6">
-                            <p-radiobutton id="category4" name="category" value="Fitness" [(ngModel)]="product.category" />
-                            <label for="category4">Fitness</label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-12 gap-4">
-                    <div class="col-span-6">
-                        <label for="price" class="block font-bold mb-3">Price</label>
-                        <p-inputnumber id="price" [(ngModel)]="product.price" mode="currency" currency="USD" locale="en-US" fluid />
-                    </div>
-                    <div class="col-span-6">
-                        <label for="quantity" class="block font-bold mb-3">Quantity</label>
-                        <p-inputnumber id="quantity" [(ngModel)]="product.quantity" fluid />
-                    </div>
-                </div>
-            </div>
-        </ng-template>
-
-        <ng-template #footer>
-            <p-button label="Cancel" icon="pi pi-times" text (click)="hideDialog()" />
-            <p-button label="Save" icon="pi pi-check" (click)="saveProduct()" />
-        </ng-template>
-    </p-dialog> -->
-
-    <p-confirmdialog [style]="{ width: '450px' }" />
     `,
     styles: `
         .mb-0 {
@@ -256,27 +160,46 @@ interface ExportColumn {
             padding-left: 1.5rem;
         }
     `,
-    providers: [ProductService, ClienteService, VentaService, MessageService, ConfirmationService]
+    providers: [ProductService, ClienteService, VentaService]
 })
 export class AddVentaPage implements OnInit {
 
     private productService = inject(ProductService);
     private clienteService = inject(ClienteService);
     private ventaService = inject(VentaService);
-    private messageService = inject(MessageService);
-    private confirmationService = inject(ConfirmationService);
+    private formBuilder = inject(FormBuilder);
+    // private messageService = inject(MessageService);
 
-    productDialog: boolean = false;
     products = signal<PresentacionOuput[]>([]);
-    product!: PresentacionOuput
-    selectedProducts!: PresentacionOuput[] | null;
-
-    submitted: boolean = false;
-    statuses!: any[];
-
-    @ViewChild('dt') dt!: Table;
-    exportColumns!: ExportColumn[];
-    cols!: Column[];
+    /*
+    {
+        "total": 100,
+        "codigo": "V-122",
+        "clienteId": 9,
+        "estado": "VENTA",
+        "detalle": [
+            {
+                "presentacionId": 18,
+                "productoId": 22,
+                "cantidad": 1,
+                "cantidadBase": 1,
+                "precioUnitario": 1
+            }
+        ]
+    }
+    */
+    profileForm = this.formBuilder.group({
+        firstName: ['', Validators.required],
+        lastName: [''],
+        address: this.formBuilder.group({
+            street: [''],
+            city: [''],
+            state: [''],
+            zip: [''],
+        }),
+        //Define a FormArray control
+        aliases: this.formBuilder.array([])
+    });
 
     // Combo Box Cliente
     clienteSelected: any = null;
@@ -296,14 +219,13 @@ export class AddVentaPage implements OnInit {
     breadcrumbHome = { icon: 'pi pi-home', to: '/' };
     breadcrumbItems = [{ label: 'Ventas' }, { label: 'New Venta' }];
 
-    constructor(
-    ) { }
+    constructor() { }
 
     ngOnInit() {
         this.loadDemoData();
     }
 
-    loadDemoData() {
+    private loadDemoData(): void {
         this.clienteService.getAllCliente()
             .subscribe((resp) => {
                 const clientes = resp.data.content;
@@ -324,26 +246,6 @@ export class AddVentaPage implements OnInit {
                     ...resp.content
                 );
             });
-
-        this.statuses = [
-            { label: 'INSTOCK', value: 'instock' },
-            { label: 'LOWSTOCK', value: 'lowstock' },
-            { label: 'OUTOFSTOCK', value: 'outofstock' }
-        ];
-
-        this.cols = [
-            { field: 'code', header: 'Code', customExportHeader: 'Product Code' },
-            { field: 'name', header: 'Name' },
-            { field: 'image', header: 'Image' },
-            { field: 'price', header: 'Price' },
-            { field: 'category', header: 'Category' }
-        ];
-
-        this.exportColumns = this.cols.map((col) => ({ title: col.header, dataKey: col.field }));
-    }
-
-    exportCSV() {
-        this.dt.exportCSV();
     }
 
     addDetalle() {
@@ -373,10 +275,7 @@ export class AddVentaPage implements OnInit {
             detalle: detalle
         };
         console.log('venta: ', venta);
-        this.ventaService.saveVenta(venta).subscribe(resp => {
-            console.log('Response: ', resp);
-
-        })
+        // this.ventaService.saveVenta(venta).subscribe(resp => console.log('Response: ', resp))
     }
 
     savePreventa() {
@@ -394,7 +293,7 @@ export class AddVentaPage implements OnInit {
 
         const venta: VentaInput = {
             total: 100,
-            codigo: 'V-124',
+            codigo: 'V-125',
             clienteId: this.clienteSelected.id,
             estado: 'PREVENTA',
             detalle: detalle
@@ -402,86 +301,8 @@ export class AddVentaPage implements OnInit {
         console.log('venta: ', venta);
         this.ventaService.saveVenta(venta).subscribe(resp => {
             console.log('Response: ', resp);
-        })
-
-    }
-
-    onGlobalFilter(table: Table, event: Event) {
-        table.filterGlobal((event.target as HTMLInputElement).value, 'contains');
-    }
-
-    openNew() {
-        this.product = PresentacionOuput.getInstance();
-
-        this.submitted = false;
-        this.productDialog = true;
-    }
-
-    editProduct(product: PresentacionOuput) {
-        this.product = { ...product };
-        this.productDialog = true;
-    }
-
-    deleteSelectedProducts() {
-        this.confirmationService.confirm({
-            message: 'Are you sure you want to delete the selected products?',
-            header: 'Confirm',
-            icon: 'pi pi-exclamation-triangle',
-            accept: () => {
-                this.products.set(this.products().filter((val) => !this.selectedProducts?.includes(val)));
-                this.selectedProducts = null;
-                this.messageService.add({
-                    severity: 'success',
-                    summary: 'Successful',
-                    detail: 'Products Deleted',
-                    life: 3000
-                });
-            }
         });
-    }
 
-    hideDialog() {
-        this.productDialog = false;
-        this.submitted = false;
-    }
-
-    deleteProduct(product: PresentacionOuput) {
-        this.confirmationService.confirm({
-            message: 'Are you sure you want to delete ' + product.nombre + '?',
-            header: 'Confirm',
-            icon: 'pi pi-exclamation-triangle',
-            accept: () => {
-                this.products.set(this.products().filter((val) => val.id !== product.id));
-                this.product = PresentacionOuput.getInstance();
-                this.messageService.add({
-                    severity: 'success',
-                    summary: 'Successful',
-                    detail: 'Product Deleted',
-                    life: 3000
-                });
-            }
-        });
-    }
-
-    findIndexById(id: number): number {
-        let index = -1;
-        for (let i = 0; i < this.products().length; i++) {
-            if (this.products()[i].id === id) {
-                index = i;
-                break;
-            }
-        }
-
-        return index;
-    }
-
-    createId(): string {
-        let id = '';
-        var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        for (var i = 0; i < 5; i++) {
-            id += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        return id;
     }
 
     getSeverity(status: string) {
@@ -497,33 +318,4 @@ export class AddVentaPage implements OnInit {
         }
     }
 
-    saveProduct() {
-        this.submitted = true;
-        let _products = this.products();
-        if (this.product.nombre?.trim()) {
-            if (this.product.id) {
-                _products[this.findIndexById(this.product.id)] = this.product;
-                this.products.set([..._products]);
-                this.messageService.add({
-                    severity: 'success',
-                    summary: 'Successful',
-                    detail: 'Product Updated',
-                    life: 3000
-                });
-            } else {
-                // this.product.id = this.createId();
-                // this.product.image = 'product-placeholder.svg';
-                this.messageService.add({
-                    severity: 'success',
-                    summary: 'Successful',
-                    detail: 'Product Created',
-                    life: 3000
-                });
-                this.products.set([..._products, this.product]);
-            }
-
-            this.productDialog = false;
-            this.product = PresentacionOuput.getInstance();
-        }
-    }
 }
