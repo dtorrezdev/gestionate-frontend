@@ -1,6 +1,8 @@
 import { HttpClient, HttpHeaders } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { VentaInput } from "../venta/dto/venta.input";
+import { VentaOutput } from "../venta/dto/venta.output";
+import { CommonResponse, ListResponse } from "../cliente/dto/interface";
 
 export interface Venta {
     id: string,
@@ -17,119 +19,15 @@ export interface Venta {
 export class VentaService {
 
     private readonly _API: string = 'http://localhost:8080/modulobase/api/v1/ventas';
-    private readonly _TOKEN: string = 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJyb2wiOiJTdXBlciBBZG1pbmlzdHJhZG9yIiwic3ViIjoiYWRtaW4iLCJpYXQiOjE3NzQ0NzM2NDQsImV4cCI6MTc3NDQ4MDg0NH0.5h6HV3g30CGuFq3qUTRd4nfNKLoHjLOkB0yFqUaZjtM';
+    private readonly _TOKEN: string = 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJyb2wiOiJTdXBlciBBZG1pbmlzdHJhZG9yIiwic3ViIjoiYWRtaW4iLCJpYXQiOjE3NzQ1NTM0NjUsImV4cCI6MTc3NDU2MDY2NX0.PLev6K8z8mlAHI5-Bn6s-Z2IwxKrfz5YTQ4i-5reW1M';
 
     constructor(private http: HttpClient) { }
 
-    private getVentasData() {
-        return [
-            {
-                id: '1099',
-                cliente: 'Rediff Main WIll McEncroe',
-                nit: '328992389',
-                total: 15.0,
-                fechaCreacion: '01/01/2025 13:16:07',
-                vendedor: 'Mitchell Admin',
-                estado: 'Preventa'
-            },
-            {
-                id: '1100',
-                cliente: 'David Torrez',
-                nit: '328992389',
-                total: 15.0,
-                fechaCreacion: '01/01/2025 13:16:07',
-                vendedor: 'Mitchell Admin',
-                estado: 'Preventa'
-            },
-            {
-                id: '1101',
-                cliente: 'f230fh0g3',
-                nit: '328992389',
-                total: 15.0,
-                fechaCreacion: '01/01/2025 13:16:07',
-                vendedor: 'Mitchell Admin',
-                estado: 'Preventa'
-            },
-            {
-                id: '1102',
-                cliente: 'f230fh0g3',
-                nit: '328992389',
-                total: 15.0,
-                fechaCreacion: '01/01/2025 13:16:07',
-                vendedor: 'Mitchell Admin',
-                estado: 'Preventa'
-            },
-
-            {
-                id: '1101',
-                cliente: 'f230fh0g3',
-                nit: '328992389',
-                total: 15.0,
-                fechaCreacion: '01/01/2025 13:16:07',
-                vendedor: 'Mitchell Admin',
-                estado: 'Preventa'
-            },
-            {
-                id: '1102',
-                cliente: 'f230fh0g3',
-                nit: '328992389',
-                total: 15.0,
-                fechaCreacion: '01/01/2025 13:16:07',
-                vendedor: 'Mitchell Admin',
-                estado: 'Preventa'
-            },
-
-            {
-                id: '1101',
-                cliente: 'f230fh0g3',
-                nit: '328992389',
-                total: 15.0,
-                fechaCreacion: '01/01/2025 13:16:07',
-                vendedor: 'Mitchell Admin',
-                estado: 'Preventa'
-            },
-            {
-                id: '1102',
-                cliente: 'f230fh0g3',
-                nit: '328992389',
-                total: 15.0,
-                fechaCreacion: '01/01/2025 13:16:07',
-                vendedor: 'Mitchell Admin',
-                estado: 'Preventa'
-            },
-            {
-                id: '1102',
-                cliente: 'f230fh0g3',
-                nit: '328992389',
-                total: 15.0,
-                fechaCreacion: '01/01/2025 13:16:07',
-                vendedor: 'Mitchell Admin',
-                estado: 'Preventa'
-            },
-            {
-                id: '1101',
-                cliente: 'f230fh0g3',
-                nit: '328992389',
-                total: 15.0,
-                fechaCreacion: '01/01/2025 13:16:07',
-                vendedor: 'Mitchell Admin',
-                estado: 'Preventa'
-            },
-            {
-                id: '1102',
-                cliente: 'f230fh0g3',
-                nit: '328992389',
-                total: 15.0,
-                fechaCreacion: '01/01/2025 13:16:07',
-                vendedor: 'Mitchell Admin',
-                estado: 'Preventa'
-            },
-
-        ];
-    }
-
-    getVentas() {
-        return Promise.resolve(this.getVentasData());
+    getAllVenta() {
+        let headers = new HttpHeaders();
+        headers = headers.set('Content-Type', 'application/json');
+        headers = headers.set('Authorization', this._TOKEN);
+        return this.http.get<CommonResponse<ListResponse<VentaOutput>>>(`${this._API}?sort=venta_id,DESC&page=0&size=2000`, { headers: headers });
     }
 
     saveVenta(venta: VentaInput) {

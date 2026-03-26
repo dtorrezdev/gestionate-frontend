@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, ViewChild } from "@angular/core";
+import { Component, inject, OnInit, signal, ViewChild } from "@angular/core";
 import { BreadcrumbModule } from "primeng/breadcrumb";
 import { Venta, VentaService } from "../../services/venta.service";
 import { Table, TableModule } from "primeng/table";
@@ -20,6 +20,7 @@ import { InputIconModule } from "primeng/inputicon";
 import { IconFieldModule } from "primeng/iconfield";
 import { ConfirmDialogModule } from "primeng/confirmdialog";
 import { RouterModule } from "@angular/router";
+import { VentaOutput } from "../dto/venta.output";
 
 interface Column {
     field: string;
@@ -31,8 +32,6 @@ interface ExportColumn {
     title: string;
     dataKey: string;
 }
-
-
 
 @Component({
     imports: [
@@ -116,13 +115,13 @@ interface ExportColumn {
             <td style="width: 3rem">
                 <p-tableCheckbox [value]="venta" />
             </td>
-            <td style="min-width: 7rem">{{ venta.id }}</td>
-            <td style="min-width: 12rem">{{ venta.fechaCreacion }}</td>
+            <td style="min-width: 7rem">{{ venta.codigo }}</td>
+            <td style="min-width: 12rem">{{ venta.fechaRegistro }}</td>
             <td>{{ venta.cliente }}</td>
-            <td>{{ venta.vendedor }}</td>
-            <td>{{ venta.total | currency: 'USD' }}</td>
+            <td>{{ venta.vendedor ?? 'admin' }}</td>
+            <td>{{ venta.total | currency: 'Bs' }}</td>
             <td>
-                <p-tag [value]="venta.estado"/>
+                <p-tag [value]="venta.estado" [severity]="getSeverityEstado(venta.estado)"/>
             </td>
             <td>
                 <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true"/>
@@ -151,9 +150,11 @@ interface ExportColumn {
 })
 export class ListVentaPage implements OnInit {
 
-    ventas = signal<Venta[]>([]);
+    private ventaServive = inject(VentaService);
 
-    venta!: Venta;
+    ventas = signal<VentaOutput[]>([]);
+
+    venta!: VentaOutput;
 
     @ViewChild('dt') dt!: Table;
 
@@ -165,18 +166,19 @@ export class ListVentaPage implements OnInit {
     breadcrumbHome = { icon: 'pi pi-home', to: '/' };
     breadcrumbItems = [{ label: 'Ventas' }, { label: 'Listar Venta' }, { label: 'all' }];
 
-    constructor(
-        private ventaServive: VentaService
-    ) { }
+    constructor() { }
 
     ngOnInit() {
-        this.loadDemoData();
+        this.loadData();
     }
 
-    public loadDemoData(): void {
-        this.ventaServive.getVentas()
-            .then((data) => {
-                this.ventas.set(data);
+    public loadData(): void {
+
+        this.ventaServive.getAllVenta()
+            .subscribe((resp) => {
+                const ventas = resp.data.content;
+                console.log('resp', resp);
+                this.ventas.set(ventas);
             });
 
         this.cols = [
@@ -192,5 +194,18 @@ export class ListVentaPage implements OnInit {
 
     onGlobalFilter(table: Table, event: Event) {
         table.filterGlobal((event.target as HTMLInputElement).value, 'contains');
+    }
+
+    getSeverityEstado(status: string) {
+        switch (status) {
+            case 'VENTA':
+                return 'success';
+            case 'PREVENTA':
+                return 'warn';
+            case 'ANULADO':
+                return 'danger';
+            default:
+                return 'info';
+        }
     }
 }

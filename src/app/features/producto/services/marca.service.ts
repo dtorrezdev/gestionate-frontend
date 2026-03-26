@@ -10,7 +10,7 @@ import { Observable } from "rxjs";
 export class MarcaService {
 
     private readonly _API: string = 'http://localhost:8080/modulobase/api/v1/marcas';
-    private readonly _TOKEN: string = 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJyb2wiOiJTdXBlciBBZG1pbmlzdHJhZG9yIiwic3ViIjoiYWRtaW4iLCJpYXQiOjE3NzQ0NzM2NDQsImV4cCI6MTc3NDQ4MDg0NH0.5h6HV3g30CGuFq3qUTRd4nfNKLoHjLOkB0yFqUaZjtM';
+    private readonly _TOKEN: string = 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJyb2wiOiJTdXBlciBBZG1pbmlzdHJhZG9yIiwic3ViIjoiYWRtaW4iLCJpYXQiOjE3NzQ1NTM0NjUsImV4cCI6MTc3NDU2MDY2NX0.PLev6K8z8mlAHI5-Bn6s-Z2IwxKrfz5YTQ4i-5reW1M';
 
     constructor(private http: HttpClient) { }
 
