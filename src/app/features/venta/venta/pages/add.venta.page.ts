@@ -256,6 +256,7 @@ interface ExportColumn {
             padding-left: 1.5rem;
         }
     `,
+    providers: [ProductService, ClienteService, VentaService, MessageService, ConfirmationService]
 })
 export class AddVentaPage implements OnInit {
 

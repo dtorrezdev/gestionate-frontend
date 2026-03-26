@@ -26,7 +26,7 @@ export interface Product {
 export class ProductService {
 
     private readonly _API: string = 'http://localhost:8080/modulobase/api/v1/producto_presentacion';
-    private readonly _TOKEN: string = 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJyb2wiOiJTdXBlciBBZG1pbmlzdHJhZG9yIiwic3ViIjoiYWRtaW4iLCJpYXQiOjE3NzQzODM5NzUsImV4cCI6MTc3NDM5MTE3NX0.V-NSsx0tv5dh8H01fnNfRQyuwIhUBcLPlcRjqg18dB8';
+    private readonly _TOKEN: string = 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJyb2wiOiJTdXBlciBBZG1pbmlzdHJhZG9yIiwic3ViIjoiYWRtaW4iLCJpYXQiOjE3NzQ0NzM2NDQsImV4cCI6MTc3NDQ4MDg0NH0.5h6HV3g30CGuFq3qUTRd4nfNKLoHjLOkB0yFqUaZjtM';
 
     getProductsData() {
         return [
