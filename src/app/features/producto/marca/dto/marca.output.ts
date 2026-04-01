@@ -3,12 +3,12 @@
 export class MarcaOutput {
     id: number;
     nombre: string;
-    celular: string;
+    descripcion: string;
 
-    constructor(id: number, nombre: string, celular: string) {
+    constructor(id: number, nombre: string, descripcion: string) {
         this.id = id;
         this.nombre = nombre;
-        this.celular = celular;
+        this.descripcion = descripcion;
     }
 
     public static getInstance(): MarcaOutput {

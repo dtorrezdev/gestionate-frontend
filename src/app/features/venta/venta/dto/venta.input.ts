@@ -4,14 +4,14 @@ export interface VentaInput {
     glosa?: string;
     clienteId: number;
     estado: string;
-    movimientoId?: number;
-    detalle: Detalle[];
+    detalle: DetalleVenta[];
 }
 
-export interface Detalle {
+export interface DetalleVenta {
     presentacionId: number;
     productoId: number;
     cantidad: number;
     cantidadBase: number;
     precioUnitario: number;
+    subtotal?: number;
 }

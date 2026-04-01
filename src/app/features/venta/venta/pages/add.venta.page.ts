@@ -1,33 +1,39 @@
-import { Component, inject, OnInit, signal, ViewChild } from '@angular/core';
-import { TableModule } from 'primeng/table';
+import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+
+import { MessageService } from 'primeng/api';
+import { ToastModule } from 'primeng/toast';
+import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { BreadcrumbModule } from 'primeng/breadcrumb';
 import { SelectModule } from 'primeng/select';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { TagModule } from 'primeng/tag';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
+
 import { ProductService } from "../../../producto/services/producto.service";
-import { RouterModule } from '@angular/router';
 import { ClienteService } from '../../services/cliente.service';
 import { ClienteOption } from '../../cliente/dto/cliente.option';
 import { PresentacionOption } from '../../../producto/presentacion/dto/presentacion.option';
 import { PresentacionOuput } from '../../../producto/presentacion/dto/presentacion.output';
 import { VentaService } from '../../services/venta.service';
-import { VentaInput } from '../dto/venta.input';
 
 @Component({
     imports: [
+        ReactiveFormsModule,
+        RouterModule,
         CommonModule,
         TableModule,
-        FormsModule,
         ButtonModule,
         BreadcrumbModule,
         SelectModule,
         InputNumberModule,
         TagModule,
-        RouterModule,
-        ReactiveFormsModule
+        ToastModule,
+        ToggleSwitchModule
     ],
     standalone: true,
     template: `
@@ -35,50 +41,54 @@ import { VentaInput } from '../dto/venta.input';
         <div class="font-semibold text-xl mb-4">Add Venta Productos</div>
         <p-breadcrumb [model]="breadcrumbItems" [home]="breadcrumbHome"></p-breadcrumb>
     </div>
-    <!-- <div class="md:w-1/1"> -->
+    <form [formGroup]="ventaForm" (submit)="submitForm($event)" class="md:w-1/1">
     <div class="card flex flex-col gap-6 w-full mb-0">
-        <div class="font-semibold text-xl">Orden Venta N-2312</div>
+        <div class="font-semibold text-xl">Orden Venta {{ventaForm.get('codigo')?.value}}</div>
         <div class="flex flex-col md:flex-row gap-6">
-            <div class="flex gap-2 w-full">
-                <label for="cliente">Cliente: </label>
+            <div class="flex flex-wrap gap-2 w-full">
+                <label class="font-semibold" for="cliente">Cliente: </label>
                 <p-select id="cliente"
-                    [(ngModel)]="clienteSelected"
+                    formControlName="clienteId"
                     [options]="clienteOptions"
+                    size="large"
                     optionLabel="nombre"
                     placeholder="Seleccione Cliente"
                     class="w-full">
                 </p-select>
+                @if( ventaForm.get('clienteId')?.invalid && (ventaForm.get('clienteId')?.touched || ventaForm.get('clienteId')?.dirty) ) {
+                    <small class="text-red">Cliente no debe ser vacio.</small>
+                }
             </div>
-            <div class="flex gap-2 w-full">
-                <p-button label="Cliente" icon="pi pi-user-plus" />
+            <div class="flex gap-2 w-full flex-cc">
+                <p-button class="mt-2" label="Cliente" icon="pi pi-user-plus" />
             </div>
         </div>
 
         <div class="flex flex-col md:flex-row gap-6">
             <div class="flex flex-wrap gap-2 w-full">
-                <label for="state">Productos</label>
+                <label class="font-semibold" for="producto">Productos:</label>
                 <p-select
-                    id="state"
-                    [(ngModel)]="productoPresentacionSelected"
+                    id="producto"
+                    (onChange)="addDetalle($event.value)"
                     [options]="productoPresentacionOptions"
                     optionLabel="nombre"
                     placeholder="Seleccione Producto" class="w-full">
                 </p-select>
+                <!-- <small class="text-red">El detalle esta vacio.</small> -->
             </div>
-            <div class="flex gap-2 w-full">
-                <label for="cantidad">cantidad</label>
-                <p-inputnumber inputId="cantidad" [(ngModel)]="cantidad" />
+            <div class="flex gap-2 w-full flex-cc">
+                <label for="pago">Pagos: </label>
+                <p-toggleswitch  formControlName="hasPay" />
             </div>
-            <div class="flex gap-2 w-full">
+            <!-- <div class="flex gap-2 w-full">
                 <p-button label="Agregar" icon="pi pi-plus" (onClick)="addDetalle()"  />
-            </div>
+            </div> -->
         </div>
     </div>
-    <!-- </div> -->
+
     <p-table
         #dt
-        [value]="products()"
-        [rows]="10"
+        [value]="detalle.controls"
         [tableStyle]="{ 'min-width': '75rem' }"
         [rowHover]="true"
         dataKey="id"
@@ -91,141 +101,403 @@ import { VentaInput } from '../dto/venta.input';
         </ng-template>
         <ng-template #header>
             <tr>
-                <th style="min-width: 8rem; text-align: center;">Code</th>
-                <th pSortableColumn="name" style="min-width:16rem">
-                    Nombre
-                    <p-sortIcon field="name" />
+                <th style="min-width: 2rem; text-align: center;">Code</th>
+                <th style="min-width:18rem">
+                    Producto
+                </th>
+                <th style="min-width: 8rem">
+                    Status
                 </th>
                 <!-- <th>Image</th> -->
-                <th pSortableColumn="price" style="min-width: 4rem">
-                    Price
-                    <p-sortIcon field="price" />
+                <th style="min-width: 3rem">
+                    Precio
                 </th>
-                <!-- <th pSortableColumn="category" style="min-width:10rem">
-                    Category
-                    <p-sortIcon field="category" />
-                </th> -->
-                <!-- <th pSortableColumn="rating" style="min-width: 12rem">
-                    Reviews
-                    <p-sortIcon field="rating" />
-                </th> -->
-                <th pSortableColumn="inventoryStatus" style="min-width: 8rem">
-                    Status
-                    <p-sortIcon field="inventoryStatus" />
+                <th style="min-width: 3rem">
+                    Cantidad
                 </th>
+                <th style="min-width: 4rem">
+                    Subtotal
+                </th>
+
                 <th style="min-width: 8rem"></th>
             </tr>
         </ng-template>
-        <ng-template #body let-product>
-            <tr>
-                <td style="min-width: 8rem; text-align: center;">{{ product.id }}</td>
-                <td style="min-width: 16rem">{{ product.nombre }}</td>
-                <!-- <td>
-                    <img [src]="'https://primefaces.org/cdn/primeng/images/demo/product/' + product.image" [alt]="product.name" style="width: 64px" class="rounded" />
-                </td> -->
-                <td>{{ product.precioVenta | currency: 'Bs ' }}</td>
-                <!-- <td>{{ product.category }}</td> -->
-                <!-- <td>
-                    <p-rating [(ngModel)]="product.rating" [readonly]="true" />
-                </td> -->
-                <td>
+        <ng-template #body let-product let-editing="editing" let-index="rowIndex">
+            <tr
+                [formGroup]="product"
+            >
+                <td style="min-width: 2rem; text-align: center;">P-{{ product.value.presentacionId }}</td>
+                <td style="min-width: 18rem">
+                     {{ product.value.nombre }}
+                </td>
+                <td style="min-width: 8rem">
                     <p-tag value="INSTOCK" [severity]="getSeverity('INSTOCK')" />
                 </td>
+                <td
+                    style="min-width: 3rem"
+                    [pEditableColumn]="product.precioUnitario"
+                    pEditableColumnField="precioUnitario">
+                    <p-cellEditor>
+                        <ng-template #input>
+                            <p-inputnumber inputId="precioUnitario" formControlName="precioUnitario" mode="decimal" [minFractionDigits]="2" />
+                            @if(product.value.precioUnitario <= 0) {
+                            <small class="text-red">precio debe ser mayor a 0</small>
+                            }
+                        </ng-template>
+                        <ng-template #output>
+                            {{ product.value.precioUnitario | currency: 'Bs ' }}
+                            @if(product.value.precioUnitario <= 0) {
+                                <small class="text-red">valor invalido</small>
+                            }
+                        </ng-template>
+                    </p-cellEditor>
+
+                </td>
+                <td
+                    style="min-width: 3rem"
+                    [pEditableColumn]="product.cantidad" pEditableColumnField="cantidad">
+                    <p-cellEditor>
+                        <ng-template #input>
+                            <p-inputnumber inputId="cantidad" formControlName="cantidad" />
+                            @if(product.value.cantidad <= 0) {
+                            <small class="text-red">cantidad debe ser mayor a 0</small>
+                            }
+                        </ng-template>
+                        <ng-template #output>
+                            {{ product.value.cantidad }}
+                            @if(product.value.cantidad <= 0) {
+                                <small class="text-red">valor invalido</small>
+                            }
+                        </ng-template>
+                    </p-cellEditor>
+                </td>
+
+                <td style="min-width: 4rem">{{ product.value.subtotal }}</td>
                 <td style="min-width: 8rem;">
-                    <!-- <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" (click)="editProduct(product)" /> -->
-                    <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" />
+                    <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" (click)="removeDetalle(index)" />
+                </td>
+            </tr>
+        </ng-template>
+        <ng-template #footer>
+            <tr class="font-bold">
+                <td style="text-align: center;" colspan="5">Total:</td>
+                <td colspan="2" style="min-width: 8rem; text-align: left;">
+                    {{total}}
                 </td>
             </tr>
         </ng-template>
         <ng-template #emptymessage>
             <tr style="text-align: center;">
-                <td colspan="5">No hay detalle venta.</td>
+                <td colspan="7">No hay detalle venta.</td>
             </tr>
         </ng-template>
     </p-table>
+    <div
+        formGroupName="pagos"
+        [className]="hasPay? 'card flex flex-col gap-4 mb-0 active':
+            'card flex flex-col gap-4 noactive'">
+        <div class="font-semibold text-xl mb-4">Pagos</div>
+        <div class="flex flex-col md:flex-row gap-6 mt-1">
+            <div class="flex gap-2 w-full">
+                <label class="font-semibold" for="metodo">Metodo:</label>
+                <p-select
+                    id="metodo"
+                    formControlName="tipo"
+                    [options]="metodoValues"
+                    optionLabel="name"
+                    placeholder="Seleccione metodo" class="w-full">
+                </p-select>
+                <!-- <small class="text-red">El detalle esta vacio.</small> -->
+            </div>
+            <div class="flex gap-2 w-full flex-cc">
+                <label for="monto">Monto: </label>
+                <p-inputnumber formControlName="monto" mode="decimal" [minFractionDigits]="2" inputId="cantidad" />
+            </div>
+            <div class="flex gap-2 w-full flex-cc">
+                <p-button label="Agregar" icon="pi pi-plus" (onClick)="addDetallePago()" />
+            </div>
+            <div class="flex gap-2 w-full flex-cc">
+                Total Pago: {{ totalPago }}
+            </div>
 
-    <div class="card flex flex-col gap-4">
+        </div>
+        <p-table
+            #dt2
+            [value]="detallePagos.controls"
+            [tableStyle]="{ 'min-width': '70rem' }"
+            [rowHover]="true"
+            dataKey="id"
+            [showCurrentPageReport]="true"
+            >
+            <ng-template #header>
+                <tr>
+                    <th style="min-width: 2rem; text-align: center;">#</th>
+                    <th style="min-width:8rem">
+                        Metodo
+                    </th>
+                    <th style="min-width:5rem">
+                        Monto
+                    </th>
+                    <th style="min-width: 8rem"></th>
+                </tr>
+            </ng-template>
+            <ng-template #body let-pago let-editing="editing" let-index="rowIndex">
+                <tr
+                    [formGroup]="pago"
+                >
+                    <td style="min-width: 2rem; text-align: center;">{{ index + 1 }}</td>
+                    <td style="min-width: 8rem">
+                        {{ pago.value.tipo.name }}
+                    </td>
+                    <td
+                        style="min-width: 3rem"
+                        [pEditableColumn]="pago.value.monto" pEditableColumnField="monto">
+                        <p-cellEditor>
+                            <ng-template #input>
+                                <p-inputnumber inputId="monto" formControlName="monto" mode="decimal" [minFractionDigits]="2" />
+                                @if(pago.value.monto <= 0) {
+                                <small class="text-red">monto debe ser mayor a 0</small>
+                                }
+                            </ng-template>
+                            <ng-template #output>
+                                {{ pago.value.monto }}
+                                @if(pago.value.monto <= 0) {
+                                    <small class="text-red">valor invalido</small>
+                                }
+                            </ng-template>
+                        </p-cellEditor>
+                    </td>
+                    <td style="min-width: 4rem;">
+                        <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" (click)="removeDetallePago(index)" />
+                    </td>
+                </tr>
+            </ng-template>
+            <ng-template #emptymessage>
+                <tr style="text-align: center;">
+                    <td colspan="4">No hay pagos registrados.</td>
+                </tr>
+            </ng-template>
+        </p-table>
+    </div>
+
+    <div class="card flex flex-col gap-4 mb-0">
         <div class="flex flex-wrap gap-2">
-            <p-button label="Guardar" (onClick)="saveVenta()" />
-            <p-button label="Preventa" severity="info" (onClick)="savePreventa()" />
+            <p-button label="Guardar" [disabled]="ventaForm.invalid" type="submit" />
+            <p-button label="Preventa" [disabled]="isPreventaDisable()" severity="info" (onClick)="submitForm()" />
             <p-button label="Cancelar" severity="secondary" [routerLink]="'/venta'" />
         </div>
     </div>
+     <p-toast />
+</form>
     `,
     styles: `
+        .mt-1 {
+            margin-bottom: 1.5rem;
+        }
         .mb-0 {
             margin-bottom: 0;
         }
         .pl-1 {
             padding-left: 1.5rem;
         }
+        .flex-cc {
+            align-items:center;
+        }
+        .flex-rc {
+            justify-content: center;
+        }
+        .text-red {
+            color: red;
+            display: block;
+        }
+        .active {
+            display: block;
+        }
+        .noactive {
+            display: none;
+        }
     `,
-    providers: [ProductService, ClienteService, VentaService]
+    providers: [ProductService, ClienteService, VentaService, MessageService]
 })
 export class AddVentaPage implements OnInit {
-
     private productService = inject(ProductService);
     private clienteService = inject(ClienteService);
     private ventaService = inject(VentaService);
     private formBuilder = inject(FormBuilder);
-    // private messageService = inject(MessageService);
+    private messageService = inject(MessageService);
+    private readonly cdr = inject(ChangeDetectorRef);
 
-    products = signal<PresentacionOuput[]>([]);
-    /*
-    {
-        "total": 100,
-        "codigo": "V-122",
-        "clienteId": 9,
-        "estado": "VENTA",
-        "detalle": [
-            {
-                "presentacionId": 18,
-                "productoId": 22,
-                "cantidad": 1,
-                "cantidadBase": 1,
-                "precioUnitario": 1
-            }
-        ]
-    }
-    */
-    profileForm = this.formBuilder.group({
-        firstName: ['', Validators.required],
-        lastName: [''],
-        address: this.formBuilder.group({
-            street: [''],
-            city: [''],
-            state: [''],
-            zip: [''],
-        }),
-        //Define a FormArray control
-        aliases: this.formBuilder.array([])
-    });
+    public ventaForm!: FormGroup;
+    public clienteOptions!: ClienteOption[];
+    public productoPresentacionOptions!: PresentacionOption[];
 
-    // Combo Box Cliente
-    clienteSelected: any = null;
-    clienteOptions = [
-        ClienteOption.getInstance()
+    public metodoValues = [
+        { name: 'Efectivo', code: 'EF' },
+        { name: 'QR/TRANSFERENCIA', code: 'QR_TR' },
+        { name: 'TARJETA', code: 'TAR' }
     ];
-
-    // Combo Box Producto
-    productoPresentacionSelected: any = null;
-    productoPresentacionOptions = [
-        PresentacionOption.getInstance()
-    ];
-
-    cantidad: number = 0;
+    public metodo: any = null;
 
     // MenuBar BreadcrumbModule
-    breadcrumbHome = { icon: 'pi pi-home', to: '/' };
-    breadcrumbItems = [{ label: 'Ventas' }, { label: 'New Venta' }];
+    public breadcrumbHome = { icon: 'pi pi-home', to: '/' };
+    public breadcrumbItems = [{ label: 'Ventas' }, { label: 'New Venta' }];
 
-    constructor() { }
-
-    ngOnInit() {
-        this.loadDemoData();
+    constructor() {
+        this.buildFormAndInitValues();
     }
 
-    private loadDemoData(): void {
+    ngOnInit() {
+        this.loadDataToVentaForm();
+    }
+
+    submitForm(evt?: SubmitEvent) {
+        console.log(this.ventaForm);
+        if (this.ventaForm.valid || !this.isPreventaDisable()) {
+            const estado = evt ? 'VENTA' : 'PREVENTA';
+            const clienteSelected = this.ventaForm.get('clienteId')?.value;
+
+            this.ventaForm.get('estado')?.setValue(estado);
+            this.ventaForm.get('clienteId')?.setValue(clienteSelected.id);
+            console.log(this.ventaForm.value);
+            this.ventaService.saveVenta(this.ventaForm.value)
+                .subscribe({
+                    next: (resp) => {
+                        console.log(resp);
+                        this.messageService.add({
+                            severity: 'success',
+                            summary: 'Mensaje',
+                            detail: 'Venta Formulario es valido',
+                            life: 3000
+                        });
+                    },
+                    error: (e) => {
+                        console.error(e);
+                        this.messageService.add({
+                            severity: 'error',
+                            summary: 'Mensaje',
+                            detail: 'Error al guardar venta ' + e.error?.message,
+                            life: 3000
+                        });
+                    },
+                    complete: () => console.info('complete')
+                });
+        } else {
+            this.messageService.add({
+                severity: 'warn',
+                summary: 'Mensaje',
+                detail: 'Venta Formulario es invalido',
+                life: 3000
+            });
+        }
+    }
+
+    addDetalle(presentacionProducto: PresentacionOuput) {
+        if (presentacionProducto.id == 0) return;
+        const findIndexInDetalle = this.findIndexDelProductoEnDetalle(presentacionProducto);
+        if (findIndexInDetalle < 0) {
+            const newDetalle = this.crearDetalle(presentacionProducto);
+            newDetalle.valueChanges.subscribe((presentacion) => {
+                const total = presentacion.precioUnitario * presentacion.cantidad;
+                newDetalle.get('subtotal')?.setValue(total, { emitEvent: false });
+            });
+            this.detalle.push(newDetalle);
+            this.ventaForm.get('hasPay')?.enable();
+        } else {
+            this.messageService.add({
+                severity: 'info',
+                summary: 'Mensaje',
+                detail: 'El producto ' + presentacionProducto.nombre
+                    + ' esta en la fila nro ' + (findIndexInDetalle + 1),
+                life: 3000
+            });
+        }
+    }
+
+    isPreventaDisable() {
+        return this.detalle.invalid || this.detalle.length === 0 || this.hasPay;
+    }
+
+    addDetallePago() {
+        const tipoPago = this.pagos.get('tipo')?.value;
+        const montoPago = this.pagos.get('monto')?.value;
+        const findIndexDetallePago = this.detallePagos.controls
+            .findIndex(ele => ele.value.tipo.name === tipoPago.name);
+
+        if (findIndexDetallePago < 0) {
+            const newDetalle = this.crearDetallePago(tipoPago, montoPago);
+            this.detallePagos.push(newDetalle);
+        }
+    }
+
+    editPresentacionProducto(index: number, presentacionId: number) {
+        const presentacionProd = this.productoPresentacionOptions.find(p => p.id === presentacionId);
+        if (!presentacionProd) return;
+
+        const detalle = this.detalle.at(index);
+
+        detalle.patchValue({
+            presentacionId: presentacionProd.id,
+            productoId: presentacionProd.productoId,
+            precioUnitario: presentacionProd.precioVenta,
+        });
+    }
+
+    removeDetalle(index: number) {
+        this.detalle.removeAt(index);
+        if (this.detalle.length === 0) {
+            this.ventaForm.get('hasPay')?.setValue(false);
+            this.ventaForm.get('hasPay')?.disable();
+        }
+    }
+    removeDetallePago(index: number) {
+        this.detallePagos.removeAt(index);
+    }
+
+    getSeverity(status: string) {
+        switch (status) {
+            case 'INSTOCK':
+                return 'success';
+            case 'LOWSTOCK':
+                return 'warn';
+            case 'OUTOFSTOCK':
+                return 'danger';
+            default:
+                return 'info';
+        }
+    }
+
+    private buildFormAndInitValues(): void {
+        this.clienteOptions = [ClienteOption.getInstance()];
+        this.productoPresentacionOptions = [
+            PresentacionOption.getInstance()
+        ];
+        this.ventaForm = this.crearVentaForm();
+        // change detection para cambios en Forms
+        this.ventaForm.valueChanges
+            .pipe(takeUntilDestroyed())
+            .subscribe(() => this.cdr.markForCheck());
+    }
+
+    private crearVentaForm(): FormGroup {
+        return this.formBuilder.group({
+            clienteId: [null, Validators.required],
+            codigo: ['V-12', Validators.required],
+            glosa: [''],
+            estado: [''],
+            detalle: this.formBuilder.array([]),
+            total: [0, [Validators.required, Validators.min(1)]],
+            // Pagos
+            hasPay: [{ value: false, disabled: true }, Validators.required],
+            pagos: this.formBuilder.group({
+                tipo: [''],
+                monto: [''],
+                detallePago: this.formBuilder.array([]),
+                totalPago: [0, [Validators.required, Validators.min(1)]]
+            }),
+        });
+    }
+
+    private loadDataToVentaForm(): void {
         this.clienteService.getAllCliente()
             .subscribe((resp) => {
                 const clientes = resp.data.content;
@@ -240,82 +512,69 @@ export class AddVentaPage implements OnInit {
 
         this.productService.getAllProdutos()
             .subscribe(resp => {
-                console.log(resp.content);
-                // this.products.set(resp.content);
                 this.productoPresentacionOptions.push(
                     ...resp.content
                 );
             });
     }
 
-    addDetalle() {
-        console.log('addDetalle ', this.clienteSelected, this.productoPresentacionSelected);
-        console.log('addDetalle cantidad: ', this.cantidad);
-        this.products.set([...this.products(), this.productoPresentacionSelected]);
-    }
-
-    saveVenta() {
-        console.log('saveVenta()');
-
-        const detalle = this.products().map(product => {
-            return {
-                presentacionId: product.id,
-                productoId: product.productoId,
-                cantidad: 1,
-                cantidadBase: 1,
-                precioUnitario: product.precioVenta + 1
-            }
-        })
-
-        const venta: VentaInput = {
-            total: 100,
-            codigo: 'V-122',
-            clienteId: this.clienteSelected.id,
-            estado: 'VENTA',
-            detalle: detalle
-        };
-        console.log('venta: ', venta);
-        // this.ventaService.saveVenta(venta).subscribe(resp => console.log('Response: ', resp))
-    }
-
-    savePreventa() {
-        console.log('saveVenta()');
-
-        const detalle = this.products().map(product => {
-            return {
-                presentacionId: product.id,
-                productoId: product.productoId,
-                cantidad: 1,
-                cantidadBase: 1,
-                precioUnitario: product.precioVenta + 1
-            }
-        })
-
-        const venta: VentaInput = {
-            total: 100,
-            codigo: 'V-125',
-            clienteId: this.clienteSelected.id,
-            estado: 'PREVENTA',
-            detalle: detalle
-        };
-        console.log('venta: ', venta);
-        this.ventaService.saveVenta(venta).subscribe(resp => {
-            console.log('Response: ', resp);
+    private crearDetalle(presentacionProducto?: PresentacionOuput): FormGroup {
+        return this.formBuilder.group({
+            presentacionId: [presentacionProducto?.id || null, Validators.required],
+            nombre: [presentacionProducto?.nombre || ''],
+            productoId: [presentacionProducto?.productoId || null, Validators.required],
+            precioUnitario: [presentacionProducto?.precioVenta || 0, [Validators.required, Validators.min(1)]],
+            cantidad: [1, [Validators.required, Validators.min(1)]],
+            cantidadBase: [1, [Validators.required, Validators.min(1)]],
+            subtotal: [presentacionProducto ? presentacionProducto.precioVenta : 0, [Validators.required, Validators.min(1)]]
         });
-
     }
 
-    getSeverity(status: string) {
-        switch (status) {
-            case 'INSTOCK':
-                return 'success';
-            case 'LOWSTOCK':
-                return 'warn';
-            case 'OUTOFSTOCK':
-                return 'danger';
-            default:
-                return 'info';
-        }
+    private crearDetallePago(tipo: string, monto: number): FormGroup {
+        return this.formBuilder.group({
+            tipo: [tipo || '', Validators.required],
+            monto: [monto || 0, [Validators.required, Validators.min(1)]],
+        });
+    }
+
+    private findIndexDelProductoEnDetalle(presentacionProducto: PresentacionOuput): number {
+        return this.detalle.controls.findIndex(prod =>
+            prod.value.presentacionId === presentacionProducto.id &&
+            prod.value.productoId === presentacionProducto?.productoId);
+    }
+
+    get detalle(): FormArray {
+        return this.ventaForm.get('detalle') as FormArray;
+    }
+
+    get pagos(): FormGroup {
+        return this.ventaForm.get('pagos') as FormGroup;
+    }
+
+    get detallePagos(): FormArray {
+        return this.pagos.get('detallePago') as FormArray;
+    }
+
+    get hasPay(): boolean {
+        return this.ventaForm.get('hasPay')?.value || false;
+    }
+
+    get total(): number {
+        const total = this.detalle.controls
+            .reduce((acc, d) => acc + d.value.subtotal, 0);
+        this.ventaForm.patchValue({ total });
+        return total;
+    }
+
+    get totalPago(): number {
+        const totalPago = this.detallePagos.controls
+            .reduce((acc, d) => acc + d.value.monto, 0);
+        this.ventaForm.patchValue({
+            pagos: {
+                totalPago: totalPago
+            }
+        });
+        return totalPago;
     }
 
 }

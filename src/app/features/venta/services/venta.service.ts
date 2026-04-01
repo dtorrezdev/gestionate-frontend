@@ -3,6 +3,7 @@ import { Injectable } from "@angular/core";
 import { VentaInput } from "../venta/dto/venta.input";
 import { VentaOutput } from "../venta/dto/venta.output";
 import { CommonResponse, ListResponse } from "../cliente/dto/interface";
+import { VentaDelete } from "../venta/dto/venta.delete";
 
 export interface Venta {
     id: string,
@@ -19,7 +20,7 @@ export interface Venta {
 export class VentaService {
 
     private readonly _API: string = 'http://localhost:8080/modulobase/api/v1/ventas';
-    private readonly _TOKEN: string = 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJyb2wiOiJTdXBlciBBZG1pbmlzdHJhZG9yIiwic3ViIjoiYWRtaW4iLCJpYXQiOjE3NzQ1NTM0NjUsImV4cCI6MTc3NDU2MDY2NX0.PLev6K8z8mlAHI5-Bn6s-Z2IwxKrfz5YTQ4i-5reW1M';
+    private readonly _TOKEN: string = 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJyb2wiOiJTdXBlciBBZG1pbmlzdHJhZG9yIiwic3ViIjoiYWRtaW4iLCJpYXQiOjE3NzUwNzU1MTYsImV4cCI6MTc3NTA4MjcxNn0.OCv6xJunSqS_86NAwAK6rs_Jj3WQg-rtd5uYdhmqv9A';
 
     constructor(private http: HttpClient) { }
 
@@ -35,6 +36,13 @@ export class VentaService {
         headers = headers.set('Content-Type', 'application/json');
         headers = headers.set('Authorization', this._TOKEN);
         return this.http.post(this._API, JSON.stringify(venta), { headers });
+    }
+
+    deleteVenta(venta: VentaDelete) {
+        let headers = new HttpHeaders();
+        headers = headers.set('Content-Type', 'application/json');
+        headers = headers.set('Authorization', this._TOKEN);
+        return this.http.delete(this._API, { headers, body: JSON.stringify(venta) });
     }
 
 }

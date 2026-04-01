@@ -10,7 +10,7 @@ import { CommonModule } from '@angular/common';
 import { InputTextModule } from 'primeng/inputtext';
 
 
-import { MarcaService } from "../../services/marca.service";
+import { MarcaService } from "../service/marca.service";
 import { MarcaOutput } from "../dto/marca.output";
 import { Table, TableModule } from "primeng/table";
 import { DialogModule } from "primeng/dialog";
@@ -65,6 +65,8 @@ interface ExportColumn {
 
     <p-table #dt
         [value]="marcas()"
+        [paginator]="true"
+        [rowsPerPageOptions]="[10, 20, 50,100]"
         [rows]="10"
         [columns]="cols"
         [tableStyle]="{ 'min-width': '75rem' }"

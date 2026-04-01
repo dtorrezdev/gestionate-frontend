@@ -9,7 +9,7 @@ import { ClienteInput } from "../cliente/dto/cliente.input";
 export class ClienteService {
 
     private readonly _API: string = 'http://localhost:8080/modulobase/api/v1/clientes';
-    private readonly _TOKEN: string = 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJyb2wiOiJTdXBlciBBZG1pbmlzdHJhZG9yIiwic3ViIjoiYWRtaW4iLCJpYXQiOjE3NzQ1NTM0NjUsImV4cCI6MTc3NDU2MDY2NX0.PLev6K8z8mlAHI5-Bn6s-Z2IwxKrfz5YTQ4i-5reW1M';
+    private readonly _TOKEN: string = 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJyb2wiOiJTdXBlciBBZG1pbmlzdHJhZG9yIiwic3ViIjoiYWRtaW4iLCJpYXQiOjE3NzUwNzU1MTYsImV4cCI6MTc3NTA4MjcxNn0.OCv6xJunSqS_86NAwAK6rs_Jj3WQg-rtd5uYdhmqv9A';
 
     constructor(private http: HttpClient) { }
 

@@ -1,26 +1,22 @@
 import { Component, inject, OnInit, signal, ViewChild } from "@angular/core";
 import { BreadcrumbModule } from "primeng/breadcrumb";
-import { Venta, VentaService } from "../../services/venta.service";
+import { VentaService } from "../../services/venta.service";
 import { Table, TableModule } from "primeng/table";
 import { ToolbarModule } from "primeng/toolbar";
 import { ButtonModule } from "primeng/button";
 import { CommonModule } from "@angular/common";
-import { FormsModule } from "@angular/forms";
-import { RippleModule } from "primeng/ripple";
 import { ToastModule } from "primeng/toast";
-import { RatingModule } from "primeng/rating";
 import { InputTextModule } from "primeng/inputtext";
-import { TextareaModule } from "primeng/textarea";
-import { SelectModule } from "primeng/select";
-import { RadioButtonModule } from "primeng/radiobutton";
+import { TooltipModule } from 'primeng/tooltip';
 import { InputNumberModule } from "primeng/inputnumber";
-import { DialogModule } from "primeng/dialog";
 import { TagModule } from "primeng/tag";
 import { InputIconModule } from "primeng/inputicon";
 import { IconFieldModule } from "primeng/iconfield";
 import { ConfirmDialogModule } from "primeng/confirmdialog";
 import { RouterModule } from "@angular/router";
 import { VentaOutput } from "../dto/venta.output";
+import { ConfirmationService, MessageService } from "primeng/api";
+import { VentaDelete } from "../dto/venta.delete";
 
 @Component({
     imports: [
@@ -34,7 +30,10 @@ import { VentaOutput } from "../dto/venta.output";
         TagModule,
         InputIconModule,
         IconFieldModule,
-        RouterModule
+        RouterModule,
+        TooltipModule,
+        ToastModule,
+        ConfirmDialogModule
     ],
     standalone: true,
     template: `
@@ -74,50 +73,65 @@ import { VentaOutput } from "../dto/venta.output";
     </ng-template>
     <ng-template #header>
         <tr>
-            <th style="width: 3rem">
-                <p-tableHeaderCheckbox />
+            <th style="min-width: 4rem; text-align: center;">Nro</th>
+            <th pSortableColumn="fechaRegistro" style="min-width:4rem">
+                Fecha Registro
+                <p-sortIcon field="fechaRegistro" />
             </th>
-            <th style="min-width: 7rem">#</th>
-            <th pSortableColumn="name" style="min-width:12rem">
-                Fecha Creacion
-                <p-sortIcon field="name" />
+            <th pSortableColumn="cliente" style="min-width: 4rem">
+                Cliente
+                <p-sortIcon field="cliente" />
             </th>
-            <th>Cliente</th>
-            <th pSortableColumn="price" style="min-width: 8rem">
+            <th pSortableColumn="price" style="min-width: 4rem">
                 Vendedor
                 <p-sortIcon field="price" />
             </th>
-            <th pSortableColumn="category" style="min-width:10rem">
+            <th pSortableColumn="total" style="min-width:3rem">
                 total
-                <p-sortIcon field="category" />
+                <p-sortIcon field="total" />
             </th>
-            <th pSortableColumn="inventoryStatus" style="min-width: 12rem">
+            <th pSortableColumn="estado" style="min-width: 4rem">
                 Estado
-                <p-sortIcon field="inventoryStatus" />
+                <p-sortIcon field="estado" />
             </th>
-            <th style="min-width: 12rem"></th>
+            <th></th>
         </tr>
     </ng-template>
     <ng-template #body let-venta>
         <tr>
-            <td style="width: 3rem">
-                <p-tableCheckbox [value]="venta" />
-            </td>
-            <td style="min-width: 7rem">{{ venta.codigo }}</td>
-            <td style="min-width: 12rem">{{ venta.fechaRegistro }}</td>
-            <td>{{ venta.cliente }}</td>
-            <td>{{ venta.vendedor ?? 'admin' }}</td>
-            <td>{{ venta.total | currency: 'Bs' }}</td>
-            <td>
+            <td style="min-width: 4rem;text-align: center;">{{ venta.codigo }}</td>
+            <td style="min-width: 4rem">{{ venta.fechaRegistro }}</td>
+            <td style="min-width: 4rem">{{ venta.cliente }}</td>
+            <td style="min-width: 4rem">{{ venta.vendedor ?? 'admin' }}</td>
+            <td style="min-width: 3rem">{{ venta.total | currency: 'Bs' }}</td>
+            <td style="min-width: 4rem">
                 <p-tag [value]="venta.estado" [severity]="getSeverityEstado(venta.estado)"/>
             </td>
             <td>
-                <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true"/>
-                <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true"/>
+                <p-button icon="pi pi-eye" severity="info" class="mr-2"
+                        pTooltip="Ver detalle" tooltipPosition="top"
+                        [routerLink]="'/venta/show/'"
+                        [rounded]="true" [outlined]="true"/>
+                @if(venta.estado === 'VENTA') {
+                    <p-button icon="pi pi-trash" severity="danger"
+                        pTooltip="Anular" tooltipPosition="top"
+                        (onClick)="deleteVenta(venta)"
+                        [rounded]="true" [outlined]="true"/>
+                }
+                @if(venta.estado === 'PREVENTA') {
+                    <p-button icon="pi pi-pencil"
+                        pTooltip="Editar detalle" tooltipPosition="top"
+                        [routerLink]="'/venta/edit/'"
+                        [rounded]="true" [outlined]="true"/>
+                }
+
             </td>
         </tr>
     </ng-template>
     </p-table>
+
+    <p-toast />
+    <p-confirmdialog [style]="{ width: '450px' }" />
     `,
     styles: `
         .mb-0 {
@@ -133,18 +147,18 @@ import { VentaOutput } from "../dto/venta.output";
             border-radius: 0;
         }
     `,
-    providers: [VentaService]
+    providers: [VentaService, ConfirmationService, MessageService]
 
 })
 export class ListVentaPage implements OnInit {
 
     private ventaServive = inject(VentaService);
+    private confirmationService = inject(ConfirmationService);
+    private messageService = inject(MessageService);
 
     ventas = signal<VentaOutput[]>([]);
 
     venta!: VentaOutput;
-
-    @ViewChild('dt') dt!: Table;
 
     // MenuBar BreadcrumbModule
     breadcrumbHome = { icon: 'pi pi-home', to: '/' };
@@ -161,7 +175,6 @@ export class ListVentaPage implements OnInit {
         this.ventaServive.getAllVenta()
             .subscribe((resp) => {
                 const ventas = resp.data.content;
-                console.log('resp', resp);
                 this.ventas.set(ventas);
             });
 
@@ -182,5 +195,50 @@ export class ListVentaPage implements OnInit {
             default:
                 return 'info';
         }
+    }
+
+    public deleteVenta(venta: VentaOutput): void {
+
+        this.confirmationService.confirm({
+            message: 'Estas seguro de anular la venta ' + venta.codigo + '?',
+            header: 'Confirm',
+            icon: 'pi pi-exclamation-triangle',
+            accept: () => {
+                this.ventaServive.deleteVenta(this.buildBodyVentaDelete(venta))
+                    .subscribe({
+                        next: (resp) => {
+                            console.log('Venta anulada: ', resp);
+                            this.messageService.add({
+                                severity: 'success',
+                                summary: 'Successful',
+                                detail: 'Venta Anulada correctamente!',
+                                life: 3000
+                            });
+                            this.loadData();
+                        },
+                        error: (e) => {
+                            console.log('Error al anular venta: ', e);
+                            this.messageService.add({
+                                severity: 'error',
+                                summary: 'Error',
+                                detail: 'Error al anulada venta: \n' + e.error?.message,
+                                life: 3000
+                            });
+                        }
+                    })
+            },
+            reject: () => {
+                console.log('Reject Solicitud');
+            }
+        });
+
+    }
+    private buildBodyVentaDelete(venta: VentaOutput): VentaDelete {
+        return {
+            ventaId: venta.id,
+            glosa: 'Anulacion de venta ' + venta.codigo,
+            clienteId: venta.clienteId,
+            movimientoId: venta.movimientoId
+        };
     }
 }

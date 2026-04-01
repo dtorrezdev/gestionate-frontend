@@ -19,24 +19,16 @@ import { InputIconModule } from 'primeng/inputicon';
 import { IconFieldModule } from 'primeng/iconfield';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { Product, ProductService } from "../../services/producto.service";
-
-interface Column {
-    field: string;
-    header: string;
-    customExportHeader?: string;
-}
-
-interface ExportColumn {
-    title: string;
-    dataKey: string;
-}
-
+import { RouterModule } from '@angular/router';
+import { BreadcrumbModule } from 'primeng/breadcrumb';
 
 @Component({
     imports: [
         CommonModule,
-        TableModule,
+        RouterModule,
         FormsModule,
+        BreadcrumbModule,
+        TableModule,
         ButtonModule,
         RippleModule,
         ToastModule,
@@ -55,9 +47,13 @@ interface ExportColumn {
     ],
     standalone: true,
     template: `
-    <p-toolbar styleClass="mb-6">
+    <div class="card mb-0 pb-1">
+        <div class="font-semibold text-xl mb-4">Listado de Productos Presentacion</div>
+        <p-breadcrumb [model]="breadcrumbItems" [home]="breadcrumbHome"></p-breadcrumb>
+    </div>
+    <p-toolbar styleClass="mb-6  n-border n-border-r">
         <ng-template #start>
-            <p-button label="New" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="openNew()" />
+            <p-button label="New Producto" [routerLink]="'/producto/add-producto'" icon="pi pi-plus" severity="secondary" class="mr-2"/>
             <p-button severity="secondary" label="Delete" icon="pi pi-trash" outlined (onClick)="deleteSelectedProducts()" [disabled]="!selectedProducts || !selectedProducts.length" />
         </ng-template>
 
@@ -70,7 +66,6 @@ interface ExportColumn {
         #dt
         [value]="products()"
         [rows]="10"
-        [columns]="cols"
         [paginator]="true"
         [globalFilterFields]="['name', 'country.name', 'representative.name', 'status']"
         [tableStyle]="{ 'min-width': '75rem' }"
@@ -207,7 +202,20 @@ interface ExportColumn {
     </p-dialog>
 
     <p-confirmdialog [style]="{ width: '450px' }" />
-
+    `,
+    styles: `
+        .mb-0 {
+            margin-bottom: 0;
+        }
+        .pb-1 {
+            padding-bottom: 1rem;
+        }
+        .n-border {
+            border: none;
+        }
+        .n-border-r {
+            border-radius: 0;
+        }
     `,
     providers: [MessageService, ProductService, ConfirmationService]
 })
@@ -227,9 +235,11 @@ export class PresentacionPage implements OnInit {
 
     @ViewChild('dt') dt!: Table;
 
-    exportColumns!: ExportColumn[];
 
-    cols!: Column[];
+
+    // MenuBar BreadcrumbModule
+    breadcrumbHome = { icon: 'pi pi-home', to: '/' };
+    breadcrumbItems = [{ label: 'Producto' }, { label: 'Listar Presentaciones' }, { label: 'Todos' }];
 
     constructor(
         private productService: ProductService,
@@ -250,21 +260,18 @@ export class PresentacionPage implements OnInit {
             this.products.set(data);
         });
 
+        this.productService.getAllProdutos()
+            .subscribe({
+                next(value) {
+                    console.log('getAllProdutos: ', value);
+                },
+            })
+
         this.statuses = [
             { label: 'INSTOCK', value: 'instock' },
             { label: 'LOWSTOCK', value: 'lowstock' },
             { label: 'OUTOFSTOCK', value: 'outofstock' }
         ];
-
-        this.cols = [
-            { field: 'code', header: 'Code', customExportHeader: 'Product Code' },
-            { field: 'name', header: 'Name' },
-            { field: 'image', header: 'Image' },
-            { field: 'price', header: 'Price' },
-            { field: 'category', header: 'Category' }
-        ];
-
-        this.exportColumns = this.cols.map((col) => ({ title: col.header, dataKey: col.field }));
     }
 
     onGlobalFilter(table: Table, event: Event) {

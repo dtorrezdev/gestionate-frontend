@@ -4,6 +4,7 @@ export default [
     { path: 'producto-base', loadComponent: () => import('./pages').then(p => p.ProductoBase) },
     // { path: 'presentacion', component: PresentacionPage },
     { path: 'presentacion', loadComponent: () => import('./presentacion/pages/presentacion.page').then(p => p.PresentacionPage) },
+    { path: 'add-producto', loadComponent: () => import('./presentacion/pages/add.presentacion.page').then(p => p.AddPresentacionPage) },
     { path: 'marca', loadComponent: () => import('./marca/pages/marca.page').then(p => p.Marca) },
     { path: 'categoria', loadComponent: () => import('./pages').then(p => p.Categoria) },
     { path: 'unidad-medida', loadComponent: () => import('./pages').then(p => p.UnidadMedida) },
