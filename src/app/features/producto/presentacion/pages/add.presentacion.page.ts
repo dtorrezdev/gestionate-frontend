@@ -5,16 +5,15 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BreadcrumbModule } from "primeng/breadcrumb";
 import { TabsModule } from 'primeng/tabs';
 import { ButtonModule } from "primeng/button";
+import { DatePickerModule } from 'primeng/datepicker';
 import { InputTextModule } from "primeng/inputtext";
 import { MarcaService } from "../../marca/service/marca.service";
-import { MarcaOutput } from "../../marca/dto/marca.output";
 import { MarcaOption } from "../../marca/dto/marca.option";
-import { Marca } from "../../marca/pages/marca.page";
 import { ProductoBaseService } from "../../base/service/producto.base.service";
 import { ProductoBaseOption } from "../../base/dto/producto.base.option";
 import { SelectModule } from "primeng/select";
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from "@angular/forms";
+import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from "@angular/forms";
 import { TextareaModule } from 'primeng/textarea';
 import { UnidadMedidaService } from "../../unidad-medida/service/unidad-medida.service";
 import { UnidadMedidaOption } from "../../unidad-medida/dto/unidad-medida.option";
@@ -22,6 +21,7 @@ import { ProductService } from "../../services/producto.service";
 import { MessageService } from "primeng/api";
 import { ToastModule } from "primeng/toast";
 import { InputNumberModule } from "primeng/inputnumber";
+import { TableModule } from "primeng/table";
 
 @Component({
     imports: [
@@ -35,24 +35,24 @@ import { InputNumberModule } from "primeng/inputnumber";
         SelectModule,
         ToggleSwitchModule,
         TextareaModule,
-        ToastModule
+        ToastModule,
+        DatePickerModule,
+        TableModule
     ],
     standalone: true,
     template: `
     <div class="card mb-0 pb-0">
-        <div class="font-bold text-xl mb-4">Add Venta Productos</div>
+        <div class="font-bold text-xl mb-4">Add Productos Presentacion</div>
         <p-breadcrumb [model]="breadcrumbItems" [home]="breadcrumbHome"></p-breadcrumb>
     </div>
     <form [formGroup]="productoPresentacionForm" (submit)="submit()" class="card">
         <div class="font-bold text-xl mb-4">Formulario Producto Presentacion</div>
 
             <p-tabs value="0">
-
                 <p-tablist>
                     <p-tab value="0">Presentacion (*)</p-tab>
-                    <p-tab value="1">Precios</p-tab>
-                    <p-tab value="2" disabled>Existencia</p-tab>
-                    <p-tab value="3" disabled>Proveedor</p-tab>
+                    <p-tab value="1">Inv. Existencia</p-tab>
+                    <p-tab value="2" disabled>Proveedor</p-tab>
                 </p-tablist>
 
                 <p-tabpanels>
@@ -60,8 +60,8 @@ import { InputNumberModule } from "primeng/inputnumber";
                         <div class="card flex flex-col gap-4 margin-lr-4">
                             {{nombreProducto}}
                             <div class="flex flex-wrap gap-6">
-                                <div class="flex flex-col grow basis-0 gap-2">
-                                    <label for="marca" class="font-semibold">Marca:</label>
+                                <div class="flex flex-col grow-m basis-0 gap-2">
+                                    <label for="marca" class="font-semibold">Marca(*):</label>
                                     <p-select
                                     formControlName="marcaId"
                                     [options]="marcaOptions"
@@ -71,7 +71,7 @@ import { InputNumberModule } from "primeng/inputnumber";
                                     placeholder="Seleccione Marca" />
                                 </div>
                                 <div class="flex flex-col grow basis-0 gap-2">
-                                    <label for="base" class="font-semibold">Producto Base</label>
+                                    <label for="base" class="font-semibold">Producto Base(*):</label>
                                     <p-select
                                     formControlName="productoId"
                                     [options]="productoBaseOption"
@@ -81,82 +81,139 @@ import { InputNumberModule } from "primeng/inputnumber";
                                     placeholder="Seleccionar Producto Base" />
                                 </div>
                             </div>
-                        <div class="flex flex-wrap gap-6">
-                            <!-- <div class="flex flex-col grow basis-0 gap-2">
-                                <label for="base" class="font-semibold">Codigo:</label>
-                                <input pInputText id="base" type="text" fluid  />
-                            </div> -->
-                            <div class="flex flex-col grow basis-0 gap-2">
-                                <label for="codigo" class="font-semibold">Presentacion:</label>
-                                <input pInputText id="codigo" formControlName="nombre" type="text" />
+                            <div class="flex flex-wrap gap-6">
+                                <div class="flex flex-col grow basis-0 gap-2">
+                                    <label for="codigo" class="font-semibold">Presentacion(*):</label>
+                                    <input pInputText id="codigo" formControlName="nombre" type="text" />
+                                </div>
                             </div>
-                        </div>
-                        <div class="flex flex-wrap gap-6">
-                            <div class="flex flex-col grow basis-0 gap-2">
-                                <label for="unidad" class="font-semibold">Unidad Medida:</label>
-                                <!-- <input pInputText id="unidad" type="text" /> -->
-                                <p-select
-                                    formControlName="unidadMedidaId"
-                                    [options]="unidadMedidaOption"
-                                    optionLabel="nombre"
-                                    placeholder="Seleccione Unidad Medida" />
-                            </div>
-                            <div class="flex flex-col gap-2 flex-cc">
-                                <label for="categoria" class="font-semibold">Es unidad Minima:</label>
-                                <!-- <input pInputText id="categoria" type="text" /> -->
-                                <p-toggleswitch formControlName="esUnidadBase" />
-                            </div>
-                            <div class="flex flex-col basis-0 gap-2 ">
-                                <label for="factor_conver" class="font-semibold">Factor de conversion:</label>
-                                <!-- <input pInputText id="factor_conver" formControlName="factorConversion" type="text" /> -->
-                                <p-inputnumber formControlName="factorConversion" inputId="factor_conver" />
-                            </div>
-                        </div>
+                            <div class="flex flex-wrap gap-6">
+                                <div class="flex flex-col grow-m basis-0 gap-2">
+                                    <label for="unidad" class="font-semibold">Unidad Medida de venta(*):</label>
+                                    <p-select
+                                        formControlName="unidadMedidaId"
+                                        [options]="unidadMedidaOption"
+                                        optionLabel="nombre"
+                                        placeholder="Seleccione Unidad Medida" />
+                                </div>
+                                <div class="flex flex-col gap-2 flex-cc">
+                                    <label for="categoria" class="font-semibold">Es unidad Minima:</label>
+                                    <p-toggleswitch formControlName="esUnidadMinima" />
+                                </div>
+                                <div class="flex flex-col basis-0 gap-2 ">
+                                    <label for="factor_conver" class="font-semibold">Factor de conversion:</label>
+                                    <p-inputnumber formControlName="factorConversion" inputId="factor_conver" />
+                                </div>
 
+                            </div>
+                            <div class="flex flex-wrap gap-6">
+                                <div class="flex flex-col grow-s gap-2">
+                                    <label for="precio_un" class="font-semibold">Precio Unitario(*):</label>
+                                    <p-inputnumber formControlName="precioUnitario" mode="decimal" [minFractionDigits]="2" inputId="precio_un" />
+                                </div>
+
+                                <div class="flex flex-col grow-s gap-2">
+                                    <label for="precio_ve" class="font-semibold">Precio Venta(*):</label>
+                                    <p-inputnumber formControlName="precioVenta" mode="decimal" [minFractionDigits]="2" inputId="precio_ve" />
+                                </div>
+                                <div class="flex flex-col grow gap-2">
+                                    <label for="cant_existencia" class="font-semibold">Existencia Disponible:</label>
+                                    <p-inputnumber mode="decimal" formControlName="cantidadDisponibleStock"
+                                        inputId="cant_existencia" (onInput)="onCambioExistenciaDisponibleStock($event.value)" />
+                                </div>
+                            </div>
                             <div class="flex flex-col gap-2">
-                                <label for="concepto" class="font-semibold">Concepto:</label>
-                                <!-- <input pInputText id="concepto" type="text" /> -->
+                                <label for="concepto" class="font-semibold">Principios Activos:</label>
                                 <textarea rows="4" cols="30" formControlName="concepto" pTextarea></textarea>
                             </div>
 
                         </div>
                     </p-tabpanel>
                     <p-tabpanel value="1">
-                        <div class="card flex flex-col gap-4 margin-lr-4">
-                            <div class="flex flex-col gap-2">
-                                <label for="precio_c" class="font-semibold">Precio Referencia (compra):</label>
-                                <!-- <input pInputText id="precio_c" formControlName="precioRef" type="text" /> -->
-                                <p-inputnumber formControlName="precioRef" mode="decimal" [minFractionDigits]="2" inputId="precio_c" />
+                        <div formGroupName="movimientoInventario" class="card flex flex-col gap-4 margin-lr-4">
+                            <div class="flex flex-wrap gap-6">
+                                <div class="flex flex-col grow-s gap-2">
+                                    <label for="stock_minimo" class="font-semibold">Stock minimo:</label>
+                                    <p-inputnumber inputId="stock_minimo" (onInput)="onCambioCantidadMinimoStock($event.value)"/>
+
+                                </div>
+                                <div class="flex flex-col grow-s gap-2">
+                                    <label for="dia_venc" class="font-semibold">Alarma dia antes Vencimiento:</label>
+                                    <p-inputnumber inputId="dia_venc" (onInput)="onCambioDiasAntesExpiracion($event.value)"/>
+                                </div>
+                                <div class="flex flex-col grow-s gap-2">
+                                    <label for="cantidad_exist" class="font-semibold">Existencia Disponible:</label>
+                                    <p-inputnumber formControlName="cantidadDisponibleStock"
+                                        inputId="cantidad_exist" (onInput)="onCambioExistenciaDisponibleStock($event.value)"/>
+                                </div>
                             </div>
-                            <div class="flex flex-col gap-2">
-                                <label for="precio_un" class="font-semibold">Precio Unitario:</label>
-                                <!-- <input pInputText id="precio_un" formControlName="precioVenta" type="text" fluid  /> -->
-                                <p-inputnumber formControlName="precioVenta" mode="decimal" [minFractionDigits]="2" inputId="precio_un" />
+                            <div class="flex flex-wrap gap-6">
+                                <div class="flex flex-col grow-s gap-2">
+                                    <label for="lote" class="font-semibold">Lote:</label>
+                                    <input pInputText id="lote" formControlName="lote" type="text" />
+                                </div>
+                                <div class="flex flex-col grow-s gap-2">
+                                    <label for="precio_un" class="font-semibold">Fecha Vencimiento:</label>
+                                    <p-datepicker formControlName="fechaExpiracion" />
+                                </div>
+                                <div class="flex flex-col grow-s gap-2">
+                                    <label for="cantidad" class="font-semibold">Cantidad:</label>
+                                    <input pInputText id="cantidad" formControlName="cantidadStockBase" type="text" />
+                                </div>
+                                <div class="flex flex-col grow-s gap-2 flex-re">
+                                    <p-button label="+ add" type="button" (onClick)="addDetalleMovimiento()"/>
+                                </div>
                             </div>
-                            <div class="flex flex-col gap-2">
-                                <label for="precio_m" class="font-semibold">Precio Mayor:</label>
-                                <!-- <input pInputText id="precio_m" formControlName="precioXMayor" type="text" /> -->
-                                <p-inputnumber formControlName="precioXMayor" mode="decimal" [minFractionDigits]="2" inputId="precio_m" />
-                            </div>
+                            <p-table
+                                #dt
+                                [value]="detalleMovimiento.controls"
+                                [tableStyle]="{ 'min-width': '50rem' }"
+                                [rowHover]="true"
+                                dataKey="id"
+                                [showCurrentPageReport]="true"
+                                >
+                                <ng-template #header>
+                                    <tr>
+                                        <th style="min-width: 2rem; text-align: center;">#</th>
+                                        <th style="min-width:8rem">
+                                            Lote
+                                        </th>
+                                        <th style="min-width:8rem">
+                                            Fecha Vencimiento
+                                        </th>
+                                        <th style="min-width:5rem">
+                                            Cantidad
+                                        </th>
+                                        <th style="min-width: 8rem"></th>
+                                    </tr>
+                                </ng-template>
+                                <ng-template #body let-stock let-editing="editing" let-index="rowIndex">
+                                    <tr
+                                        [formGroup]="stock"
+                                    >
+                                        <td style="min-width: 2rem; text-align: center;">{{ index + 1 }}</td>
+                                        <td style="min-width: 8rem">
+                                            {{ stock.value.lote }}
+                                        </td>
+                                        <td
+                                            style="min-width: 3rem">
+                                            {{ stock.value.fechaExpiracion }}
+                                        </td>
+                                        <td
+                                            style="min-width: 3rem">
+                                            {{ stock.value.cantidadStockBase }}
+                                        </td>
+                                        <td style="min-width: 4rem;">
+                                            <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" (click)="removeDetalleStock(index)" />
+                                        </td>
+                                    </tr>
+                                </ng-template>
+
+                            </p-table>
+
                         </div>
                     </p-tabpanel>
                     <p-tabpanel value="2">
-                        <div class="card flex flex-col gap-4 margin-lr-4">
-                            <div class="flex flex-col gap-2">
-                                <label for="lote" class="font-semibold">Lote nro:</label>
-                                <input pInputText id="lote" type="text" />
-                            </div>
-                            <div class="flex flex-col gap-2">
-                                <label for="precio_un" class="font-semibold">Fecha Caducidad:</label>
-                                <input pInputText id="precio_un" type="text" fluid  />
-                            </div>
-                            <div class="flex flex-col gap-2">
-                                <label for="cantidad" class="font-semibold">Cantidad:</label>
-                                <input pInputText id="cantidad" type="text" />
-                            </div>
-                        </div>
-                    </p-tabpanel>
-                    <p-tabpanel value="3">
                         <div class="card flex flex-col gap-4 margin-lr-4">
                             <div class="flex flex-col gap-2">
                                 <label for="lote" class="font-semibold">Proveedor: </label>
@@ -198,6 +255,9 @@ import { InputNumberModule } from "primeng/inputnumber";
         .flex-rc {
             justify-content: center;
         }
+        .flex-re {
+            justify-content: end;
+        }
         .text-red {
             color: red;
             display: block;
@@ -211,12 +271,6 @@ import { InputNumberModule } from "primeng/inputnumber";
         .margin-lr-4 {
             margin: .5rem 4rem;
         }
-        @media (max-width: 670px) {
-            .margin-lr-4 {
-                margin: 0;
-                padding: 0.3rem;
-            }
-        }
         .n-border {
             border: none;
         }
@@ -225,6 +279,31 @@ import { InputNumberModule } from "primeng/inputnumber";
         }
         .tabs-center {
             justify-content: space-evenly
+        }
+        .grow-xs {
+            flex-grow: 0.1;
+        }
+        .grow-s {
+            flex-grow: 0.33;
+        }
+        .grow-m {
+            flex-grow: 0.5;
+        }
+
+        @media (max-width: 670px) {
+            .margin-lr-4 {
+                margin: 0;
+                padding: 0.3rem;
+            }
+            .grow-xs {
+                flex-grow: 1;
+            }
+            .grow-s {
+                flex-grow: 1;
+            }
+            .grow-m {
+                flex-grow: 1;
+            }
         }
     `,
     providers: [MarcaService, ProductoBaseService, ProductService, UnidadMedidaService, MessageService]
@@ -263,20 +342,7 @@ export class AddPresentacionPage implements OnInit {
     }
 
     submit() {
-        console.log('submit', this.productoPresentacionForm.value);
-        /*
-            productoId: number;
-            nombre: string;
-            concepto: string;
-            descripcion: string;
-            unidadMedidaId: number;
-            esUnidadBase: boolean;
-            factorConversion: number;
-            precioRef: number;
-            precioVenta: number;
-            precioXMayor: number;
-            marcaId: number;
-        */
+        console.log('submit', this.productoPresentacionForm);
 
         if (!this.productoPresentacionForm.invalid) {
             console.log('Formulario Valido');
@@ -289,6 +355,7 @@ export class AddPresentacionPage implements OnInit {
             //this.sanatizarProductoPresentacionForm();
 
             console.log(this.productoPresentacionForm.value);
+            console.log(JSON.stringify(this.productoPresentacionForm.value));
             // this.productoPresentacionService.savePresentacion(this.productoPresentacionForm.value)
             //     .subscribe({
             //         next(value) {
@@ -314,6 +381,22 @@ export class AddPresentacionPage implements OnInit {
 
     }
 
+    onCambioExistenciaDisponibleStock(value: any) {
+        console.log(' changeCantidaDisponible: ', value);
+        this.productoPresentacionForm.get('cantidadDisponibleStock')?.setValue(value);
+        this.movimientoInventario.get('cantidadDisponibleStock')?.setValue(value);
+    }
+
+    onCambioCantidadMinimoStock(value: any) {
+        console.log(' changeCantidaDisponible: ', value);
+        this.productoPresentacionForm.get('cantidadMinimoStock')?.setValue(value);
+    }
+
+    onCambioDiasAntesExpiracion(value: any) {
+        console.log(' changeCantidaDisponible: ', value);
+        this.productoPresentacionForm.get('diasAntesExpiracion')?.setValue(value);
+    }
+
     private sanatizarProductoPresentacionForm() {
         const productoBase = this.productoPresentacionForm.get('productoId')?.value;
         const unidadMedida = this.productoPresentacionForm.get('unidadMedidaId')?.value;
@@ -322,7 +405,6 @@ export class AddPresentacionPage implements OnInit {
         this.productoPresentacionForm.get('productoId')?.setValue(productoBase.id);
         this.productoPresentacionForm.get('unidadMedidaId')?.setValue(unidadMedida.id);
         this.productoPresentacionForm.get('marcaId')?.setValue(marca.id);
-
     }
 
     private buildFormAndInitValues() {
@@ -337,18 +419,71 @@ export class AddPresentacionPage implements OnInit {
             concepto: [''],
             descripcion: [''],
             unidadMedidaId: [null, Validators.required],
-            esUnidadBase: [false], // analizar esUnidadMinima
+            esUnidadMinima: [true], // analizar esUnidadMinima
             factorConversion: [null],
-            precioRef: [0, [Validators.required, Validators.min(1)]],
+            precioUnitario: [0, [Validators.required, Validators.min(0)]],
             precioVenta: [0, [Validators.required, Validators.min(1)]],
-            precioXMayor: [0, [Validators.required, Validators.min(1)]],
             marcaId: [0, [Validators.required]],
+            cantidadDisponibleStock: [null],
+            cantidadMinimoStock: [1],
+            diasAntesExpiracion: [null],
+            movimientoInventario: this.formBuilder.group({
+                // campo de backup Producto presentacion (se omiten en el backend)
+                cantidadDisponibleStock: [null],
+
+
+                tipoMovimientoId: [1], // llevar a constante
+                motivo: ['Registro de producto con existencia'], // llevar a constante
+                productoId: [null],
+                presentacionId: [null],
+                ubicacionStockId: [null],
+                // campo para add detalle
+                lote: [''],
+                fechaExpiracion: [null],
+                cantidadStockBase: [0],
+                registroSanitario: [null],
+
+                detalleMovimiento: this.formBuilder.array([])
+            })
         });
 
         // change detection para cambios en Forms
         this.productoPresentacionForm.valueChanges
             .pipe(takeUntilDestroyed())
             .subscribe(() => this.cdr.markForCheck());
+    }
+
+    addDetalleMovimiento() {
+        const lote = this.movimientoInventario.get('lote')?.value;
+        const fechaExpiracion = this.movimientoInventario.get('fechaExpiracion')?.value;
+
+        const cantidadStockBase = this.movimientoInventario.get('cantidadStockBase')?.value;
+        console.log('values: lote: ', lote);
+        console.log('values: fechaExpiracion: ', fechaExpiracion);
+        console.log('values: cantidadStockBase: ', cantidadStockBase);
+
+        const newDetalle = this.crearDetalleMovimiento(lote, fechaExpiracion, cantidadStockBase);
+        this.detalleMovimiento.push(newDetalle);
+    }
+
+    removeDetalleStock(index: number) {
+        this.detalleMovimiento.removeAt(index);
+    }
+
+    get movimientoInventario(): FormGroup {
+        return this.productoPresentacionForm.get('movimientoInventario') as FormGroup;
+    }
+
+    get detalleMovimiento(): FormArray {
+        return this.movimientoInventario.get('detalleMovimiento') as FormArray;
+    }
+
+    private crearDetalleMovimiento(lote: string, fechaExpiracion: Date, cantidadStock: number): FormGroup {
+        return this.formBuilder.group({
+            lote: [lote || '', Validators.required],
+            fechaExpiracion: [fechaExpiracion || null, [Validators.required, Validators.min(1)]],
+            cantidadStockBase: [cantidadStock || 0],
+        });
     }
 
     private cargarDatosComboBoxs() {

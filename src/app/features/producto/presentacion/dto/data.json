@@ -1,0 +1,162 @@
+{
+    "presentacion": [
+        {
+            "productoId": 17,
+            "nombre": "PRODUCTO WEI",
+            "concepto": "no tiene",
+            "descripcion": "",
+            "unidadMedidaId": 5,
+            "esUnidadMinima": true,
+            "factorConversion": null,
+            "precioUnitario": 3,
+            "precioVenta": 4,
+            "marcaId": 134,
+            "cantidadDisponibleStock": 40,
+            "cantidadMinimoStock": 1,
+            "diasAntesExpiracion": 50,
+            "movimientoInventario": {
+                "tipoMovimientoId": 1,
+                "motivo": "",
+                "productoId": "",
+                "presentacionId": "",
+                "ubicacionStockId": "",
+                "detalleMovimiento": [
+                    {
+                        "lote": "LOTE-00001",
+                        "fechaExpiracion": "2027-05-01T04:00:00.000Z",
+                        "cantidadStock": "20",
+                        "cantidadStockBase": "20",
+                        "registroSanitario": ""
+                    },
+                    {
+                        "lote": "LOTE-00011",
+                        "fechaExpiracion": "2027-05-28T04:00:00.000Z",
+                        "cantidadStock": "20",
+                        "cantidadStockBase": "20",
+                        "registroSanitario": ""
+                    }
+                ]
+            }
+        },
+        {
+            "productoId": 21,
+            "nombre": "Resfrianet DADS",
+            "concepto": "cualquier cosa",
+            "descripcion": "",
+            "unidadMedidaId": 9,
+            "esUnidadMinima": true,
+            "factorConversion": null,
+            "precioUnitario": 4,
+            "precioVenta": 5,
+            "marcaId": 130,
+            "cantidadDisponibleStock": 60,
+            "cantidadMinimoStock": 15,
+            "diasAntesExpiracion": 40,
+            "movimientoInventario": {
+                "cantidadDisponibleStock": 60,
+                "tipoMovimientoId": 1,
+                "motivo": "Registro de producto con existencia",
+                "productoId": null,
+                "presentacionId": null,
+                "ubicacionStockId": null,
+                "lote": "LOTE-0001",
+                "fechaExpiracion": "2028-05-02T04:00:00.000Z",
+                "cantidadStockBase": "60",
+                "registroSanitario": null,
+                "detalleMovimiento": [
+                    {
+                        "lote": "LOTE-0001",
+                        "fechaExpiracion": "2028-05-02T04:00:00.000Z",
+                        "cantidadStockBase": "60"
+                    }
+                ]
+            }
+        },
+        {
+            "productoId": {
+                "id": 17,
+                "nombre": "Marca prueba"
+            },
+            "nombre": "PRODUCTO WEI",
+            "concepto": "no tiene",
+            "descripcion": "",
+            "unidadMedidaId": {
+                "id": 5,
+                "nombre": "TBL- TABLETA",
+                "esUnidadMinima": true
+            },
+            "esUnidadMinima": false,
+            "factorConversion": null,
+            "precioUnitario": 3,
+            "precioVenta": 4,
+            "marcaId": {
+                "id": 134,
+                "nombre": "otherMarca"
+            },
+            "cantidadDisponible": 40,
+            "stockMinimo": 1,
+            "diasAntesVencimiento": null,
+            "inventario": {
+                "stockMinimo": "10",
+                "diasAntesVencimiento": "50",
+                "cantidadTotal": 40,
+                "lote": "LOTE-00011",
+                "detalleStocks": [
+                    {
+                        "lote": "LOTE-00001",
+                        "fechaVencimiento": "2027-05-01T04:00:00.000Z",
+                        "cantidad": "20"
+                    },
+                    {
+                        "lote": "LOTE-00011",
+                        "fechaVencimiento": "2027-05-28T04:00:00.000Z",
+                        "cantidad": "20"
+                    }
+                ]
+            }
+        },
+        {
+            "productoId": {
+                "id": 17,
+                "nombre": "Marca prueba"
+            },
+            "nombre": "PRODUCTO WEI",
+            "concepto": "no tiene",
+            "descripcion": "",
+            "unidadMedidaId": {
+                "id": 5,
+                "nombre": "TBL- TABLETA",
+                "esUnidadMinima": true
+            },
+            "esUnidadMinima": false,
+            "factorConversion": null,
+            "precioUnitario": 3,
+            "precioVenta": 4,
+            "marcaId": {
+                "id": 134,
+                "nombre": "otherMarca"
+            },
+            "cantidadDisponible": 40,
+            "stockMinimo": 1,
+            "diasAntesVencimiento": null,
+            "inventario": {
+                "stockMinimo": "10",
+                "diasAntesVencimiento": "50",
+                "cantidadTotal": 40,
+                "lote": "LOTE-00011",
+                "detalleStocks": [
+                    {
+                        "lote": "LOTE-00001",
+                        "fechaVencimiento": "2027-05-01T04:00:00.000Z",
+                        "cantidad": "20"
+                    },
+                    {
+                        "lote": "LOTE-00011",
+                        "fechaVencimiento": "2027-05-28T04:00:00.000Z",
+                        "cantidad": "20"
+                    }
+                ]
+            }
+        }
+    ]
+}

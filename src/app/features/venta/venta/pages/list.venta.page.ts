@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal, ViewChild } from "@angular/core";
+import { Component, inject, OnInit, signal } from "@angular/core";
 import { BreadcrumbModule } from "primeng/breadcrumb";
 import { VentaService } from "../../services/venta.service";
 import { Table, TableModule } from "primeng/table";

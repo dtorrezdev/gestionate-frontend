@@ -224,7 +224,7 @@ import { VentaService } from '../../services/venta.service';
         <p-table
             #dt2
             [value]="detallePagos.controls"
-            [tableStyle]="{ 'min-width': '70rem' }"
+            [tableStyle]="{ 'min-width': '30rem' }"
             [rowHover]="true"
             dataKey="id"
             [showCurrentPageReport]="true"
@@ -513,7 +513,7 @@ export class AddVentaPage implements OnInit {
         this.productService.getAllProdutos()
             .subscribe(resp => {
                 this.productoPresentacionOptions.push(
-                    ...resp.content
+                    ...resp.data.content
                 );
             });
     }
