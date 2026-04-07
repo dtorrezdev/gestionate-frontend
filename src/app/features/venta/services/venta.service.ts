@@ -20,7 +20,7 @@ export interface Venta {
 export class VentaService {
 
     private readonly _API: string = 'http://localhost:8080/modulobase/api/v1/ventas';
-    private readonly _TOKEN: string = 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJyb2wiOiJTdXBlciBBZG1pbmlzdHJhZG9yIiwic3ViIjoiYWRtaW4iLCJpYXQiOjE3NzUyNDk4MzQsImV4cCI6MTc3NTI1NzAzNH0.GwaVI5p9cS9kljT8j8S1xXvm-M6VZKoJ_bAvN6nIJrs';
+    private readonly _TOKEN: string = 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJyb2wiOiJTdXBlciBBZG1pbmlzdHJhZG9yIiwic3ViIjoiYWRtaW4iLCJpYXQiOjE3NzU1MDczNzgsImV4cCI6MTc3NTUxNDU3OH0.YPj8GZftAB5OF6tEtyU-zRLkE-2mvWMYPYRV13cHtAIeyJhbGciOiJIUzI1NiJ9.eyJyb2wiOiJTdXBlciBBZG1pbmlzdHJhZG9yIiwic3ViIjoiYWRtaW4iLCJpYXQiOjE3NzU1MDczNzgsImV4cCI6MTc3NTUxNDU3OH0.YPj8GZftAB5OF6tEtyU-zRLkE-2mvWMYPYRV13cHtAI';
 
     constructor(private http: HttpClient) { }
 

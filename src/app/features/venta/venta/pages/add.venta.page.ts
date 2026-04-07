@@ -449,6 +449,7 @@ export class AddVentaPage implements OnInit {
             this.ventaForm.get('hasPay')?.disable();
         }
     }
+
     removeDetallePago(index: number) {
         this.detallePagos.removeAt(index);
     }

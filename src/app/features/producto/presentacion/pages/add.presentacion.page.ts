@@ -13,7 +13,7 @@ import { ProductoBaseService } from "../../base/service/producto.base.service";
 import { ProductoBaseOption } from "../../base/dto/producto.base.option";
 import { SelectModule } from "primeng/select";
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
-import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from "@angular/forms";
+import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from "@angular/forms";
 import { TextareaModule } from 'primeng/textarea';
 import { UnidadMedidaService } from "../../unidad-medida/service/unidad-medida.service";
 import { UnidadMedidaOption } from "../../unidad-medida/dto/unidad-medida.option";
@@ -69,6 +69,11 @@ import { TableModule } from "primeng/table";
                                     filter="true"
                                     size="large"
                                     placeholder="Seleccione Marca" />
+                                    @if( productoPresentacionForm.get('marcaId')?.invalid &&
+                                        (productoPresentacionForm.get('marcaId')?.touched ||
+                                            productoPresentacionForm.get('marcaId')?.dirty)) {
+                                        <small class="text-red">Marca no debe ser vacio.</small>
+                                    }
                                 </div>
                                 <div class="flex flex-col grow basis-0 gap-2">
                                     <label for="base" class="font-semibold">Producto Base(*):</label>
@@ -79,12 +84,22 @@ import { TableModule } from "primeng/table";
                                     filter="true"
                                     size="large"
                                     placeholder="Seleccionar Producto Base" />
+                                    @if( productoPresentacionForm.get('productoId')?.invalid &&
+                                        (productoPresentacionForm.get('productoId')?.touched ||
+                                            productoPresentacionForm.get('productoId')?.dirty)) {
+                                        <small class="text-red">Producto no debe ser vacio.</small>
+                                    }
                                 </div>
                             </div>
                             <div class="flex flex-wrap gap-6">
                                 <div class="flex flex-col grow basis-0 gap-2">
                                     <label for="codigo" class="font-semibold">Presentacion(*):</label>
                                     <input pInputText id="codigo" formControlName="nombre" type="text" />
+                                    @if( productoPresentacionForm.get('nombre')?.invalid &&
+                                        (productoPresentacionForm.get('nombre')?.touched ||
+                                            productoPresentacionForm.get('nombre')?.dirty)) {
+                                        <small class="text-red">Presentacion no debe ser vacio.</small>
+                                    }
                                 </div>
                             </div>
                             <div class="flex flex-wrap gap-6">
@@ -95,6 +110,11 @@ import { TableModule } from "primeng/table";
                                         [options]="unidadMedidaOption"
                                         optionLabel="nombre"
                                         placeholder="Seleccione Unidad Medida" />
+                                    @if( productoPresentacionForm.get('unidadMedidaId')?.invalid &&
+                                        (productoPresentacionForm.get('unidadMedidaId')?.touched ||
+                                            productoPresentacionForm.get('unidadMedidaId')?.dirty)) {
+                                        <small class="text-red">Unidad Medida no debe ser vacio.</small>
+                                    }
                                 </div>
                                 <div class="flex flex-col gap-2 flex-cc">
                                     <label for="categoria" class="font-semibold">Es unidad Minima:</label>
@@ -108,13 +128,18 @@ import { TableModule } from "primeng/table";
                             </div>
                             <div class="flex flex-wrap gap-6">
                                 <div class="flex flex-col grow-s gap-2">
-                                    <label for="precio_un" class="font-semibold">Precio Unitario(*):</label>
+                                    <label for="precio_un" class="font-semibold">Precio Unitario:</label>
                                     <p-inputnumber formControlName="precioUnitario" mode="decimal" [minFractionDigits]="2" inputId="precio_un" />
                                 </div>
 
                                 <div class="flex flex-col grow-s gap-2">
                                     <label for="precio_ve" class="font-semibold">Precio Venta(*):</label>
                                     <p-inputnumber formControlName="precioVenta" mode="decimal" [minFractionDigits]="2" inputId="precio_ve" />
+                                    @if( productoPresentacionForm.get('precioVenta')?.invalid &&
+                                        (productoPresentacionForm.get('precioVenta')?.touched ||
+                                            productoPresentacionForm.get('precioVenta')?.dirty)) {
+                                        <small class="text-red">Precio Venta no debe ser cero o vacio.</small>
+                                    }
                                 </div>
                                 <div class="flex flex-col grow gap-2">
                                     <label for="cant_existencia" class="font-semibold">Existencia Disponible:</label>
@@ -161,7 +186,9 @@ import { TableModule } from "primeng/table";
                                     <input pInputText id="cantidad" formControlName="cantidadStockBase" type="text" />
                                 </div>
                                 <div class="flex flex-col grow-s gap-2 flex-re">
-                                    <p-button label="+ add" type="button" (onClick)="addDetalleMovimiento()"/>
+                                    <p-button label="+ add" type="button"
+                                        (onClick)="addDetalleMovimiento()"
+                                        [disabled]="isDisableBtnAddDetalleMovimiento()"/>
                                 </div>
                             </div>
                             <p-table
@@ -230,7 +257,7 @@ import { TableModule } from "primeng/table";
 
         <div class="card flex flex-col gap-4 margin-lr-4">
             <div class="flex flex-wrap gap-2">
-                <p-button label="Guardar" type="submit"/>
+                <p-button label="Guardar" [disabled]="productoPresentacionForm.invalid" type="submit"/>
                 <p-button label="Cancelar" severity="secondary" [routerLink]="'/producto/presentacion'" />
             </div>
         </div>
@@ -352,7 +379,7 @@ export class AddPresentacionPage implements OnInit {
                 detail: 'Producto Formulario es valido',
                 life: 3000
             });
-            //this.sanatizarProductoPresentacionForm();
+            this.sanatizarProductoPresentacionForm();
 
             console.log(this.productoPresentacionForm.value);
             console.log(JSON.stringify(this.productoPresentacionForm.value));
@@ -405,6 +432,37 @@ export class AddPresentacionPage implements OnInit {
         this.productoPresentacionForm.get('productoId')?.setValue(productoBase.id);
         this.productoPresentacionForm.get('unidadMedidaId')?.setValue(unidadMedida.id);
         this.productoPresentacionForm.get('marcaId')?.setValue(marca.id);
+
+        // agregando valor por defecto
+        if (!this.productoPresentacionForm.get('diasAntesExpiracion')?.value) {
+            this.productoPresentacionForm.get('diasAntesExpiracion')?.setValue(1);
+        }
+        if (!this.productoPresentacionForm.get('cantidadDisponibleStock')?.value) {
+            this.productoPresentacionForm.get('cantidadDisponibleStock')?.setValue(0);
+        }
+        if (!this.productoPresentacionForm.get('cantidadMinimoStock')?.value) {
+            this.productoPresentacionForm.get('cantidadMinimoStock')?.setValue(1);
+        }
+        if (!this.productoPresentacionForm.get('precioUnitario')?.value) {
+            this.productoPresentacionForm.get('precioUnitario')?.setValue(1);
+        }
+
+        this.agregarStockLotePorDefaultSiRequiere();
+    }
+
+    private agregarStockLotePorDefaultSiRequiere() {
+
+        const cantidadDisponibleStock = this.productoPresentacionForm.get('cantidadDisponibleStock')?.value;
+
+        if (cantidadDisponibleStock &&
+            cantidadDisponibleStock > 0 &&
+            this.detalleMovimiento.length == 0) {
+            console.log(" Se va cargar un detalle Lote Stock Por Default");
+            const randomNumber = Math.round(Math.random() * 10000);
+            console.log(" Se va cargar un detalle Lote Stock Por Default LOTE-" + randomNumber);
+            const newDetalle = this.crearDetalleMovimiento("LOTE-" + randomNumber, null, cantidadDisponibleStock);
+            this.detalleMovimiento.push(newDetalle);
+        }
     }
 
     private buildFormAndInitValues() {
@@ -415,15 +473,15 @@ export class AddPresentacionPage implements OnInit {
         this.productoPresentacionForm = this.formBuilder.group({
 
             productoId: [null, Validators.required],
-            nombre: ['', Validators.required],
-            concepto: [''],
-            descripcion: [''],
+            nombre: ['', [Validators.required, Validators.maxLength(60)]],
+            concepto: ['', Validators.maxLength(255)],
+            descripcion: ['', Validators.maxLength(255)],
             unidadMedidaId: [null, Validators.required],
             esUnidadMinima: [true], // analizar esUnidadMinima
-            factorConversion: [null],
-            precioUnitario: [0, [Validators.required, Validators.min(0)]],
+            factorConversion: [1],
+            precioUnitario: [null],
             precioVenta: [0, [Validators.required, Validators.min(1)]],
-            marcaId: [0, [Validators.required]],
+            marcaId: [null, [Validators.required]],
             cantidadDisponibleStock: [null],
             cantidadMinimoStock: [1],
             diasAntesExpiracion: [null],
@@ -431,9 +489,8 @@ export class AddPresentacionPage implements OnInit {
                 // campo de backup Producto presentacion (se omiten en el backend)
                 cantidadDisponibleStock: [null],
 
-
                 tipoMovimientoId: [1], // llevar a constante
-                motivo: ['Registro de producto con existencia'], // llevar a constante
+                motivo: ['REGISTRO PRODUCTO'], // llevar a constante
                 productoId: [null],
                 presentacionId: [null],
                 ubicacionStockId: [null],
@@ -443,7 +500,8 @@ export class AddPresentacionPage implements OnInit {
                 cantidadStockBase: [0],
                 registroSanitario: [null],
 
-                detalleMovimiento: this.formBuilder.array([])
+                detalleMovimiento: this.formBuilder.array([]),
+                totalCantidadDetalle: [0]
             })
         });
 
@@ -462,8 +520,39 @@ export class AddPresentacionPage implements OnInit {
         console.log('values: fechaExpiracion: ', fechaExpiracion);
         console.log('values: cantidadStockBase: ', cantidadStockBase);
 
-        const newDetalle = this.crearDetalleMovimiento(lote, fechaExpiracion, cantidadStockBase);
-        this.detalleMovimiento.push(newDetalle);
+        if (this.validarDetalleMovimiento(lote, fechaExpiracion, cantidadStockBase)) {
+            const newDetalle = this.crearDetalleMovimiento(lote, fechaExpiracion, cantidadStockBase);
+            this.detalleMovimiento.push(newDetalle);
+        }
+    }
+
+    isDisableBtnAddDetalleMovimiento() {
+        return !this.productoPresentacionForm.get('cantidadDisponibleStock')?.value ||
+            this.productoPresentacionForm.get('cantidadDisponibleStock')?.value === 0;
+    }
+
+    private validarDetalleMovimiento(lote: string, fechaExpiracion: Date, cantidad: number): boolean {
+        console.log('lote ' + lote, typeof lote);
+        console.log('fechaExpiracion ' + fechaExpiracion, typeof fechaExpiracion);
+        console.log('cantidad ' + cantidad, typeof cantidad);
+        if (!lote || !fechaExpiracion || (!cantidad || cantidad == 0)) { // si es vacio | null | undifiend
+            return false;
+        }
+
+        const findIndexLote = this.detalleMovimiento.controls.findIndex(det => det.value.lote === lote);
+        console.log(" existe lote en index " + findIndexLote);
+
+        if (findIndexLote > 0) {
+            this.messageService.add({
+                severity: 'warn',
+                summary: 'Mensaje',
+                detail: 'Nro Lote ya se encuentra registrado.',
+                life: 3000
+            });
+            return false;
+        }
+
+        return true;
     }
 
     removeDetalleStock(index: number) {
@@ -478,11 +567,22 @@ export class AddPresentacionPage implements OnInit {
         return this.movimientoInventario.get('detalleMovimiento') as FormArray;
     }
 
-    private crearDetalleMovimiento(lote: string, fechaExpiracion: Date, cantidadStock: number): FormGroup {
+    get totalCantidadDetalle(): number {
+        const totalPago = this.detalleMovimiento.controls
+            .reduce((acc, d) => acc + d.value.cantidadStockBase, 0);
+        this.productoPresentacionForm.patchValue({
+            movimientoInventario: {
+                totalCantidadDetalle: totalPago
+            }
+        });
+        return totalPago;
+    }
+
+    private crearDetalleMovimiento(lote: string, fechaExpiracion: Date | null, cantidadStock: number): FormGroup {
         return this.formBuilder.group({
             lote: [lote || '', Validators.required],
-            fechaExpiracion: [fechaExpiracion || null, [Validators.required, Validators.min(1)]],
-            cantidadStockBase: [cantidadStock || 0],
+            fechaExpiracion: [fechaExpiracion || null],
+            cantidadStockBase: [cantidadStock || 0, [Validators.required, Validators.min(1)]],
         });
     }
 
