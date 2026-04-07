@@ -6,11 +6,13 @@ export class PresentacionOuput {
     concepto: string;
     descripcion: string;
     unidadMedidaId: number;
-    hasUnidadBase: boolean;
+    esUnidadMinima: boolean;
     factorConversion: number;
-    precioRef: number;
+    precioUnitario: number;
     precioVenta: number;
-    precioXMayor: number;
+    cantidadMinimoStock: number;
+    cantidadDisponibleStock: number;
+    diasAntesExpiracion: number;
     marcaId: number;
 
     constructor(
@@ -20,31 +22,33 @@ export class PresentacionOuput {
         concepto: string,
         descripcion: string,
         unidadMedidaId: number,
-        hasUnidadBase: boolean,
+        esUnidadMinima: boolean,
         factorConversion: number,
-        precioRef: number,
+        precioUnitario: number,
         precioVenta: number,
-        precioXMayor: number,
+        cantidadMinimoStock: number,
+        cantidadDisponibleStock: number,
+        diasAntesExpiracion: number,
         marcaId: number
     ) {
-
         this.id = id;
         this.productoId = productoId;
         this.nombre = nombre;
         this.concepto = concepto;
         this.descripcion = descripcion;
         this.unidadMedidaId = unidadMedidaId;
-        this.hasUnidadBase = hasUnidadBase;
+        this.esUnidadMinima = esUnidadMinima;
         this.factorConversion = factorConversion;
-        this.precioRef = precioRef;
+        this.precioUnitario = precioUnitario;
         this.precioVenta = precioVenta;
-        this.precioXMayor = precioXMayor;
+        this.cantidadDisponibleStock = cantidadDisponibleStock;
+        this.cantidadMinimoStock = cantidadMinimoStock;
+        this.diasAntesExpiracion = diasAntesExpiracion;
         this.marcaId = marcaId;
-
     }
 
     public static getInstance(): PresentacionOuput {
-        return new PresentacionOuput(0, 0, '', '', '', 0, false, 0, 0, 0, 0, 0);
+        return new PresentacionOuput(0, 0, '', '', '', 0, false, 0, 0, 0, 0, 0, 0, 0);
     }
 
 }

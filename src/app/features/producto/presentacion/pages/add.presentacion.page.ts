@@ -1,5 +1,5 @@
 import { ChangeDetectorRef, Component, inject, OnInit } from "@angular/core";
-import { RouterModule } from "@angular/router";
+import { Router, RouterModule } from "@angular/router";
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { BreadcrumbModule } from "primeng/breadcrumb";
@@ -13,7 +13,7 @@ import { ProductoBaseService } from "../../base/service/producto.base.service";
 import { ProductoBaseOption } from "../../base/dto/producto.base.option";
 import { SelectModule } from "primeng/select";
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
-import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from "@angular/forms";
+import { FormArray, FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from "@angular/forms";
 import { TextareaModule } from 'primeng/textarea';
 import { UnidadMedidaService } from "../../unidad-medida/service/unidad-medida.service";
 import { UnidadMedidaOption } from "../../unidad-medida/dto/unidad-medida.option";
@@ -22,6 +22,11 @@ import { MessageService } from "primeng/api";
 import { ToastModule } from "primeng/toast";
 import { InputNumberModule } from "primeng/inputnumber";
 import { TableModule } from "primeng/table";
+import { UbicacionStockService } from "../../../inventario/ubicacion-stock/service/ubicacion-stock.service";
+import { UbicacionStockOption } from "../../../inventario/ubicacion-stock/dtos/ubicacion-stock.option";
+import { MovimientoService } from "../../../inventario/movimiento/service/movimiento.service";
+import { catchError, of, switchMap, tap } from "rxjs";
+import { DatePipe } from "@angular/common";
 
 @Component({
     imports: [
@@ -37,7 +42,8 @@ import { TableModule } from "primeng/table";
         TextareaModule,
         ToastModule,
         DatePickerModule,
-        TableModule
+        TableModule,
+        DatePipe
     ],
     standalone: true,
     template: `
@@ -157,16 +163,24 @@ import { TableModule } from "primeng/table";
                     <p-tabpanel value="1">
                         <div formGroupName="movimientoInventario" class="card flex flex-col gap-4 margin-lr-4">
                             <div class="flex flex-wrap gap-6">
-                                <div class="flex flex-col grow-s gap-2">
+                                <div class="flex flex-col grow-m basis-0 gap-2">
+                                    <label for="marca" class="font-semibold">Ubicacion Stock:</label>
+                                    <p-select
+                                    formControlName="ubicacionStockId"
+                                    [options]="ubicacionStockOption"
+                                    optionLabel="nombre"
+                                    placeholder="Seleccione Ubicacion" />
+                                </div>
+                                <div class="flex flex-col grow-xs gap-2">
                                     <label for="stock_minimo" class="font-semibold">Stock minimo:</label>
                                     <p-inputnumber inputId="stock_minimo" (onInput)="onCambioCantidadMinimoStock($event.value)"/>
 
                                 </div>
-                                <div class="flex flex-col grow-s gap-2">
+                                <div class="flex flex-col grow-xs gap-2">
                                     <label for="dia_venc" class="font-semibold">Alarma dia antes Vencimiento:</label>
                                     <p-inputnumber inputId="dia_venc" (onInput)="onCambioDiasAntesExpiracion($event.value)"/>
                                 </div>
-                                <div class="flex flex-col grow-s gap-2">
+                                <div class="flex flex-col grow-xs gap-2">
                                     <label for="cantidad_exist" class="font-semibold">Existencia Disponible:</label>
                                     <p-inputnumber formControlName="cantidadDisponibleStock"
                                         inputId="cantidad_exist" (onInput)="onCambioExistenciaDisponibleStock($event.value)"/>
@@ -179,16 +193,16 @@ import { TableModule } from "primeng/table";
                                 </div>
                                 <div class="flex flex-col grow-s gap-2">
                                     <label for="precio_un" class="font-semibold">Fecha Vencimiento:</label>
-                                    <p-datepicker formControlName="fechaExpiracion" />
+                                    <p-datepicker formControlName="fechaExpiracion" dateFormat="dd/mm/yy" />
                                 </div>
                                 <div class="flex flex-col grow-s gap-2">
                                     <label for="cantidad" class="font-semibold">Cantidad:</label>
-                                    <input pInputText id="cantidad" formControlName="cantidadStockBase" type="text" />
+                                    <p-inputnumber inputId="cantidad" formControlName="cantidadStockBase" />
                                 </div>
                                 <div class="flex flex-col grow-s gap-2 flex-re">
                                     <p-button label="+ add" type="button"
                                         (onClick)="addDetalleMovimiento()"
-                                        [disabled]="isDisableBtnAddDetalleMovimiento()"/>
+                                        [disabled]="!esValidoCantidadDisponibleStock()"/>
                                 </div>
                             </div>
                             <p-table
@@ -224,7 +238,7 @@ import { TableModule } from "primeng/table";
                                         </td>
                                         <td
                                             style="min-width: 3rem">
-                                            {{ stock.value.fechaExpiracion }}
+                                            {{ stock.value.fechaExpiracion | date: 'dd/MM/yyyy' }}
                                         </td>
                                         <td
                                             style="min-width: 3rem">
@@ -333,17 +347,28 @@ import { TableModule } from "primeng/table";
             }
         }
     `,
-    providers: [MarcaService, ProductoBaseService, ProductService, UnidadMedidaService, MessageService]
+    providers: [
+        MarcaService,
+        ProductoBaseService,
+        ProductService,
+        UnidadMedidaService,
+        MovimientoService,
+        MessageService,
+        UbicacionStockService
+    ]
 })
 export class AddPresentacionPage implements OnInit {
 
     private marcaService = inject(MarcaService);
     private productoBaseService = inject(ProductoBaseService);
     private productoPresentacionService = inject(ProductService);
+    private movimientoService = inject(MovimientoService);
     private unidadMedidaService = inject(UnidadMedidaService);
+    private ubicacionStockService = inject(UbicacionStockService);
     private formBuilder = inject(FormBuilder);
     private readonly cdr = inject(ChangeDetectorRef);
     private messageService = inject(MessageService);
+    private router = inject(Router);
 
     productoPresentacionForm!: FormGroup;
 
@@ -352,6 +377,8 @@ export class AddPresentacionPage implements OnInit {
     productoBaseOption!: ProductoBaseOption[];
 
     unidadMedidaOption!: UnidadMedidaOption[];
+
+    ubicacionStockOption!: UbicacionStockOption[];
 
     checked: boolean = false;
     nombreProducto = 'Refrianex Dia Sabor a Miel';
@@ -369,67 +396,118 @@ export class AddPresentacionPage implements OnInit {
     }
 
     submit() {
-        console.log('submit', this.productoPresentacionForm);
 
-        if (!this.productoPresentacionForm.invalid) {
-            console.log('Formulario Valido');
-            this.messageService.add({
-                severity: 'success',
-                summary: 'Mensaje',
-                detail: 'Producto Formulario es valido',
-                life: 3000
-            });
-            this.sanatizarProductoPresentacionForm();
+        if (this.esValidoFormulario()) {
+
+            // LimpiarForm para Enviar a Guardar()
+            this.darFormatoToFormForGuardar();
 
             console.log(this.productoPresentacionForm.value);
             console.log(JSON.stringify(this.productoPresentacionForm.value));
-            // this.productoPresentacionService.savePresentacion(this.productoPresentacionForm.value)
-            //     .subscribe({
-            //         next(value) {
-            //             console.log(value);
-            //         },
-            //         error(err) {
-            //             console.log(err);
-            //         },
-            //         complete() {
-            //             console.log('Complete action');
-            //         },
-            //     });
-
+            if (this.tieneDetalleMovimientoForm()) {
+                this.savePresentacionConMovimientoInventario();
+                console.log('tieneDetalleMovimientoForm guardar todo');
+            } else {
+                this.saveOnlyPresentacionForm();
+                console.log('tieneDetalleMovimientoForm guarda solo producto');
+            }
         } else {
             console.log('Formulario inValido');
-            this.messageService.add({
-                severity: 'warn',
-                summary: 'Mensaje',
-                detail: 'Producto Formulario es invalido',
-                life: 3000
-            });
+            this.mostrarMsg('warn', 'Producto Formulario es invalido');
         }
+    }
+
+    navigateToListPresentacion(): void {
+        setTimeout(() =>
+            this.router.navigate(['/producto/presentacion']), 3000);
+        ;
+    }
+
+    private tieneDetalleMovimientoForm(): boolean {
+        if (!this.esValidoCantidadDisponibleStock() ||
+            this.esVacioDetalleMovimiento()
+        ) {
+            return false;
+        }
+        return true;
+    }
+
+    private esValidoFormMovimiento(): boolean {
+        const esValid = this.totalCantidadDetalle == this.cantidadDisponibleStock.value;
+        if (!esValid) {
+            this.mostrarMsg('warn', 'En Inv. Existencia \n Debe ser iguales Existencia Disponible \n y total Cantidad del Detalle.');
+        }
+        return esValid;
+    }
+
+    private savePresentacionConMovimientoInventario() {
+        this.productoPresentacionService
+            .savePresentacion(this.productoPresentacionForm.value)
+            .pipe(
+                tap(resp => {
+                    this.mostrarMsg('success', `${resp.message} la Presentacion PR-${resp.data.id}`);
+                }),
+                catchError(err => {
+                    this.mostrarMsg('error', err.error?.message || 'Error al crear producto');
+                    return of(null);
+                }),
+                switchMap(resp => {
+                    if (!resp) return of(null);
+
+                    this.movimientoInventario.
+                        get("presentacionId")?.setValue(resp.data.id);
+
+                    return this.movimientoService.
+                        saveMovimiento(this.movimientoInventario.value);
+                }),
+                catchError(err => {
+                    console.error('Error en flujo:', err);
+                    this.mostrarMsg('error', err.error?.message || 'Error en movimiento');
+                    return of(null);
+                })
+            ).subscribe(resp => {
+                if (resp) {
+                    console.log('Finalizo todo bien ', resp);
+                    this.mostrarMsg('success', 'Se creo correctamente Producto con inventario.')
+
+                    this.navigateToListPresentacion();
+                }
+            });
 
     }
 
-    onCambioExistenciaDisponibleStock(value: any) {
-        console.log(' changeCantidaDisponible: ', value);
-        this.productoPresentacionForm.get('cantidadDisponibleStock')?.setValue(value);
-        this.movimientoInventario.get('cantidadDisponibleStock')?.setValue(value);
+    private saveOnlyPresentacionForm() {
+        this.productoPresentacionService.savePresentacion(this.productoPresentacionForm.value)
+            .subscribe({
+                next: (value) => {
+                    console.log(value);
+                    this.mostrarMsg('success', `${value.message} la Presentacion PR-${value.data.id}`)
+                    this.navigateToListPresentacion();
+                },
+                error: (err) => {
+                    this.mostrarMsg('error', `${err.error?.message} - fallo`)
+                    console.log(err);
+                },
+            });
+
     }
 
-    onCambioCantidadMinimoStock(value: any) {
-        console.log(' changeCantidaDisponible: ', value);
-        this.productoPresentacionForm.get('cantidadMinimoStock')?.setValue(value);
-    }
 
-    onCambioDiasAntesExpiracion(value: any) {
-        console.log(' changeCantidaDisponible: ', value);
-        this.productoPresentacionForm.get('diasAntesExpiracion')?.setValue(value);
-    }
-
-    private sanatizarProductoPresentacionForm() {
+    private darFormatoToFormForGuardar(): void {
+        console.log('darFormatoToFormForGuardar paso');
         const productoBase = this.productoPresentacionForm.get('productoId')?.value;
         const unidadMedida = this.productoPresentacionForm.get('unidadMedidaId')?.value;
         const marca = this.productoPresentacionForm.get('marcaId')?.value;
+        const ubicacionStock = this.movimientoInventario.get('ubicacionStockId')?.value;
+        console.log('ubicacionStock: ', ubicacionStock);
 
         this.productoPresentacionForm.get('productoId')?.setValue(productoBase.id);
+        this.movimientoInventario.get('productoId')?.setValue(productoBase.id);
+
+        this.movimientoInventario.get('productoId')?.setValue(productoBase.id);
+        console.log('ubicacionStockId: ', ubicacionStock?.id);
+        // si asignas undefined value in .setValue(undefined) se pierde ese atributo del FORM
+        this.movimientoInventario.get('ubicacionStockId')?.setValue(ubicacionStock ? ubicacionStock.id : null);
         this.productoPresentacionForm.get('unidadMedidaId')?.setValue(unidadMedida.id);
         this.productoPresentacionForm.get('marcaId')?.setValue(marca.id);
 
@@ -437,8 +515,8 @@ export class AddPresentacionPage implements OnInit {
         if (!this.productoPresentacionForm.get('diasAntesExpiracion')?.value) {
             this.productoPresentacionForm.get('diasAntesExpiracion')?.setValue(1);
         }
-        if (!this.productoPresentacionForm.get('cantidadDisponibleStock')?.value) {
-            this.productoPresentacionForm.get('cantidadDisponibleStock')?.setValue(0);
+        if (!this.cantidadDisponibleStock.value) {
+            this.cantidadDisponibleStock.setValue(0);
         }
         if (!this.productoPresentacionForm.get('cantidadMinimoStock')?.value) {
             this.productoPresentacionForm.get('cantidadMinimoStock')?.setValue(1);
@@ -451,17 +529,16 @@ export class AddPresentacionPage implements OnInit {
     }
 
     private agregarStockLotePorDefaultSiRequiere() {
-
-        const cantidadDisponibleStock = this.productoPresentacionForm.get('cantidadDisponibleStock')?.value;
-
-        if (cantidadDisponibleStock &&
-            cantidadDisponibleStock > 0 &&
-            this.detalleMovimiento.length == 0) {
+        console.log('agregarStockLotePorDefaultSiRequiere ');
+        if (this.esValidoCantidadDisponibleStock() &&
+            this.esVacioDetalleMovimiento()) {
             console.log(" Se va cargar un detalle Lote Stock Por Default");
             const randomNumber = Math.round(Math.random() * 10000);
             console.log(" Se va cargar un detalle Lote Stock Por Default LOTE-" + randomNumber);
-            const newDetalle = this.crearDetalleMovimiento("LOTE-" + randomNumber, null, cantidadDisponibleStock);
+            const newDetalle = this.crearDetalleMovimiento("LOTE-" + randomNumber, null, this.cantidadDisponibleStock.value);
             this.detalleMovimiento.push(newDetalle);
+            console.log('agregarStockLotePorDefaultSiRequiere agrego ', newDetalle);
+            this.movimientoInventario.get('totalCantidadDetalle')?.setValue(this.cantidadDisponibleStock.value);
         }
     }
 
@@ -469,13 +546,14 @@ export class AddPresentacionPage implements OnInit {
         this.marcaOptions = [MarcaOption.getInstance()];
         this.productoBaseOption = [ProductoBaseOption.getInstance()];
         this.unidadMedidaOption = [UnidadMedidaOption.getInstance()];
+        this.ubicacionStockOption = [UbicacionStockOption.getInstance()];
 
         this.productoPresentacionForm = this.formBuilder.group({
 
             productoId: [null, Validators.required],
             nombre: ['', [Validators.required, Validators.maxLength(60)]],
-            concepto: ['', Validators.maxLength(255)],
-            descripcion: ['', Validators.maxLength(255)],
+            concepto: [null, Validators.maxLength(255)],
+            descripcion: [null, Validators.maxLength(255)],
             unidadMedidaId: [null, Validators.required],
             esUnidadMinima: [true], // analizar esUnidadMinima
             factorConversion: [1],
@@ -497,7 +575,7 @@ export class AddPresentacionPage implements OnInit {
                 // campo para add detalle
                 lote: [''],
                 fechaExpiracion: [null],
-                cantidadStockBase: [0],
+                cantidadStockBase: [null],
                 registroSanitario: [null],
 
                 detalleMovimiento: this.formBuilder.array([]),
@@ -516,9 +594,6 @@ export class AddPresentacionPage implements OnInit {
         const fechaExpiracion = this.movimientoInventario.get('fechaExpiracion')?.value;
 
         const cantidadStockBase = this.movimientoInventario.get('cantidadStockBase')?.value;
-        console.log('values: lote: ', lote);
-        console.log('values: fechaExpiracion: ', fechaExpiracion);
-        console.log('values: cantidadStockBase: ', cantidadStockBase);
 
         if (this.validarDetalleMovimiento(lote, fechaExpiracion, cantidadStockBase)) {
             const newDetalle = this.crearDetalleMovimiento(lote, fechaExpiracion, cantidadStockBase);
@@ -526,37 +601,38 @@ export class AddPresentacionPage implements OnInit {
         }
     }
 
-    isDisableBtnAddDetalleMovimiento() {
-        return !this.productoPresentacionForm.get('cantidadDisponibleStock')?.value ||
-            this.productoPresentacionForm.get('cantidadDisponibleStock')?.value === 0;
+    esValidoCantidadDisponibleStock(): boolean {
+        return this.cantidadDisponibleStock.value ||
+            this.cantidadDisponibleStock.value > 0;
     }
 
     private validarDetalleMovimiento(lote: string, fechaExpiracion: Date, cantidad: number): boolean {
-        console.log('lote ' + lote, typeof lote);
-        console.log('fechaExpiracion ' + fechaExpiracion, typeof fechaExpiracion);
-        console.log('cantidad ' + cantidad, typeof cantidad);
+
         if (!lote || !fechaExpiracion || (!cantidad || cantidad == 0)) { // si es vacio | null | undifiend
+            this.mostrarMsg('warn', 'Detalle Stock invalido.');
             return false;
         }
 
-        const findIndexLote = this.detalleMovimiento.controls.findIndex(det => det.value.lote === lote);
-        console.log(" existe lote en index " + findIndexLote);
-
+        const findIndexLote = this.detalleMovimiento.controls
+            .findIndex(det => det.value.lote === lote);
         if (findIndexLote > 0) {
-            this.messageService.add({
-                severity: 'warn',
-                summary: 'Mensaje',
-                detail: 'Nro Lote ya se encuentra registrado.',
-                life: 3000
-            });
+            this.mostrarMsg('warn', 'Nro Lote ya se encuentra registrado.')
             return false;
         }
-
+        if ((this.totalCantidadDetalle + cantidad) > this.cantidadDisponibleStock.value) {
+            this.mostrarMsg('warn', 'La Cantidad Total Detalle debe ser \n igual a Existencia Disponible.')
+            return false;
+        }
         return true;
     }
 
     removeDetalleStock(index: number) {
         this.detalleMovimiento.removeAt(index);
+    }
+
+    // GETTERS
+    get cantidadDisponibleStock(): FormControl {
+        return this.productoPresentacionForm.get('cantidadDisponibleStock') as FormControl;
     }
 
     get movimientoInventario(): FormGroup {
@@ -568,15 +644,30 @@ export class AddPresentacionPage implements OnInit {
     }
 
     get totalCantidadDetalle(): number {
-        const totalPago = this.detalleMovimiento.controls
+        const cantidadStock = this.detalleMovimiento.controls
             .reduce((acc, d) => acc + d.value.cantidadStockBase, 0);
         this.productoPresentacionForm.patchValue({
             movimientoInventario: {
-                totalCantidadDetalle: totalPago
+                totalCantidadDetalle: cantidadStock
             }
         });
-        return totalPago;
+        return cantidadStock;
     }
+
+    // OnChange Input
+    onCambioExistenciaDisponibleStock(value: any) {
+        this.cantidadDisponibleStock.setValue(value);
+        this.movimientoInventario.get('cantidadDisponibleStock')?.setValue(value);
+    }
+
+    onCambioCantidadMinimoStock(value: any) {
+        this.productoPresentacionForm.get('cantidadMinimoStock')?.setValue(value);
+    }
+
+    onCambioDiasAntesExpiracion(value: any) {
+        this.productoPresentacionForm.get('diasAntesExpiracion')?.setValue(value);
+    }
+
 
     private crearDetalleMovimiento(lote: string, fechaExpiracion: Date | null, cantidadStock: number): FormGroup {
         return this.formBuilder.group({
@@ -591,14 +682,12 @@ export class AddPresentacionPage implements OnInit {
             .subscribe((resp) => {
                 const data = resp.data.content;
                 this.marcaOptions.push(...data.map(marca => new MarcaOption(marca.id, marca.nombre)));
-                // console.log("value: ", resp);
             });
 
         this.productoBaseService.getAllProductoBase()
             .subscribe((resp) => {
                 const data = resp.content;
                 this.productoBaseOption.push(...data.map(base => new ProductoBaseOption(base.id, base.nombre)));
-                // console.log("value: ", resp);
             });
 
         this.unidadMedidaService.getAllUnidadMedida()
@@ -611,6 +700,39 @@ export class AddPresentacionPage implements OnInit {
                         base.esUnidadMinima)
                 ));
             });
+
+        this.ubicacionStockService.getAllUbicacionStock()
+            .subscribe((resp) => {
+                const data = resp.data.content;
+                this.ubicacionStockOption.push(
+                    ...data.map(
+                        ubi =>
+                            new UbicacionStockOption(ubi.id,
+                                `${ubi.seccion}->${ubi.estante}->${ubi.nivel}`
+                            )
+                    )
+                );
+            });
     }
 
+    esVacioDetalleMovimiento(): boolean {
+        return this.detalleMovimiento.length === 0;
+    }
+
+    private mostrarMsg(tipo: string, detalle: string): void {
+        this.messageService.add({
+            severity: tipo,
+            summary: 'Mensaje',
+            detail: detalle,
+            life: 5000
+        });
+    }
+
+    private esValidoFormulario(): boolean {
+        let isValidoFormMovimiento = true;
+        if (this.tieneDetalleMovimientoForm()) {
+            isValidoFormMovimiento = this.esValidoFormMovimiento();
+        }
+        return !this.productoPresentacionForm.invalid && isValidoFormMovimiento;
+    }
 }

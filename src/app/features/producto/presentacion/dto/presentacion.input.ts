@@ -5,12 +5,12 @@ export interface PresentacionInput {
     concepto: string;
     descripcion: string;
     unidadMedidaId: number;
-    esUnidadBase: boolean;
+    esUnidadMinima: boolean;
     factorConversion: number;
-    precioRef: number;
+    precioUnitario: number;
     precioVenta: number;
-    precioXMayor: number;
     marcaId: number;
-
-
+    cantidadDisponibleStock: number;
+    cantidadMinimoStock: number;
+    diasAntesExpiracion: number;
 }
