@@ -469,11 +469,9 @@ export class AddPresentacionPage implements OnInit {
                 if (resp) {
                     console.log('Finalizo todo bien ', resp);
                     this.mostrarMsg('success', 'Se creo correctamente Producto con inventario.')
-
                     this.navigateToListPresentacion();
                 }
             });
-
     }
 
     private saveOnlyPresentacionForm() {
@@ -489,9 +487,7 @@ export class AddPresentacionPage implements OnInit {
                     console.log(err);
                 },
             });
-
     }
-
 
     private darFormatoToFormForGuardar(): void {
         console.log('darFormatoToFormForGuardar paso');

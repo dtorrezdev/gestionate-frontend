@@ -1,3 +1,4 @@
+import { PresentacionOuput } from "./presentacion.output";
 
 
 export class PresentacionOption {
@@ -20,6 +21,15 @@ export class PresentacionOption {
 
     public static getInstance(): PresentacionOption {
         return new PresentacionOption(0, 0, 'Selecione Producto', 0);
+    }
+
+    public static getInstanceFromOutput(presentacion: PresentacionOuput): PresentacionOption {
+        return new PresentacionOption(
+            presentacion.id,
+            presentacion.productoId,
+            `${presentacion.marca} - ${presentacion.presentacion}`,
+            presentacion.precioVenta
+        );
     }
 
 }

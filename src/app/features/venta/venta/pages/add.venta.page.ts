@@ -128,10 +128,10 @@ import { VentaService } from '../../services/venta.service';
             >
                 <td style="min-width: 2rem; text-align: center;">P-{{ product.value.presentacionId }}</td>
                 <td style="min-width: 18rem">
-                     {{ product.value.nombre }}
+                    {{ product.value.nombre }}
                 </td>
                 <td style="min-width: 8rem">
-                    <p-tag value="INSTOCK" [severity]="getSeverity('INSTOCK')" />
+                    <p-tag value="INSTOCK" [severity]="'success'" />
                 </td>
                 <td
                     style="min-width: 3rem"
@@ -330,6 +330,7 @@ export class AddVentaPage implements OnInit {
     public ventaForm!: FormGroup;
     public clienteOptions!: ClienteOption[];
     public productoPresentacionOptions!: PresentacionOption[];
+    public statuses!: Map<string, string>;
 
     public metodoValues = [
         { name: 'Efectivo', code: 'EF' },
@@ -391,7 +392,9 @@ export class AddVentaPage implements OnInit {
         }
     }
 
-    addDetalle(presentacionProducto: PresentacionOuput) {
+    addDetalle(presentacionProducto: PresentacionOption) {
+        console.log('addDetalle ', presentacionProducto);
+
         if (presentacionProducto.id == 0) return;
         const findIndexInDetalle = this.findIndexDelProductoEnDetalle(presentacionProducto);
         if (findIndexInDetalle < 0) {
@@ -454,17 +457,20 @@ export class AddVentaPage implements OnInit {
         this.detallePagos.removeAt(index);
     }
 
-    getSeverity(status: string) {
-        switch (status) {
-            case 'INSTOCK':
-                return 'success';
-            case 'LOWSTOCK':
-                return 'warn';
-            case 'OUTOFSTOCK':
-                return 'danger';
-            default:
-                return 'info';
+    getSeverity(producto: PresentacionOuput) {
+        console.log('prod', producto);
+
+        const minimoStock = producto.cantidadMinimoStock ? producto.cantidadMinimoStock : 0;
+        const disponibleStock = producto.cantidadDisponibleStock ?
+            producto.cantidadDisponibleStock : 0;
+        if (disponibleStock > minimoStock) {
+            return 'success';
+        } else if (disponibleStock == 0) {
+            return 'danger';
+        } else if (disponibleStock <= minimoStock) {
+            return 'warn';
         }
+        return 'info';
     }
 
     private buildFormAndInitValues(): void {
@@ -513,13 +519,21 @@ export class AddVentaPage implements OnInit {
 
         this.productService.getAllProdutos()
             .subscribe(resp => {
+                const prodPresentacion = resp.data.content;
                 this.productoPresentacionOptions.push(
-                    ...resp.data.content
+                    ...prodPresentacion.map(prod =>
+                        PresentacionOption.getInstanceFromOutput(prod)
+                    )
                 );
             });
+        this.statuses = new Map<string, string>();
+        this.statuses.set('success', 'INSTOCK');
+        this.statuses.set('warn', 'LOWSTOCK');
+        this.statuses.set('danger', 'OUTOFSTOCK');
+        this.statuses.set('info', 'S/N');
     }
 
-    private crearDetalle(presentacionProducto?: PresentacionOuput): FormGroup {
+    private crearDetalle(presentacionProducto?: PresentacionOption): FormGroup {
         return this.formBuilder.group({
             presentacionId: [presentacionProducto?.id || null, Validators.required],
             nombre: [presentacionProducto?.nombre || ''],
@@ -538,27 +552,20 @@ export class AddVentaPage implements OnInit {
         });
     }
 
-    private findIndexDelProductoEnDetalle(presentacionProducto: PresentacionOuput): number {
+    private findIndexDelProductoEnDetalle(presentacionProducto: PresentacionOption): number {
         return this.detalle.controls.findIndex(prod =>
             prod.value.presentacionId === presentacionProducto.id &&
             prod.value.productoId === presentacionProducto?.productoId);
     }
 
-    get detalle(): FormArray {
-        return this.ventaForm.get('detalle') as FormArray;
-    }
+    //GETTERs
+    get detalle(): FormArray { return this.ventaForm.get('detalle') as FormArray; }
 
-    get pagos(): FormGroup {
-        return this.ventaForm.get('pagos') as FormGroup;
-    }
+    get pagos(): FormGroup { return this.ventaForm.get('pagos') as FormGroup; }
 
-    get detallePagos(): FormArray {
-        return this.pagos.get('detallePago') as FormArray;
-    }
+    get detallePagos(): FormArray { return this.pagos.get('detallePago') as FormArray; }
 
-    get hasPay(): boolean {
-        return this.ventaForm.get('hasPay')?.value || false;
-    }
+    get hasPay(): boolean { return this.ventaForm.get('hasPay')?.value || false; }
 
     get total(): number {
         const total = this.detalle.controls

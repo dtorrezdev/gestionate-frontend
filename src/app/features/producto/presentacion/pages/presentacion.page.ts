@@ -111,9 +111,9 @@ import { PresentacionOuput } from '../dto/presentacion.output';
                     <img [src]="'https://primefaces.org/cdn/primeng/images/demo/product/' + product.image" [alt]="product.name" style="width: 64px" class="rounded" />
                 </td> -->
                 <td>{{ product.categoria }}</td>
-                <td>{{ product.unidadMedida | lowercase }}</td>
+                <td>{{ product.unidadMedida }}</td>
                 <td>
-                    <p-tag value="INSTOCK" [severity]="getSeverity('INSTOCK')" />
+                    <p-tag [value]="statuses.get(getSeverity(product))" [severity]="getSeverity(product)" />
                 </td>
                 <td>{{ product.precioVenta | currency: 'Bs' }}</td>
                 <td>
@@ -146,9 +146,7 @@ export class PresentacionPage implements OnInit {
     private messageService = inject(MessageService);
 
     products = signal<PresentacionOuput[]>([]);
-
-
-    statuses!: any[];
+    statuses!: Map<string, string>;
 
     // MenuBar BreadcrumbModule
     breadcrumbHome = { icon: 'pi pi-home', to: '/' };
@@ -166,29 +164,29 @@ export class PresentacionPage implements OnInit {
                 console.log('getAllProdutos: ', value);
                 this.products.set(value.data.content);
             })
-
-        this.statuses = [
-            { label: 'INSTOCK', value: 'instock' },
-            { label: 'LOWSTOCK', value: 'lowstock' },
-            { label: 'OUTOFSTOCK', value: 'outofstock' }
-        ];
+        this.statuses = new Map<string, string>();
+        this.statuses.set('success', 'INSTOCK');
+        this.statuses.set('warn', 'LOWSTOCK');
+        this.statuses.set('danger', 'OUTOFSTOCK');
+        this.statuses.set('info', 'S/N');
     }
 
     onGlobalFilter(table: Table, event: Event) {
         table.filterGlobal((event.target as HTMLInputElement).value, 'contains');
     }
 
-    getSeverity(status: string) {
-        switch (status) {
-            case 'INSTOCK':
-                return 'success';
-            case 'LOWSTOCK':
-                return 'warn';
-            case 'OUTOFSTOCK':
-                return 'danger';
-            default:
-                return 'info';
+    getSeverity(producto: PresentacionOuput) {
+        const minimoStock = producto.cantidadMinimoStock ? producto.cantidadMinimoStock : 0;
+        const disponibleStock = producto.cantidadDisponibleStock ?
+            producto.cantidadDisponibleStock : 0;
+        if (disponibleStock > minimoStock) {
+            return 'success';
+        } else if (disponibleStock == 0) {
+            return 'danger';
+        } else if (disponibleStock <= minimoStock) {
+            return 'warn';
         }
+        return 'info';
     }
 
 }
