@@ -9,7 +9,7 @@ export class UbicacionStockService {
     private http = inject(HttpClient);
 
     private readonly _API: string = 'http://localhost:8080/modulobase/api/v1/ubicacion_stock';
-    private readonly _TOKEN: string = 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJyb2wiOiJTdXBlciBBZG1pbmlzdHJhZG9yIiwic3ViIjoiYWRtaW4iLCJpYXQiOjE3NzU2NjE0OTMsImV4cCI6MTc3NTY2ODY5M30.omwWAUs709jG0Hpb8AVw7ne8a2_XpB3H3EB9nuWbty4';
+    private readonly _TOKEN: string = 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJyb2wiOiJTdXBlciBBZG1pbmlzdHJhZG9yIiwic3ViIjoiYWRtaW4iLCJpYXQiOjE3NzU3Njg0MTMsImV4cCI6MTc3NTc3NTYxM30.cA3IixVlJRc6xQvpVFPaOw9MJGYQlfmvZM1aI6ItqoE';
 
     getAllUbicacionStock() {
         let headers = new HttpHeaders();

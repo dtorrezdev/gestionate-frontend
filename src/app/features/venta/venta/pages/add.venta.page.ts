@@ -6,7 +6,8 @@ import { CommonModule } from '@angular/common';
 
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
-import { TableModule } from 'primeng/table';
+import { TableModule, TableRowCollapseEvent, TableRowExpandEvent } from 'primeng/table';
+import { RippleModule } from 'primeng/ripple';
 import { ButtonModule } from 'primeng/button';
 import { BreadcrumbModule } from 'primeng/breadcrumb';
 import { SelectModule } from 'primeng/select';
@@ -17,9 +18,10 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ProductService } from "../../../producto/services/producto.service";
 import { ClienteService } from '../../services/cliente.service';
 import { ClienteOption } from '../../cliente/dto/cliente.option';
-import { PresentacionOption } from '../../../producto/presentacion/dto/presentacion.option';
 import { PresentacionOuput } from '../../../producto/presentacion/dto/presentacion.output';
 import { VentaService } from '../../services/venta.service';
+import { MovimientoService } from '../../../inventario/movimiento/service/movimiento.service';
+import { StockByProductoOutput } from '../../../inventario/stock/dtos/stock-by-producto.output';
 
 @Component({
     imports: [
@@ -33,7 +35,8 @@ import { VentaService } from '../../services/venta.service';
         InputNumberModule,
         TagModule,
         ToastModule,
-        ToggleSwitchModule
+        ToggleSwitchModule,
+        RippleModule
     ],
     standalone: true,
     template: `
@@ -71,8 +74,18 @@ import { VentaService } from '../../services/venta.service';
                     id="producto"
                     (onChange)="addDetalle($event.value)"
                     [options]="productoPresentacionOptions"
-                    optionLabel="nombre"
+                    optionLabel="presentacion"
                     placeholder="Seleccione Producto" class="w-full">
+                    <ng-template #selectedItem let-productoPre>
+                    <div class="flex items-center gap-2">
+                        <div>{{ productoPre.marca }} - {{ productoPre.presentacion }}</div>
+                    </div>
+                </ng-template>
+                <ng-template let-producto #item>
+                    <div class="flex items-center gap-2">
+                        <div>{{ producto.marca }} - {{ producto.presentacion }}</div>
+                    </div>
+                </ng-template>
                 </p-select>
                 <!-- <small class="text-red">El detalle esta vacio.</small> -->
             </div>
@@ -90,9 +103,11 @@ import { VentaService } from '../../services/venta.service';
         #dt
         [value]="detalle.controls"
         [tableStyle]="{ 'min-width': '75rem' }"
-        [rowHover]="true"
+        [rowHover]="false"
         dataKey="id"
-        [showCurrentPageReport]="true"
+        [expandedRowKeys]="expandedRows"
+        (onRowExpand)="onRowExpand($event)"
+        (onRowCollapse)="onRowCollapse($event)"
         >
         <ng-template #caption>
             <div class="flex items-center justify-between">
@@ -118,11 +133,10 @@ import { VentaService } from '../../services/venta.service';
                 <th style="min-width: 4rem">
                     Subtotal
                 </th>
-
                 <th style="min-width: 8rem"></th>
             </tr>
         </ng-template>
-        <ng-template #body let-product let-editing="editing" let-index="rowIndex">
+        <ng-template #body let-product let-editing="editing" let-index="rowIndex" let-expanded="expanded">
             <tr
                 [formGroup]="product"
             >
@@ -131,22 +145,22 @@ import { VentaService } from '../../services/venta.service';
                     {{ product.value.nombre }}
                 </td>
                 <td style="min-width: 8rem">
-                    <p-tag value="INSTOCK" [severity]="'success'" />
+                    <p-tag [value]="statuses.get(getSeverity(product.value))" [severity]="getSeverity(product.value)" />
                 </td>
                 <td
                     style="min-width: 3rem"
-                    [pEditableColumn]="product.precioUnitario"
-                    pEditableColumnField="precioUnitario">
+                    [pEditableColumn]="product.precioVenta"
+                    pEditableColumnField="precioVenta">
                     <p-cellEditor>
                         <ng-template #input>
-                            <p-inputnumber inputId="precioUnitario" formControlName="precioUnitario" mode="decimal" [minFractionDigits]="2" />
-                            @if(product.value.precioUnitario <= 0) {
+                            <p-inputnumber inputId="precioVenta" formControlName="precioVenta" mode="decimal" [minFractionDigits]="2" />
+                            @if(product.value.precioVenta <= 0) {
                             <small class="text-red">precio debe ser mayor a 0</small>
                             }
                         </ng-template>
                         <ng-template #output>
-                            {{ product.value.precioUnitario | currency: 'Bs ' }}
-                            @if(product.value.precioUnitario <= 0) {
+                            {{ product.value.precioVenta | currency: 'Bs ' }}
+                            @if(product.value.precioVenta <= 0) {
                                 <small class="text-red">valor invalido</small>
                             }
                         </ng-template>
@@ -174,13 +188,62 @@ import { VentaService } from '../../services/venta.service';
 
                 <td style="min-width: 4rem">{{ product.value.subtotal }}</td>
                 <td style="min-width: 8rem;">
+                    <p-button
+                        [id]="product.presentacionId"
+                        type="button"
+                        pRipple
+                        [pRowToggler]="product"
+                        [text]="true"
+                        severity="secondary"
+                        [rounded]="true"
+                        [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" />
                     <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" (click)="removeDetalle(index)" />
+                </td>
+            </tr>
+        </ng-template>
+        <ng-template #expandedrow let-product>
+            <tr>
+                <td colspan="8">
+                    <div class="p-4">
+                        <h6>Stocks Disponibles {{ product.value.nombre }}</h6>
+                        <p-table [value]="product.value.stocks" dataKey="id">
+                            <ng-template #header>
+                                <tr>
+                                    <th>
+                                        <div class="flex items-center gap-2">Lote</div>
+                                    </th>
+                                    <th>
+                                        <div class="flex items-center gap-2">Fech. Vencimiento</div>
+                                    </th>
+                                    <th>
+                                        <div class="flex items-center gap-2">Ubicacion Stock</div>
+                                    </th>
+                                    <th>
+                                        <div class="flex items-center gap-2">Cantidad</div>
+                                    </th>
+                                </tr>
+                            </ng-template>
+                            <ng-template #body let-stock>
+                                <tr>
+                                    <td>{{ stock.lote }}</td>
+                                    <td>{{ stock.expiracion }}</td>
+                                    <td>{{ stock.seccion }}</td>
+                                    <td>{{ stock.cantidad }}</td>
+                                </tr>
+                            </ng-template>
+                            <ng-template #emptymessage>
+                                <tr>
+                                    <td colspan="6">There are no Stock for this product yet.</td>
+                                </tr>
+                            </ng-template>
+                        </p-table>
+                    </div>
                 </td>
             </tr>
         </ng-template>
         <ng-template #footer>
             <tr class="font-bold">
-                <td style="text-align: center;" colspan="5">Total:</td>
+                <td style="text-align: center;" colspan="6">Total:</td>
                 <td colspan="2" style="min-width: 8rem; text-align: left;">
                     {{total}}
                 </td>
@@ -317,20 +380,23 @@ import { VentaService } from '../../services/venta.service';
             display: none;
         }
     `,
-    providers: [ProductService, ClienteService, VentaService, MessageService]
+    providers: [ProductService, ClienteService, VentaService, MovimientoService, MessageService]
 })
 export class AddVentaPage implements OnInit {
     private productService = inject(ProductService);
     private clienteService = inject(ClienteService);
     private ventaService = inject(VentaService);
+    private movimientoService = inject(MovimientoService);
     private formBuilder = inject(FormBuilder);
     private messageService = inject(MessageService);
     private readonly cdr = inject(ChangeDetectorRef);
 
     public ventaForm!: FormGroup;
     public clienteOptions!: ClienteOption[];
-    public productoPresentacionOptions!: PresentacionOption[];
+    public productoPresentacionOptions!: PresentacionOuput[];
     public statuses!: Map<string, string>;
+
+    expandedRows: any = {};
 
     public metodoValues = [
         { name: 'Efectivo', code: 'EF' },
@@ -354,20 +420,36 @@ export class AddVentaPage implements OnInit {
     submitForm(evt?: SubmitEvent) {
         console.log(this.ventaForm);
         if (this.ventaForm.valid || !this.isPreventaDisable()) {
-            const estado = evt ? 'VENTA' : 'PREVENTA';
-            const clienteSelected = this.ventaForm.get('clienteId')?.value;
+            this.cargarDatosToVentaForm(evt);
+            console.log(JSON.stringify(this.ventaForm.value));
+            this.saveVentaForm();
+        } else {
+            this.messageService.add({
+                severity: 'warn',
+                summary: 'Mensaje',
+                detail: 'Venta Formulario es invalido',
+                life: 3000
+            });
+        }
+    }
 
-            this.ventaForm.get('estado')?.setValue(estado);
-            this.ventaForm.get('clienteId')?.setValue(clienteSelected.id);
-            console.log(this.ventaForm.value);
-            this.ventaService.saveVenta(this.ventaForm.value)
+    private cargarDatosToVentaForm(evt?: SubmitEvent) {
+        const estado = evt ? 'VENTA' : 'PREVENTA';
+        const clienteSelected = this.ventaForm.get('clienteId')?.value;
+
+        this.ventaForm.get('estado')?.setValue(estado);
+        this.ventaForm.get('clienteId')?.setValue(clienteSelected.id);
+    }
+
+    private saveVentaForm(): void {
+        this.ventaService.saveVenta(this.ventaForm.value)
                 .subscribe({
                     next: (resp) => {
                         console.log(resp);
                         this.messageService.add({
                             severity: 'success',
                             summary: 'Mensaje',
-                            detail: 'Venta Formulario es valido',
+                            detail: 'Venta registrado correctamente',
                             life: 3000
                         });
                     },
@@ -382,37 +464,42 @@ export class AddVentaPage implements OnInit {
                     },
                     complete: () => console.info('complete')
                 });
-        } else {
-            this.messageService.add({
-                severity: 'warn',
-                summary: 'Mensaje',
-                detail: 'Venta Formulario es invalido',
-                life: 3000
-            });
-        }
     }
 
-    addDetalle(presentacionProducto: PresentacionOption) {
+    addDetalle(presentacionProducto: PresentacionOuput) {
         console.log('addDetalle ', presentacionProducto);
 
         if (presentacionProducto.id == 0) return;
         const findIndexInDetalle = this.findIndexDelProductoEnDetalle(presentacionProducto);
         if (findIndexInDetalle < 0) {
-            const newDetalle = this.crearDetalle(presentacionProducto);
-            newDetalle.valueChanges.subscribe((presentacion) => {
-                const total = presentacion.precioUnitario * presentacion.cantidad;
-                newDetalle.get('subtotal')?.setValue(total, { emitEvent: false });
-            });
-            this.detalle.push(newDetalle);
-            this.ventaForm.get('hasPay')?.enable();
+
+            this.movimientoService.getStockByProducto(
+                presentacionProducto.productoId, presentacionProducto.id)
+                .subscribe({
+                    next: (resp) => {
+                        console.log('resp', resp);
+                        const stocks = resp.data;
+                        const newDetalle = this.crearDetalle(presentacionProducto, this.crearFormArrayStock(stocks));
+                        newDetalle.valueChanges.subscribe((presentacion) => {
+                            const total = presentacion.precioVenta * presentacion.cantidad;
+                            newDetalle.get('subtotal')?.setValue(total, { emitEvent: false });
+                        });
+                        this.mostrarMsg('success', 'Se trajo Stock del producto')
+
+                        console.log('new Detalle with stock ', newDetalle);
+
+                        this.detalle.push(newDetalle);
+                        this.ventaForm.get('hasPay')?.enable();
+                    },
+                    error: (err) => {
+                        console.log(err);
+                    }
+                })
+
+
         } else {
-            this.messageService.add({
-                severity: 'info',
-                summary: 'Mensaje',
-                detail: 'El producto ' + presentacionProducto.nombre
-                    + ' esta en la fila nro ' + (findIndexInDetalle + 1),
-                life: 3000
-            });
+            this.mostrarMsg('info', 'El producto ' + presentacionProducto.presentacion
+                + ' esta en la fila nro ' + (findIndexInDetalle + 1));
         }
     }
 
@@ -441,7 +528,7 @@ export class AddVentaPage implements OnInit {
         detalle.patchValue({
             presentacionId: presentacionProd.id,
             productoId: presentacionProd.productoId,
-            precioUnitario: presentacionProd.precioVenta,
+            precioVenta: presentacionProd.precioVenta,
         });
     }
 
@@ -457,26 +544,10 @@ export class AddVentaPage implements OnInit {
         this.detallePagos.removeAt(index);
     }
 
-    getSeverity(producto: PresentacionOuput) {
-        console.log('prod', producto);
-
-        const minimoStock = producto.cantidadMinimoStock ? producto.cantidadMinimoStock : 0;
-        const disponibleStock = producto.cantidadDisponibleStock ?
-            producto.cantidadDisponibleStock : 0;
-        if (disponibleStock > minimoStock) {
-            return 'success';
-        } else if (disponibleStock == 0) {
-            return 'danger';
-        } else if (disponibleStock <= minimoStock) {
-            return 'warn';
-        }
-        return 'info';
-    }
-
     private buildFormAndInitValues(): void {
         this.clienteOptions = [ClienteOption.getInstance()];
         this.productoPresentacionOptions = [
-            PresentacionOption.getInstance()
+            PresentacionOuput.getInstance()
         ];
         this.ventaForm = this.crearVentaForm();
         // change detection para cambios en Forms
@@ -520,28 +591,76 @@ export class AddVentaPage implements OnInit {
         this.productService.getAllProdutos()
             .subscribe(resp => {
                 const prodPresentacion = resp.data.content;
-                this.productoPresentacionOptions.push(
-                    ...prodPresentacion.map(prod =>
-                        PresentacionOption.getInstanceFromOutput(prod)
-                    )
-                );
+                this.productoPresentacionOptions.push(...prodPresentacion);
             });
         this.statuses = new Map<string, string>();
         this.statuses.set('success', 'INSTOCK');
         this.statuses.set('warn', 'LOWSTOCK');
         this.statuses.set('danger', 'OUTOFSTOCK');
         this.statuses.set('info', 'S/N');
+
+        this.ventaService.getLastVenta()
+            .subscribe(resp => {
+                const ventas = resp.data.content;
+
+                console.log('ultima venta ', resp);
+                if (ventas && ventas.length) {
+                    const codigoVenta = 'V-' + (ventas[0].id + 1);
+                    this.ventaForm.get('codigo')?.setValue(codigoVenta);
+                }
+
+            });
     }
 
-    private crearDetalle(presentacionProducto?: PresentacionOption): FormGroup {
+    private crearDetalle(presentacionProducto?: PresentacionOuput, stocks?: FormArray,): FormGroup {
         return this.formBuilder.group({
             presentacionId: [presentacionProducto?.id || null, Validators.required],
-            nombre: [presentacionProducto?.nombre || ''],
+            nombre: [presentacionProducto?.presentacion || ''],
             productoId: [presentacionProducto?.productoId || null, Validators.required],
-            precioUnitario: [presentacionProducto?.precioVenta || 0, [Validators.required, Validators.min(1)]],
+            precioVenta: [presentacionProducto?.precioVenta || 0, [Validators.required, Validators.min(1)]],
+            // Venta siempre realizar en cantidad minima (cantidad base)
             cantidad: [1, [Validators.required, Validators.min(1)]],
-            cantidadBase: [1, [Validators.required, Validators.min(1)]],
-            subtotal: [presentacionProducto ? presentacionProducto.precioVenta : 0, [Validators.required, Validators.min(1)]]
+            // cantidadBase: [1, [Validators.required, Validators.min(1)]],
+            subtotal: [presentacionProducto ? presentacionProducto.precioVenta : 0, [Validators.required, Validators.min(1)]],
+            stocks: stocks,
+            stockMinimo: [presentacionProducto?.cantidadMinimoStock || 1],
+            stockDisponible: [presentacionProducto?.cantidadDisponibleStock || 0]
+        });
+    }
+
+    private crearFormArrayStock(stocks: StockByProductoOutput[]): FormArray {
+        console.log('crearFormArraysStocks ', stocks);
+        if (stocks.length == 0) {
+            return this.formBuilder.array([]);
+        }
+        const stocksFormGroup = stocks.map(stock => this.crearStock(stock));
+        return this.formBuilder.array(stocksFormGroup);
+    }
+
+    private crearStock(stock: StockByProductoOutput): FormGroup {
+        return this.formBuilder.group({
+            id: [stock?.id || null],
+            lote: [stock?.lote || ''],
+            expiracion: [stock?.expiracion || ''],
+            seccion: [stock?.seccion || ''],
+            estante: [stock?.estante || ''],
+            nivel: [stock?.nivel || ''],
+            cantidad: [stock?.cantidad || 0],
+        });
+    }
+
+    onRowExpand(event: TableRowExpandEvent) {
+        console.log('event: ', event);
+        this.messageService.add({ severity: 'info', summary: 'Product Expanded', detail: event.data, life: 3000 });
+    }
+
+    onRowCollapse(event: TableRowCollapseEvent) {
+        console.log('event: ', event);
+        this.messageService.add({
+            severity: 'success',
+            summary: 'Product Collapsed',
+            detail: event.data.name,
+            life: 3000
         });
     }
 
@@ -552,7 +671,7 @@ export class AddVentaPage implements OnInit {
         });
     }
 
-    private findIndexDelProductoEnDetalle(presentacionProducto: PresentacionOption): number {
+    private findIndexDelProductoEnDetalle(presentacionProducto: PresentacionOuput): number {
         return this.detalle.controls.findIndex(prod =>
             prod.value.presentacionId === presentacionProducto.id &&
             prod.value.productoId === presentacionProducto?.productoId);
@@ -583,6 +702,32 @@ export class AddVentaPage implements OnInit {
             }
         });
         return totalPago;
+    }
+
+    private mostrarMsg(tipo: string, detail: string) {
+        this.messageService.add({
+            severity: tipo,
+            summary: 'Mensaje',
+            detail: detail,
+            life: 3000
+        });
+    }
+
+    getSeverity(producto: any) {
+        // hace llamada innecesarias desd el Select produccto
+        // console.log('getSeverity: ', producto);
+
+        const minimoStock = producto.stockMinimo ? producto.stockMinimo : 0;
+        const disponibleStock = producto.stockDisponible ?
+            producto.stockDisponible : 0;
+        if (disponibleStock > minimoStock) {
+            return 'success';
+        } else if (disponibleStock == 0) {
+            return 'danger';
+        } else if (disponibleStock <= minimoStock) {
+            return 'warn';
+        }
+        return 'info';
     }
 
 }

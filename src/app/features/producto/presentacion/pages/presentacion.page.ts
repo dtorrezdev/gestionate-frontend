@@ -15,6 +15,7 @@ import { ProductService } from "../../services/producto.service";
 import { RouterModule } from '@angular/router';
 import { BreadcrumbModule } from 'primeng/breadcrumb';
 import { PresentacionOuput } from '../dto/presentacion.output';
+import { MovimientoService } from '../../../inventario/movimiento/service/movimiento.service';
 
 @Component({
     imports: [

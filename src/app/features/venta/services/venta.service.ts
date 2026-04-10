@@ -20,7 +20,7 @@ export interface Venta {
 export class VentaService {
 
     private readonly _API: string = 'http://localhost:8080/modulobase/api/v1/ventas';
-    private readonly _TOKEN: string = 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJyb2wiOiJTdXBlciBBZG1pbmlzdHJhZG9yIiwic3ViIjoiYWRtaW4iLCJpYXQiOjE3NzU2NjE0OTMsImV4cCI6MTc3NTY2ODY5M30.omwWAUs709jG0Hpb8AVw7ne8a2_XpB3H3EB9nuWbty4';
+    private readonly _TOKEN: string = 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJyb2wiOiJTdXBlciBBZG1pbmlzdHJhZG9yIiwic3ViIjoiYWRtaW4iLCJpYXQiOjE3NzU3Njg0MTMsImV4cCI6MTc3NTc3NTYxM30.cA3IixVlJRc6xQvpVFPaOw9MJGYQlfmvZM1aI6ItqoE';
 
     constructor(private http: HttpClient) { }
 
@@ -43,6 +43,13 @@ export class VentaService {
         headers = headers.set('Content-Type', 'application/json');
         headers = headers.set('Authorization', this._TOKEN);
         return this.http.delete(this._API, { headers, body: JSON.stringify(venta) });
+    }
+
+    getLastVenta() {
+        let headers = new HttpHeaders();
+        headers = headers.set('Content-Type', 'application/json');
+        headers = headers.set('Authorization', this._TOKEN);
+        return this.http.get<CommonResponse<ListResponse<VentaOutput>>>(`${this._API}?sort=venta_id,DESC&page=0&size=1`, { headers: headers });
     }
 
 }
