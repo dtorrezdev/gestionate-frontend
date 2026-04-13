@@ -180,16 +180,15 @@ export class AddVentaPage implements OnInit {
         return  true;
     }
 
-
     isPreventaDisable() {
         return this.detalle.invalid || this.detalle.length === 0 || this.hasPay;
     }
 
     addDetallePago() {
-        const tipoPago = this.pagos.get('tipo')?.value;
+        const tipoPago = this.pagos.get('tipo')?.value?.name;
         const montoPago = this.pagos.get('monto')?.value;
         const findIndexDetallePago = this.detallePagos.controls
-            .findIndex(ele => ele.value.tipo.name === tipoPago.name);
+            .findIndex(ele => ele.value.tipo === tipoPago);
 
         if (findIndexDetallePago < 0) {
             const newDetalle = this.crearDetallePago(tipoPago, montoPago);
@@ -213,6 +212,7 @@ export class AddVentaPage implements OnInit {
     removeDetalle(index: number) {
         this.detalle.removeAt(index);
         if (this.detalle.length === 0) {
+            // se deshabilita los pagos (no hay detalles productos)
             this.ventaForm.get('hasPay')?.setValue(false);
             this.ventaForm.get('hasPay')?.disable();
         }

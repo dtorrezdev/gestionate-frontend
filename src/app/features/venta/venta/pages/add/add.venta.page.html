@@ -153,7 +153,8 @@
                         [text]="true"
                         severity="secondary"
                         [rounded]="true"
-                        [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" />
+                        [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+                    />
                     <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" (click)="removeDetalle(index)" />
                 </td>
             </tr>
@@ -267,7 +268,7 @@
                 >
                     <td style="min-width: 2rem; text-align: center;">{{ index + 1 }}</td>
                     <td style="min-width: 8rem">
-                        {{ pago.value.tipo.name }}
+                        {{ pago.value.tipo }}
                     </td>
                     <td
                         style="min-width: 3rem"
