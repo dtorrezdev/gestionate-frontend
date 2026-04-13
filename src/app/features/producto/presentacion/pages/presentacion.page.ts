@@ -56,7 +56,7 @@ import { MovimientoService } from '../../../inventario/movimiento/service/movimi
         [rows]="10"
         [paginator]="true"
         [globalFilterFields]="['name', 'country.name', 'representative.name', 'status']"
-        [tableStyle]="{ 'min-width': '75rem' }"
+        [tableStyle]="{ 'min-width': '65rem' }"
         [rowHover]="true"
         dataKey="id"
         currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"

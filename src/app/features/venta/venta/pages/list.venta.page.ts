@@ -17,6 +17,7 @@ import { RouterModule } from "@angular/router";
 import { VentaOutput } from "../dto/venta.output";
 import { ConfirmationService, MessageService } from "primeng/api";
 import { VentaDelete } from "../dto/venta.delete";
+import { DatePipe } from "@angular/common";
 
 @Component({
     imports: [
@@ -33,7 +34,8 @@ import { VentaDelete } from "../dto/venta.delete";
         RouterModule,
         TooltipModule,
         ToastModule,
-        ConfirmDialogModule
+        ConfirmDialogModule,
+        DatePipe
     ],
     standalone: true,
     template: `
@@ -58,7 +60,7 @@ import { VentaDelete } from "../dto/venta.delete";
         [value]="ventas()"
         [rows]="10"
         [globalFilterFields]="['id', 'cliente', 'nit', 'vendedor']"
-        [tableStyle]="{ 'min-width': '75rem' }"
+        [tableStyle]="{ 'min-width': '65rem' }"
         [rowHover]="true"
         dataKey="id"
         >
@@ -73,12 +75,12 @@ import { VentaDelete } from "../dto/venta.delete";
     </ng-template>
     <ng-template #header>
         <tr>
-            <th style="min-width: 4rem; text-align: center;">Nro</th>
-            <th pSortableColumn="fechaRegistro" style="min-width:4rem">
+            <th style="min-width: 2rem; text-align: center;">Nro</th>
+            <th pSortableColumn="fechaRegistro" style="min-width:3rem">
                 Fecha Registro
                 <p-sortIcon field="fechaRegistro" />
             </th>
-            <th pSortableColumn="cliente" style="min-width: 4rem">
+            <th pSortableColumn="cliente" style="min-width: 6rem">
                 Cliente
                 <p-sortIcon field="cliente" />
             </th>
@@ -86,31 +88,31 @@ import { VentaDelete } from "../dto/venta.delete";
                 Vendedor
                 <p-sortIcon field="price" />
             </th>
-            <th pSortableColumn="total" style="min-width:3rem">
+            <th pSortableColumn="total" style="min-width:2rem">
                 total
                 <p-sortIcon field="total" />
             </th>
-            <th pSortableColumn="estado" style="min-width: 4rem">
+            <th pSortableColumn="estado" style="min-width:4rem">
                 Estado
-                <p-sortIcon field="estado" />
+                <p-sortIcon field="estado"/>
             </th>
             <th></th>
         </tr>
     </ng-template>
     <ng-template #body let-venta>
         <tr>
-            <td style="min-width: 4rem;text-align: center;">{{ venta.codigo }}</td>
-            <td style="min-width: 4rem">{{ venta.fechaRegistro }}</td>
-            <td style="min-width: 4rem">{{ venta.cliente }}</td>
-            <td style="min-width: 4rem">{{ venta.vendedor ?? 'admin' }}</td>
-            <td style="min-width: 3rem">{{ venta.total | currency: 'Bs' }}</td>
-            <td style="min-width: 4rem">
+            <td style="text-align: center">{{ venta.codigo }}</td>
+            <td>{{ venta.fechaRegistro | date: 'dd/MM/yyyy HH:mm' }}</td>
+            <td>{{ venta.cliente }}</td>
+            <td>{{ venta.vendedor ?? 'admin' }}</td>
+            <td>{{ venta.total | currency: 'Bs' }}</td>
+            <td>
                 <p-tag [value]="venta.estado" [severity]="getSeverityEstado(venta.estado)"/>
             </td>
             <td>
                 <p-button icon="pi pi-eye" severity="info" class="mr-2"
                         pTooltip="Ver detalle" tooltipPosition="top"
-                        [routerLink]="'/venta/show/'"
+                        routerLink="/venta/show/{{venta.id}}"
                         [rounded]="true" [outlined]="true"/>
                 @if(venta.estado === 'VENTA') {
                     <p-button icon="pi pi-trash" severity="danger"
@@ -121,10 +123,9 @@ import { VentaDelete } from "../dto/venta.delete";
                 @if(venta.estado === 'PREVENTA') {
                     <p-button icon="pi pi-pencil"
                         pTooltip="Editar detalle" tooltipPosition="top"
-                        [routerLink]="'/venta/edit/'"
+                        routerLink="/venta/edit/{{venta.id}}"
                         [rounded]="true" [outlined]="true"/>
                 }
-
             </td>
         </tr>
     </ng-template>

@@ -15,6 +15,8 @@ export class PresentacionOuput {
     diasAntesExpiracion: number;
     marcaId: number;
     marca: string;
+    estadoStock: string;
+
 
     constructor(
         id: number,
@@ -31,7 +33,8 @@ export class PresentacionOuput {
         cantidadDisponibleStock: number,
         diasAntesExpiracion: number,
         marcaId: number,
-        marca: string
+        marca: string,
+        estadoStock: string
     ) {
         this.id = id;
         this.productoId = productoId;
@@ -48,10 +51,11 @@ export class PresentacionOuput {
         this.diasAntesExpiracion = diasAntesExpiracion;
         this.marcaId = marcaId;
         this.marca = marca;
+        this.estadoStock = estadoStock;
     }
 
     public static getInstance(): PresentacionOuput {
-        return new PresentacionOuput(0, 0, '', '', '', 0, false, 0, 0, 0, 0, 0, 0, 0, '');
+        return new PresentacionOuput(0, 0, '', '', '', 0, false, 0, 0, 0, 0, 0, 0, 0, '', '');
     }
 
 }
