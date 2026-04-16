@@ -1,4 +1,4 @@
 import { Routes } from '@angular/router';
-import { About, Dashboard, Settings } from './app.config';
+import { About, Settings } from './app.config';
 
 export const routes: Routes = [];

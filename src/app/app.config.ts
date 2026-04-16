@@ -6,9 +6,7 @@ import { provideRouter, RouterOutlet, withEnabledBlockingInitialNavigation, with
 import { Component } from '@angular/core';
 import { Routes } from '@angular/router';
 import { AppLayout } from './layout/components/app.layout';
-
-
-
+import { DashboardPage } from './features/admin/dasboard/dashboard.page';
 
 @Component({
   standalone: true,
@@ -16,11 +14,7 @@ import { AppLayout } from './layout/components/app.layout';
 })
 export class About { }
 
-@Component({
-  standalone: true,
-  template: `<p>Dashboard works!</p>`
-})
-export class Dashboard { }
+
 
 @Component({
   standalone: true,
@@ -32,7 +26,7 @@ export const routes: Routes = [
   {
     path: '', component: AppLayout,
     children: [
-      { path: '', component: Dashboard },
+        { path: '', component: DashboardPage },
       { path: 'inventario', loadChildren: () => import('./features/inventario/inventario.routes') },
       { path: 'producto', loadChildren: () => import('./features/producto/producto.routes') },
       { path: 'venta', loadChildren: () => import('./features/venta/venta.routes') }
