@@ -1,11 +1,10 @@
 import { ChangeDetectorRef, Component, inject, OnInit } from "@angular/core";
-import { ActivatedRoute, RouterModule } from "@angular/router";
+import { ActivatedRoute, Router, RouterModule } from "@angular/router";
 import { BreadcrumbModule } from "primeng/breadcrumb";
 import { ButtonModule } from "primeng/button";
 import { ProductService } from "../../../producto/services/producto.service";
 import { ClienteService } from "../../services/cliente.service";
 import { VentaService } from "../../services/venta.service";
-import { MovimientoService } from "../../../inventario/movimiento/service/movimiento.service";
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from "@angular/forms";
 import { MessageService } from "primeng/api";
 import { SelectModule } from 'primeng/select';
@@ -24,6 +23,7 @@ import { StockByProductoOutput } from "../../../inventario/stock/dtos/stock-by-p
 import { ToastModule } from "primeng/toast";
 import { RippleModule } from "primeng/ripple";
 import { PagoOutput } from "../../pago/dto/pago.output";
+import { StockService } from "../../../inventario/stock/service/stock.service";
 
 
 @Component({
@@ -49,7 +49,7 @@ import { PagoOutput } from "../../pago/dto/pago.output";
         </div>
         <p-breadcrumb [model]="breadcrumbItems" [home]="breadcrumbHome"></p-breadcrumb>
     </div>
-    <form [formGroup]="ventaForm"  class="card">
+    <form [formGroup]="ventaForm" (submit)="submitForm()" class="card">
         <div class="font-semibold text-xl mb-4">
             {{ (editMode)? 'Editar' : 'Mostrar' }} Orden Venta {{ ventaForm.value.codigo}}
         </div>
@@ -72,8 +72,11 @@ import { PagoOutput } from "../../pago/dto/pago.output";
         <div class="flex flex-col md:flex-row gap-6">
             <div class="flex flex-wrap gap-2 w-full">
                 <label class="font-semibold" for="producto">Productos:</label>
+                @if( editMode && estado == 'PREVENTA' ) {
                 <p-select
                     id="producto"
+                    filter="true"
+                    (onChange)="addDetalle($event.value)"
                     [options]="productoPresentacionOptions"
                     optionLabel="presentacion"
                     placeholder="Seleccione Producto" class="w-full">
@@ -88,6 +91,27 @@ import { PagoOutput } from "../../pago/dto/pago.output";
                         </div>
                     </ng-template>
                 </p-select>
+                } @else {
+                <p-select
+                    id="producto"
+                    filter="true"
+                    [disabled]="isDisableAccion()"
+                    [options]="productoPresentacionOptions"
+                    optionLabel="presentacion"
+                    placeholder="Seleccione Producto" class="w-full">
+                    <ng-template #selectedItem let-productoPre>
+                        <div class="flex items-center gap-2">
+                            <div>{{ productoPre.marca }} - {{ productoPre.presentacion }} - Disponible: {{ productoPre.cantidadDisponibleStock}}</div>
+                        </div>
+                    </ng-template>
+                    <ng-template let-producto #item>
+                        <div class="flex items-center gap-2">
+                            <div>{{ producto.marca }} - {{ producto.presentacion }} - Disponible: {{producto.cantidadDisponibleStock}}</div>
+                        </div>
+                    </ng-template>
+                </p-select>
+                }
+
             </div>
             <div class="flex gap-2 w-full flex-cc">
                 <label for="pago">Pagos: </label>
@@ -144,18 +168,18 @@ import { PagoOutput } from "../../pago/dto/pago.output";
                     </td>
                     <td
                         style="min-width: 3rem"
-                        [pEditableColumn]="product.precioVenta"
-                        pEditableColumnField="precioVenta">
+                        [pEditableColumn]="product.value.precio"
+                        pEditableColumnField="precio">
                         <p-cellEditor>
                             <ng-template #input>
-                                <p-inputnumber inputId="precioVenta" formControlName="precioVenta" mode="decimal" [minFractionDigits]="2" />
-                                @if(product.value.precioVenta <= 0) {
+                                <p-inputnumber inputId="precio" formControlName="precio" mode="decimal" [minFractionDigits]="2" />
+                                @if(product.value.precio <= 0) {
                                 <small class="text-red">precio debe ser mayor a 0</small>
                                 }
                             </ng-template>
                             <ng-template #output>
-                                {{ product.value.precioVenta | currency: 'Bs ' }}
-                                @if(product.value.precioVenta <= 0) {
+                                {{ product.value.precio | currency: 'Bs ' }}
+                                @if(product.value.precio <= 0) {
                                     <small class="text-red">valor invalido</small>
                                 }
                             </ng-template>
@@ -183,8 +207,6 @@ import { PagoOutput } from "../../pago/dto/pago.output";
 
                     <td style="min-width: 4rem">{{ product.value.subtotal }}</td>
                     <td style="min-width: 8rem;">
-                        <!-- {{product| json}} -->
-                        <!-- {{product.value| json}} -->
                         <p-button
                             [id]="product.value.presentacionId"
                             type="button"
@@ -195,7 +217,7 @@ import { PagoOutput } from "../../pago/dto/pago.output";
                             [rounded]="true"
                             [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
                         />
-                        <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" (click)="removeDetalle(index)" />
+                        <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" [disabled]="isDisableAccion()" (click)="removeDetalle(index)" />
                     </td>
                 </tr>
             </ng-template>
@@ -274,10 +296,10 @@ import { PagoOutput } from "../../pago/dto/pago.output";
                 </div>
                 <div class="flex gap-2 w-full flex-cc">
                     <label for="monto">Monto: </label>
-                    <p-inputnumber formControlName="monto" mode="decimal" [minFractionDigits]="2" inputId="cantidad" />
+                    <p-inputnumber formControlName="monto" mode="decimal" [minFractionDigits]="2" inputId="monto" />
                 </div>
                 <div class="flex gap-2 w-full flex-cc">
-                    <p-button label="Agregar" icon="pi pi-plus" (onClick)="addDetallePago()" />
+                    <p-button label="Agregar" icon="pi pi-plus" [disabled]="isDisableAccion()" (onClick)="addDetallePago()" />
                 </div>
                 <div class="flex gap-2 w-full flex-cc">
                     Total Pago: {{ totalPago }}
@@ -331,7 +353,7 @@ import { PagoOutput } from "../../pago/dto/pago.output";
                             </p-cellEditor>
                         </td>
                         <td style="min-width: 4rem;">
-                            <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" (click)="removeDetallePago(index)" />
+                            <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" [disabled]="isDisableAccion()" (click)="removeDetallePago(index)" />
                         </td>
                     </tr>
                 </ng-template>
@@ -345,6 +367,9 @@ import { PagoOutput } from "../../pago/dto/pago.output";
         }
         <div class="card flex flex-col gap-4 mb-0">
         <div class="flex flex-wrap gap-2">
+            @if( editMode && estado == 'PREVENTA') {
+            <p-button label="Guardar" [disabled]="ventaForm.invalid" type="submit" />
+            }
             <p-button label="Volver Atras" severity="info" [routerLink]="'/venta'" />
         </div>
     </div>
@@ -371,22 +396,25 @@ import { PagoOutput } from "../../pago/dto/pago.output";
             display: block;
         }
     `,
-    providers: [ProductService, ClienteService, VentaService, MovimientoService, MessageService]
+    providers: [ProductService, ClienteService, VentaService, StockService, MessageService]
 })
 export class EditVerVentaPage implements OnInit {
     // Providers
     private productService = inject(ProductService);
     private clienteService = inject(ClienteService);
     private ventaService = inject(VentaService);
-    private movimientoService = inject(MovimientoService);
+    private stockService = inject(StockService);
     private activatedRoute = inject(ActivatedRoute);
     private formBuilder = inject(FormBuilder);
     private messageService = inject(MessageService);
     private readonly cdr = inject(ChangeDetectorRef);
+    private router = inject(Router);
+
 
     // Field Forms
     public ventaForm!: FormGroup;
     public editMode: boolean = false;
+    public id!: number;
 
     expandedRows: { [key: string]: boolean } = {};
 
@@ -410,17 +438,58 @@ export class EditVerVentaPage implements OnInit {
     }
 
     public ngOnInit(): void {
-        const id = Number(this.activatedRoute.snapshot.paramMap.get('id'));
+        this.id = Number(this.activatedRoute.snapshot.paramMap.get('id'));
         const url = this.activatedRoute.snapshot.routeConfig?.path;
         this.editMode =  url?.startsWith('edit/') || false;
         //console.log('editMode ', this.editMode , ' url: ', url);
-        this.loadDataToVentaForm(id);
+        this.loadDataToVentaForm(this.id);
+    }
 
+    submitForm() {
+        console.log(this.ventaForm);
+        console.log(JSON.stringify(this.ventaForm.value));
+        if (this.ventaForm.valid) {
+            this.cargarDatosToVentaForm();
+            console.log(JSON.stringify(this.ventaForm.value));
+            this.saveVentaForm();
+        } else {
+            this.mostrarMsg('warn', 'Venta Formulario es invalido');
+        }
+    }
+
+    private cargarDatosToVentaForm() {
+        const clienteSelected = this.ventaForm.get('clienteId')?.value;
+        this.ventaForm.get('estado')?.setValue('VENTA');
+        this.ventaForm.get('clienteId')?.setValue(clienteSelected.id);
+    }
+
+    private saveVentaForm(): void {
+        this.ventaService.updateVenta(this.ventaForm.value, this.id)
+            .subscribe({
+                next: (resp) => {
+                    console.log(resp);
+                    this.mostrarMsg('success', this.ventaForm.get('estado')?.value + ' registrado correctamente');
+                    this.navigateToListVentas();
+                },
+                error: (e) => this.mostrarMsg(
+                    'error', 'Error al guardar venta ' + e.error?.message),
+            });
+    }
+    isDisableAccion() {
+        return !this.editMode || this.estado == 'VENTA';
+    }
+
+    navigateToListVentas(): void {
+        setTimeout(() =>
+            this.router.navigate(['/venta']), 3000);
+        ;
     }
 
     private getVenta(id: number): void {
         this.ventaService.getVenta(id).subscribe({
             next: (resp) => {
+                console.log(resp);
+
                 this.setValuesVentaForm(resp.data);
             },
             error: (err) => console.error(err)
@@ -436,12 +505,19 @@ export class EditVerVentaPage implements OnInit {
         this.ventaForm.valueChanges
             .pipe(takeUntilDestroyed())
             .subscribe(() => this.cdr.markForCheck());
+        // this.ventaForm.statusChanges.subscribe(() => {
+        //     this.cdr.markForCheck();
+        // });
+        this.detallePagos.valueChanges
+            .pipe(takeUntilDestroyed())
+            .subscribe(() => this.cdr.markForCheck());
     }
 
     private setValuesVentaForm(venta: VentaOutput) {
         const cliente = this.clienteOptions.find(cliente => cliente.id === venta.clienteId);
         const pagos = venta.pagos || [];
         this.ventaForm.patchValue({
+            id: venta.id,
             clienteId: cliente,
             codigo: venta.codigo,
             glosa: venta.glosa,
@@ -451,14 +527,17 @@ export class EditVerVentaPage implements OnInit {
         });
         this.setValuesVentaDetalle(venta.detalle || []);
         this.setValuesVentaPagos(pagos);
-        // this.cdr.markForCheck()
     }
 
     private setValuesVentaDetalle(detalles: DetalleVenta[]) {
+
         detalles.forEach(prod => {
             const producto = this.productoPresentacionOptions
                 .find(ele => ele.id == prod.presentacionId) || PresentacionOuput.getInstance();
-            console.log('setValuesVentaDetalle ', prod);
+
+            producto.precioVenta = prod.precio;
+            console.log('setValuesVentaDetalle detalle', prod);
+            console.log('setValuesVentaDetalle producto', producto);
             this.addDetalle(producto, prod.cantidad);
         });
     }
@@ -473,13 +552,34 @@ export class EditVerVentaPage implements OnInit {
     addDetallePago() {
         const tipoPago = this.pagos.get('tipo')?.value?.name;
         const montoPago = this.pagos.get('monto')?.value;
-        const findIndexDetallePago = this.detallePagos.controls
-            .findIndex(ele => ele.value.tipo === tipoPago);
-
-        if (findIndexDetallePago < 0) {
+        if (this.esValidoDetallePago(tipoPago, montoPago)) {
             const newDetalle = this.crearDetallePago(tipoPago, montoPago);
             this.detallePagos.push(newDetalle);
         }
+    }
+
+    private esValidoDetallePago(tipo: string, monto: number) {
+        if (tipo == '' || !tipo) {
+            this.mostrarMsg('info', 'El tipo pago no ingresado.');
+            return false;
+        }
+        const findIndexDetallePago = this.detallePagos.controls
+            .findIndex(ele => ele.value.tipo === tipo);
+        if (findIndexDetallePago > -1) {
+            this.mostrarMsg('info', 'El tipo pago ya esta registrado.');
+            return false;
+        }
+        if (monto == 0 || monto > this.total) {
+            this.mostrarMsg('info', 'El monto debe ser mayor a 0, \ny menor igual al total venta.');
+            return false;
+        }
+        // console.log((this.totalPago + monto), typeof (this.totalPago + monto));
+
+        if ((this.totalPago + monto) > this.total) {
+            this.mostrarMsg('info', 'El monto debe ser igual al total venta.');
+            return false;
+        }
+        return true;
     }
 
     private crearDetallePago(tipo: string, monto: number): FormGroup {
@@ -491,6 +591,7 @@ export class EditVerVentaPage implements OnInit {
 
     private crearVentaForm(): FormGroup {
         return this.formBuilder.group({
+            id: [null, Validators.required],
             clienteId: [null, Validators.required],
             codigo: ['V-12', Validators.required],
             glosa: [''],
@@ -501,7 +602,7 @@ export class EditVerVentaPage implements OnInit {
             hasPay: [{ value: false, disabled: true }, Validators.required],
             pagos: this.formBuilder.group({
                 tipo: [''],
-                monto: [''],
+                monto: [0],
                 detallePago: this.formBuilder.array([]),
                 totalPago: [0, [Validators.required, Validators.min(1)]]
             }),
@@ -511,7 +612,7 @@ export class EditVerVentaPage implements OnInit {
     addDetalle(presentacionProducto: PresentacionOuput, cantidad?: number) {
 
         // if (this.esValidoProducto(presentacionProducto)) {
-        this.movimientoService.getStockByProducto(
+        this.stockService.getStockByProducto(
             presentacionProducto.productoId, presentacionProducto.id)
             .subscribe({
                 next: (resp) => {
@@ -519,7 +620,7 @@ export class EditVerVentaPage implements OnInit {
                     const newDetalle = this.crearDetalle(presentacionProducto, this.crearFormArrayStock(stocks), cantidad);
                     newDetalle.valueChanges.subscribe((presentacion) => {
                         console.log("add detalle ", presentacion);
-                        const total = presentacion.precioVenta * presentacion.cantidad;
+                        const total = presentacion.precio * presentacion.cantidad;
                         newDetalle.get('subtotal')?.setValue(total, { emitEvent: false });
                     });
                     console.log('new Detalle with stock ');
@@ -532,17 +633,20 @@ export class EditVerVentaPage implements OnInit {
     }
 
     private esValidoProducto(productoPre: PresentacionOuput): boolean {
+        if (!this.editMode) return true;
+        console.log('se valida producto');
+
         if (productoPre && productoPre.id == 0) return false;
         const findIndexInDetalle = this.findIndexDelProductoEnDetalle(productoPre);
         if (findIndexInDetalle > -1) {
-            this.mostrarMsg('info', 'El producto ' + productoPre.presentacion
+            this.mostrarMsg('info', 'El producto ' + productoPre.nombre
                 + ' esta en la fila nro ' + (findIndexInDetalle + 1));
             return false;
         }
         if (productoPre.estadoStock === 'AGOTADO') {
             this.mostrarMsg(
                 'warn',
-                'El producto ' + productoPre.presentacion + ' esta AGOTADO.'
+                'El producto ' + productoPre.nombre + ' esta AGOTADO.'
             );
             return false;
         }
@@ -553,9 +657,9 @@ export class EditVerVentaPage implements OnInit {
         const subtotal = (presentacionProducto?.precioVenta || 0) * cantidad;
         return this.formBuilder.group({
             presentacionId: [presentacionProducto?.id || null, Validators.required],
-            nombre: [presentacionProducto?.presentacion || ''],
+            nombre: [presentacionProducto?.nombre || ''],
             productoId: [presentacionProducto?.productoId || null, Validators.required],
-            precioVenta: [presentacionProducto?.precioVenta || 0, [Validators.required, Validators.min(1)]],
+            precio: [presentacionProducto?.precioVenta || 0, [Validators.required, Validators.min(1)]],
             // Venta siempre realizar en cantidad minima (cantidad base)
             cantidad: [cantidad, [Validators.required, Validators.min(1)]],
             subtotal: [subtotal, [Validators.required, Validators.min(1)]],
@@ -665,6 +769,9 @@ export class EditVerVentaPage implements OnInit {
     // Getters
     get hasPay(): boolean { return this.ventaForm.get('hasPay')?.value || false; }
     get detalle(): FormArray { return this.ventaForm.get('detalle') as FormArray; }
+    get estado(): string { return this.ventaForm.get('estado')?.value || ''; }
+
+
 
     get total(): number {
         const total = this.detalle.controls

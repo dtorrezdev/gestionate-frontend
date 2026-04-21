@@ -9,7 +9,7 @@ import { PresentacionSave } from '../presentacion/dto/presentacion.save';
 export class ProductService {
 
     private readonly _API: string = 'http://localhost:8080/modulobase/api/v1/producto_presentacion_v2';
-    private readonly _TOKEN: string = 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJyb2wiOiJTdXBlciBBZG1pbmlzdHJhZG9yIiwic3ViIjoiYWRtaW4iLCJpYXQiOjE3NzYyODU3OTEsImV4cCI6MTc3NjI5Mjk5MX0.5PLAp92BomKmkQ__H-eRq4g85-z_fe8l4ZAJfS8zdhI';
+    private readonly _TOKEN: string = 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJyb2wiOiJTdXBlciBBZG1pbmlzdHJhZG9yIiwic3ViIjoiYWRtaW4iLCJpYXQiOjE3NzY3MTYzODEsImV4cCI6MTc3NjcyMzU4MX0.D02vWDRsDLXvu7Ogai3uTPL6Bh1wH8PpzV_HNmj9tO8';
 
     constructor(private http: HttpClient) { }
 
@@ -26,6 +26,28 @@ export class ProductService {
         headers = headers.set('Content-Type', 'application/json');
         headers = headers.set('Authorization', this._TOKEN);
         return this.http.post<CommonResponse<PresentacionSave>>(this._API, JSON.stringify(presentacion), { headers });
+    }
+
+    getProdutoPresentacion(id: number) {
+        let headers = new HttpHeaders();
+        headers = headers.set('Content-Type', 'application/json');
+        headers = headers.set('Authorization', this._TOKEN);
+
+        return this.http.get<CommonResponse<PresentacionOuput>>(`${this._API}/${id}`, { headers: headers });
+    }
+
+    updatePresentacion(presentacion: PresentacionInput, id: number) {
+        let headers = new HttpHeaders();
+        headers = headers.set('Content-Type', 'application/json');
+        headers = headers.set('Authorization', this._TOKEN);
+        return this.http.put<PresentacionSave>(`http://localhost:8080/modulobase/api/v1/producto_presentacion/${id}`, JSON.stringify(presentacion), { headers });
+    }
+
+    deletePresentacion(id: number) {
+        let headers = new HttpHeaders();
+        headers = headers.set('Content-Type', 'application/json');
+        headers = headers.set('Authorization', this._TOKEN);
+        return this.http.delete(`${this._API}`, { headers, body: JSON.stringify({ id }) });
     }
 
 }

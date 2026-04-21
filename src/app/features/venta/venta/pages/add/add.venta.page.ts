@@ -1,7 +1,7 @@
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
 import { MessageService } from 'primeng/api';
@@ -20,11 +20,9 @@ import { ClienteService } from '../../../services/cliente.service';
 import { ClienteOption } from '../../../cliente/dto/cliente.option';
 import { PresentacionOuput } from '../../../../producto/presentacion/dto/presentacion.output';
 import { VentaService } from '../../../services/venta.service';
-import { MovimientoService } from '../../../../inventario/movimiento/service/movimiento.service';
 import { StockByProductoOutput } from '../../../../inventario/stock/dtos/stock-by-producto.output';
 import { StatusStock } from '../../../../../shared/enums/status-stock.enum';
-
-type Severity = 'success' | 'secondary' | 'info' | 'warn' | 'error' | 'contrast';
+import { StockService } from '../../../../inventario/stock/service/stock.service';
 
 @Component({
     imports: [
@@ -70,16 +68,17 @@ type Severity = 'success' | 'secondary' | 'info' | 'warn' | 'error' | 'contrast'
             display: none;
         }
     `,
-    providers: [ProductService, ClienteService, VentaService, MovimientoService, MessageService]
+    providers: [ProductService, ClienteService, VentaService, StockService, MessageService]
 })
 export class AddVentaPage implements OnInit {
     private productService = inject(ProductService);
     private clienteService = inject(ClienteService);
     private ventaService = inject(VentaService);
-    private movimientoService = inject(MovimientoService);
+    private stockService = inject(StockService);
     private formBuilder = inject(FormBuilder);
     private messageService = inject(MessageService);
     private readonly cdr = inject(ChangeDetectorRef);
+    private router = inject(Router);
 
     public ventaForm!: FormGroup;
     public clienteOptions!: ClienteOption[];
@@ -130,7 +129,8 @@ export class AddVentaPage implements OnInit {
                 .subscribe({
                     next: (resp) => {
                         console.log(resp);
-                        this.mostrarMsg('success','Venta registrado correctamente');
+                        this.mostrarMsg('success', this.ventaForm.get('estado')?.value + ' registrado correctamente');
+                        this.navigateToListVentas();
                     },
                     error: (e) => this.mostrarMsg(
                         'error','Error al guardar venta ' + e.error?.message),
@@ -140,7 +140,7 @@ export class AddVentaPage implements OnInit {
     addDetalle(presentacionProducto: PresentacionOuput) {
         console.log('addDetalle ', presentacionProducto);
         if (this.esValidoProducto(presentacionProducto) ) {
-            this.movimientoService.getStockByProducto(
+            this.stockService.getStockByProducto(
                 presentacionProducto.productoId, presentacionProducto.id)
                 .subscribe({
                     next: (resp) => {
@@ -148,7 +148,7 @@ export class AddVentaPage implements OnInit {
                         const stocks = resp.data;
                         const newDetalle = this.crearDetalle(presentacionProducto, this.crearFormArrayStock(stocks));
                         newDetalle.valueChanges.subscribe((presentacion) => {
-                            const total = presentacion.precioVenta * presentacion.cantidad;
+                            const total = presentacion.precio * presentacion.cantidad;
                             newDetalle.get('subtotal')?.setValue(total, { emitEvent: false });
                         });
 
@@ -166,14 +166,14 @@ export class AddVentaPage implements OnInit {
         if (productoPre.id == 0) return false;
         const findIndexInDetalle = this.findIndexDelProductoEnDetalle(productoPre);
         if(findIndexInDetalle > -1) {
-            this.mostrarMsg('info', 'El producto ' + productoPre.presentacion
+            this.mostrarMsg('info', 'El producto ' + productoPre.nombre
                 + ' esta en la fila nro ' + (findIndexInDetalle + 1));
             return false;
         }
         if(productoPre.estadoStock === 'AGOTADO') {
             this.mostrarMsg(
                 'warn',
-                'El producto ' + productoPre.presentacion + ' esta AGOTADO.'
+                'El producto ' + productoPre.nombre + ' esta AGOTADO.'
             );
             return false;
         }
@@ -187,13 +187,33 @@ export class AddVentaPage implements OnInit {
     addDetallePago() {
         const tipoPago = this.pagos.get('tipo')?.value?.name;
         const montoPago = this.pagos.get('monto')?.value;
-        const findIndexDetallePago = this.detallePagos.controls
-            .findIndex(ele => ele.value.tipo === tipoPago);
 
-        if (findIndexDetallePago < 0) {
+        if (this.esValidoDetallePago(tipoPago, montoPago)) {
             const newDetalle = this.crearDetallePago(tipoPago, montoPago);
             this.detallePagos.push(newDetalle);
         }
+    }
+
+    private esValidoDetallePago(tipo: string, monto: number) {
+        if (tipo == '' || !tipo) {
+            this.mostrarMsg('info', 'El tipo pago no ingresado.');
+            return false;
+        }
+        const findIndexDetallePago = this.detallePagos.controls
+            .findIndex(ele => ele.value.tipo === tipo);
+        if (findIndexDetallePago > -1) {
+            this.mostrarMsg('info', 'El tipo pago ya esta registrado.');
+            return false;
+        }
+        if (monto == 0 || monto > this.total) {
+            this.mostrarMsg('info', 'El monto debe ser mayor a 0, \ny menor igual al total venta.');
+            return false;
+        }
+        if ((this.totalPago + monto) > this.total) {
+            this.mostrarMsg('info', 'El monto debe ser igual al total venta.');
+            return false;
+        }
+        return true;
     }
 
     editPresentacionProducto(index: number, presentacionId: number) {
@@ -205,7 +225,7 @@ export class AddVentaPage implements OnInit {
         detalle.patchValue({
             presentacionId: presentacionProd.id,
             productoId: presentacionProd.productoId,
-            precioVenta: presentacionProd.precioVenta,
+            precio: presentacionProd.precioVenta,
         });
     }
 
@@ -246,7 +266,7 @@ export class AddVentaPage implements OnInit {
             hasPay: [{ value: false, disabled: true }, Validators.required],
             pagos: this.formBuilder.group({
                 tipo: [''],
-                monto: [''],
+                monto: [0],
                 detallePago: this.formBuilder.array([]),
                 totalPago: [0, [Validators.required, Validators.min(1)]]
             }),
@@ -289,12 +309,10 @@ export class AddVentaPage implements OnInit {
     private crearDetalle(presentacionProducto?: PresentacionOuput, stocks?: FormArray,): FormGroup {
         return this.formBuilder.group({
             presentacionId: [presentacionProducto?.id || null, Validators.required],
-            nombre: [presentacionProducto?.presentacion || ''],
+            nombre: [presentacionProducto?.nombre || ''],
             productoId: [presentacionProducto?.productoId || null, Validators.required],
-            precioVenta: [presentacionProducto?.precioVenta || 0, [Validators.required, Validators.min(1)]],
-            // Venta siempre realizar en cantidad minima (cantidad base)
+            precio: [presentacionProducto?.precioVenta || 0, [Validators.required, Validators.min(1)]],
             cantidad: [1, [Validators.required, Validators.min(1)]],
-            // cantidadBase: [1, [Validators.required, Validators.min(1)]],
             subtotal: [presentacionProducto ? presentacionProducto.precioVenta : 0, [Validators.required, Validators.min(1)]],
             stocks: stocks,
             estadoStock: [presentacionProducto?.estadoStock || ''],
@@ -397,5 +415,11 @@ export class AddVentaPage implements OnInit {
             default:
                 return 'info';
         }
+    }
+
+    navigateToListVentas(): void {
+        setTimeout(() =>
+            this.router.navigate(['/venta']), 3000);
+        ;
     }
 }

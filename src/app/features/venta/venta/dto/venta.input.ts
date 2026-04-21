@@ -11,7 +11,6 @@ export interface DetalleVenta {
     presentacionId: number;
     productoId: number;
     cantidad: number;
-    cantidadBase: number;
-    precioUnitario: number;
+    precio: number;
     subtotal?: number;
 }

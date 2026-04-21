@@ -60,41 +60,14 @@ export class AppMenu {
                         routerLink: ['/venta']
                     },
                     {
-                        label: 'Auth',
-                        icon: 'pi pi-fw pi-user',
-                        path: '/auth',
-                        items: [
-                            {
-                                label: 'Login',
-                                icon: 'pi pi-fw pi-sign-in',
-                                routerLink: ['/auth/login']
-                            },
-                            {
-                                label: 'Error',
-                                icon: 'pi pi-fw pi-times-circle',
-                                routerLink: ['/auth/error']
-                            },
-                            {
-                                label: 'Access Denied',
-                                icon: 'pi pi-fw pi-lock',
-                                routerLink: ['/auth/access']
-                            }
-                        ]
-                    },
-                    {
-                        label: 'Crud',
+                        label: 'Venta del Dia',
                         icon: 'pi pi-fw pi-pencil',
-                        routerLink: ['/pages/crud']
+                        routerLink: ['/venta/dia']
                     },
                     {
-                        label: 'Not Found',
+                        label: 'Historial Venta',
                         icon: 'pi pi-fw pi-exclamation-circle',
-                        routerLink: ['/pages/notfound']
-                    },
-                    {
-                        label: 'Empty',
-                        icon: 'pi pi-fw pi-circle-off',
-                        routerLink: ['/pages/empty']
+                        routerLink: ['/venta/history']
                     }
                 ]
             },
@@ -195,31 +168,39 @@ export class AppMenu {
                 label: 'Inventario',
                 items: [
                     {
-                        label: 'Documentation',
+                        label: 'Producto Stock',
                         icon: 'pi pi-fw pi-book',
-                        routerLink: ['/documentation']
+                        routerLink: ['/inventario/stocks']
                     },
                     {
-                        label: 'View Source',
+                        label: 'Ubicacion Stock',
                         icon: 'pi pi-fw pi-github',
-                        url: 'https://github.com/primefaces/sakai-ng',
-                        target: '_blank'
-                    }
+                        routerLink: ['/inventario/ubicacion-stock']
+                    },
+                    {
+                        label: 'Kardex',
+                        icon: 'pi pi-fw pi-github',
+                        routerLink: ['/inventario/kardex']
+                    },
                 ]
             },
             {
                 label: 'Compras',
                 items: [
                     {
-                        label: 'Documentation',
+                        label: 'Solicitud Compra',
                         icon: 'pi pi-fw pi-book',
                         routerLink: ['/documentation']
                     },
                     {
-                        label: 'View Source',
+                        label: 'Recepcion Compra',
                         icon: 'pi pi-fw pi-github',
-                        url: 'https://github.com/primefaces/sakai-ng',
-                        target: '_blank'
+                        routerLink: ['/recpcion']
+                    },
+                    {
+                        label: 'Proveedor',
+                        icon: 'pi pi-fw pi-github',
+                        routerLink: ['/proveedor']
                     }
                 ]
             },
@@ -227,15 +208,14 @@ export class AppMenu {
                 label: 'Reportes',
                 items: [
                     {
-                        label: 'Documentation',
+                        label: 'Reporte Ventas',
                         icon: 'pi pi-fw pi-book',
-                        routerLink: ['/documentation']
+                        routerLink: ['/report-ventas']
                     },
                     {
-                        label: 'View Source',
+                        label: 'Reporte Compras',
                         icon: 'pi pi-fw pi-github',
-                        url: 'https://github.com/primefaces/sakai-ng',
-                        target: '_blank'
+                        routerLink: ['/report-compras']
                     }
                 ]
             }

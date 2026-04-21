@@ -17,3 +17,15 @@ export class Reception { }
   template: `<p>Otros works!</p>`
 })
 export class Otros { }
+
+@Component({
+    standalone: true,
+    template: `<p>UbicacionStock works!</p>`
+})
+export class UbicacionStock { }
+
+@Component({
+    standalone: true,
+    template: `<p>Kardex works!</p>`
+})
+export class Kardex { }

@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { Table, TableModule } from 'primeng/table';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -15,7 +15,7 @@ import { ProductService } from "../../services/producto.service";
 import { RouterModule } from '@angular/router';
 import { BreadcrumbModule } from 'primeng/breadcrumb';
 import { PresentacionOuput } from '../dto/presentacion.output';
-import { MovimientoService } from '../../../inventario/movimiento/service/movimiento.service';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 @Component({
     imports: [
@@ -31,7 +31,8 @@ import { MovimientoService } from '../../../inventario/movimiento/service/movimi
         RatingModule,
         TagModule,
         InputIconModule,
-        IconFieldModule
+        IconFieldModule,
+        ConfirmDialogModule,
     ],
     standalone: true,
     template: `
@@ -118,12 +119,25 @@ import { MovimientoService } from '../../../inventario/movimiento/service/movimi
                 </td>
                 <td>{{ product.precioVenta | currency: 'Bs' }}</td>
                 <td>
-                    <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" />
-                    <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" />
+                    <p-button icon="pi pi-pencil"
+                        class="mr-2"
+                        [rounded]="true"
+                        [outlined]="true"
+                        routerLink="/producto/edit-producto/{{product.id}}"
+                    />
+                    <p-button
+                        icon="pi pi-trash"
+                        severity="danger"
+                        (onClick)="deleteProducto(product)"
+                        [rounded]="true"
+                        [outlined]="true"
+                    />
                 </td>
             </tr>
         </ng-template>
     </p-table>
+    <p-toast />
+    <p-confirmdialog [style]="{ width: '450px' }" />
     `,
     styles: `
         .mb-0 {
@@ -139,12 +153,13 @@ import { MovimientoService } from '../../../inventario/movimiento/service/movimi
             border-radius: 0;
         }
     `,
-    providers: [MessageService, ProductService]
+    providers: [ProductService, MessageService, ConfirmationService]
 })
 export class PresentacionPage implements OnInit {
 
     private productService = inject(ProductService);
     private messageService = inject(MessageService);
+    private confirmationService = inject(ConfirmationService);
 
     products = signal<PresentacionOuput[]>([]);
     statuses!: Map<string, string>;
@@ -158,6 +173,34 @@ export class PresentacionPage implements OnInit {
     ngOnInit() {
         this.loadDataTable();
     }
+
+    public deleteProducto(product: PresentacionOuput): void {
+        this.confirmationService.confirm({
+            message: 'Estas seguro de eliminar el producto PR-' + product.id + '?',
+            header: 'Confirm',
+            icon: 'pi pi-exclamation-triangle',
+            accept: () => {
+                this.productService.deletePresentacion(product.id).
+                    subscribe({
+                        next: (value) => {
+                            console.log(value);
+                            console.log('Se va eliminar ');
+                            this.messageService.add({
+                                severity: 'success',
+                                summary: 'Successful',
+                                detail: `Producto PR-${product.id} eliminado correctamente!`,
+                                life: 3000
+                            });
+                            this.loadDataTable();
+                        }
+                    });
+            },
+            reject: () => {
+                console.log('Reject Solicitud');
+            }
+        });
+    }
+
 
     private loadDataTable(): void {
         this.productService.getAllProdutos()

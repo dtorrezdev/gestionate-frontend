@@ -33,6 +33,7 @@
                 <label class="font-semibold" for="producto">Productos:</label>
                 <p-select
                     id="producto"
+                    filter="true"
                     (onChange)="addDetalle($event.value)"
                     [options]="productoPresentacionOptions"
                     optionLabel="presentacion"
@@ -106,18 +107,18 @@
                 </td>
                 <td
                     style="min-width: 3rem"
-                    [pEditableColumn]="product.precioVenta"
-                    pEditableColumnField="precioVenta">
+                    [pEditableColumn]="product.precio"
+                    pEditableColumnField="precio">
                     <p-cellEditor>
                         <ng-template #input>
-                            <p-inputnumber inputId="precioVenta" formControlName="precioVenta" mode="decimal" [minFractionDigits]="2" />
-                            @if(product.value.precioVenta <= 0) {
+                            <p-inputnumber inputId="precio" formControlName="precio" mode="decimal" [minFractionDigits]="2" />
+                            @if(product.value.precio <= 0) {
                             <small class="text-red">precio debe ser mayor a 0</small>
                             }
                         </ng-template>
                         <ng-template #output>
-                            {{ product.value.precioVenta | currency: 'Bs ' }}
-                            @if(product.value.precioVenta <= 0) {
+                            {{ product.value.precio | currency: 'Bs ' }}
+                            @if(product.value.precio <= 0) {
                                 <small class="text-red">valor invalido</small>
                             }
                         </ng-template>
@@ -232,7 +233,7 @@
             </div>
             <div class="flex gap-2 w-full flex-cc">
                 <label for="monto">Monto: </label>
-                <p-inputnumber formControlName="monto" mode="decimal" [minFractionDigits]="2" inputId="cantidad" />
+                <p-inputnumber formControlName="monto" mode="decimal" [minFractionDigits]="2" inputId="monto" />
             </div>
             <div class="flex gap-2 w-full flex-cc">
                 <p-button label="Agregar" icon="pi pi-plus" (onClick)="addDetallePago()" />
@@ -305,7 +306,7 @@
         <div class="flex flex-wrap gap-2">
             <p-button label="Guardar" [disabled]="ventaForm.invalid" type="submit" />
             <p-button label="Preventa" [disabled]="isPreventaDisable()" severity="info" (onClick)="submitForm()" />
-            <p-button label="Cancelar" severity="secondary" [routerLink]="'/venta'" />
+            <p-button label="Cancelar" severity="secondary" routerLink="/venta" />
         </div>
     </div>
      <p-toast />
