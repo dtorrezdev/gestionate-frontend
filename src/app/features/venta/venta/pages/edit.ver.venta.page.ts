@@ -612,11 +612,10 @@ export class EditVerVentaPage implements OnInit {
     addDetalle(presentacionProducto: PresentacionOuput, cantidad?: number) {
 
         // if (this.esValidoProducto(presentacionProducto)) {
-        this.stockService.getStockByProducto(
-            presentacionProducto.productoId, presentacionProducto.id)
+        this.stockService.getStockByProducto(presentacionProducto.id)
             .subscribe({
                 next: (resp) => {
-                    const stocks = resp.data;
+                    const stocks = resp.data.stocks || [];
                     const newDetalle = this.crearDetalle(presentacionProducto, this.crearFormArrayStock(stocks), cantidad);
                     newDetalle.valueChanges.subscribe((presentacion) => {
                         console.log("add detalle ", presentacion);

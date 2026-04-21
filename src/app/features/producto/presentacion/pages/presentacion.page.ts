@@ -6,7 +6,6 @@ import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
 import { ToolbarModule } from 'primeng/toolbar';
-import { RatingModule } from 'primeng/rating';
 import { InputTextModule } from 'primeng/inputtext';
 import { TagModule } from 'primeng/tag';
 import { InputIconModule } from 'primeng/inputicon';
@@ -28,7 +27,6 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
         InputTextModule,
         ToastModule,
         ToolbarModule,
-        RatingModule,
         TagModule,
         InputIconModule,
         IconFieldModule,

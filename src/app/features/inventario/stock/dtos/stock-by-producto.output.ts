@@ -1,5 +1,11 @@
 
 
+
+export interface ListStockOutput {
+    stocks: StockByProductoOutput[];
+}
+
+
 export interface StockByProductoOutput {
     cantidad: number;
     estante: string;

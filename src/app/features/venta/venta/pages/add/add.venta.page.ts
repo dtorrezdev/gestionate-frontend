@@ -140,12 +140,11 @@ export class AddVentaPage implements OnInit {
     addDetalle(presentacionProducto: PresentacionOuput) {
         console.log('addDetalle ', presentacionProducto);
         if (this.esValidoProducto(presentacionProducto) ) {
-            this.stockService.getStockByProducto(
-                presentacionProducto.productoId, presentacionProducto.id)
+            this.stockService.getStockByProducto(presentacionProducto.id)
                 .subscribe({
                     next: (resp) => {
                         console.log('resp', resp);
-                        const stocks = resp.data;
+                        const stocks = resp.data.stocks || [];
                         const newDetalle = this.crearDetalle(presentacionProducto, this.crearFormArrayStock(stocks));
                         newDetalle.valueChanges.subscribe((presentacion) => {
                             const total = presentacion.precio * presentacion.cantidad;

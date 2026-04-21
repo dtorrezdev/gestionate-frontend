@@ -17,8 +17,6 @@ export class PresentacionOuput {
     marca: string;
     estadoStock: string;
 
-
-
     constructor(
         id: number,
         productoId: number,

@@ -37,7 +37,7 @@ export class AppMenu {
                     },
                     {
                         label: 'Roles',
-                        icon: 'pi pi-fw pi-github',
+                        icon: 'pi pi-fw pi-shield',
                         url: 'https://github.com/primefaces/sakai-ng',
                         target: '_blank'
                     },
@@ -56,17 +56,17 @@ export class AppMenu {
                 items: [
                     {
                         label: 'Venta',
-                        icon: 'pi pi-fw pi-globe',
+                        icon: 'pi pi-fw pi-receipt',
                         routerLink: ['/venta']
                     },
                     {
                         label: 'Venta del Dia',
-                        icon: 'pi pi-fw pi-pencil',
+                        icon: 'pi pi-fw pi-ticket',
                         routerLink: ['/venta/dia']
                     },
                     {
                         label: 'Historial Venta',
-                        icon: 'pi pi-fw pi-exclamation-circle',
+                        icon: 'pi pi-fw pi-shop',
                         routerLink: ['/venta/history']
                     }
                 ]
@@ -159,7 +159,7 @@ export class AppMenu {
                     },
                     {
                         label: 'Unidad Medida',
-                        icon: 'pi pi-fw pi-github',
+                        icon: 'pi pi-fw pi-gauge',
                         routerLink: ['/producto/unidad-medida']
                     }
                 ]
@@ -169,17 +169,17 @@ export class AppMenu {
                 items: [
                     {
                         label: 'Producto Stock',
-                        icon: 'pi pi-fw pi-book',
+                        icon: 'pi pi-fw pi-warehouse',
                         routerLink: ['/inventario/stocks']
                     },
                     {
                         label: 'Ubicacion Stock',
-                        icon: 'pi pi-fw pi-github',
+                        icon: 'pi pi-fw pi-shop',
                         routerLink: ['/inventario/ubicacion-stock']
                     },
                     {
                         label: 'Kardex',
-                        icon: 'pi pi-fw pi-github',
+                        icon: 'pi pi-fw pi-microsoft',
                         routerLink: ['/inventario/kardex']
                     },
                 ]
@@ -189,17 +189,17 @@ export class AppMenu {
                 items: [
                     {
                         label: 'Solicitud Compra',
-                        icon: 'pi pi-fw pi-book',
+                        icon: 'pi pi-fw pi-cart-plus',
                         routerLink: ['/documentation']
                     },
                     {
                         label: 'Recepcion Compra',
-                        icon: 'pi pi-fw pi-github',
+                        icon: 'pi pi-fw pi-shopping-bag',
                         routerLink: ['/recpcion']
                     },
                     {
                         label: 'Proveedor',
-                        icon: 'pi pi-fw pi-github',
+                        icon: 'pi pi-fw pi-car',
                         routerLink: ['/proveedor']
                     }
                 ]
@@ -209,12 +209,12 @@ export class AppMenu {
                 items: [
                     {
                         label: 'Reporte Ventas',
-                        icon: 'pi pi-fw pi-book',
+                        icon: 'pi pi-fw pi-chart-bar',
                         routerLink: ['/report-ventas']
                     },
                     {
                         label: 'Reporte Compras',
-                        icon: 'pi pi-fw pi-github',
+                        icon: 'pi pi-fw pi-chart-scatter',
                         routerLink: ['/report-compras']
                     }
                 ]
