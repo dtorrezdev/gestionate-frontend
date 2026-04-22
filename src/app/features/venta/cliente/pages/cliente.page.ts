@@ -119,7 +119,6 @@ export class ClientePage {
     breadcrumbHome = { icon: 'pi pi-home', to: '/' };
     breadcrumbItems = [{ label: 'Cliente' }, { label: 'Listar' }, { label: 'Todo' }];
 
-
     constructor(
         private clienteService: ClienteService,
         private messageService: MessageService,

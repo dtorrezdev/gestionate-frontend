@@ -1,9 +1,8 @@
 import { Component, inject, signal, ViewChild } from "@angular/core";
-import { MessageService, ToastMessageOptions } from "primeng/api";
+import { ConfirmationService, MessageService, ToastMessageOptions } from "primeng/api";
 import { BreadcrumbModule } from "primeng/breadcrumb";
 import { ButtonModule } from "primeng/button";
 import { ToolbarModule } from "primeng/toolbar";
-import { MessageModule } from 'primeng/message';
 import { ToastModule } from 'primeng/toast';
 
 import { CommonModule } from '@angular/common';
@@ -12,22 +11,12 @@ import { InputTextModule } from 'primeng/inputtext';
 
 import { MarcaService } from "../service/marca.service";
 import { MarcaOutput } from "../dto/marca.output";
-import { Table, TableModule } from "primeng/table";
+import { TableModule } from "primeng/table";
 import { DialogModule } from "primeng/dialog";
-import { FormBuilder, Validators, ReactiveFormsModule } from "@angular/forms";
+import { ReactiveFormsModule } from "@angular/forms";
 import { form, required, FormField } from "@angular/forms/signals";
 import { MarcaInput } from "../dto/marca.input";
-
-interface Column {
-    field: string;
-    header: string;
-    customExportHeader?: string;
-}
-
-interface ExportColumn {
-    title: string;
-    dataKey: string;
-}
+import { ConfirmDialogModule } from "primeng/confirmdialog";
 
 @Component({
     imports: [
@@ -38,10 +27,11 @@ interface ExportColumn {
         DialogModule,
         ReactiveFormsModule,
         FormField,
-        MessageModule,
         ToastModule,
         InputTextModule,
-        CommonModule
+        CommonModule,
+        ConfirmDialogModule
+
     ],
     standalone: true,
     template: `
@@ -68,7 +58,6 @@ interface ExportColumn {
         [paginator]="true"
         [rowsPerPageOptions]="[10, 20, 50,100]"
         [rows]="10"
-        [columns]="cols"
         [tableStyle]="{ 'min-width': '75rem' }"
         [rowHover]="true"
         dataKey="id"
@@ -101,7 +90,7 @@ interface ExportColumn {
                 <td style="min-width: 12rem">{{ marca.descripcion }}</td>
                 <td style="min-width: 4rem">
                     <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" />
-                    <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" />
+                    <p-button icon="pi pi-trash" severity="danger" [rounded]="true" (onClick)="deleteMarca(marca)" [outlined]="true" />
                 </td>
             </tr>
         </ng-template>
@@ -138,6 +127,9 @@ interface ExportColumn {
             </form>
         </ng-template>
     </p-dialog>
+
+    <p-confirmdialog [style]="{ width: '450px' }" />
+
     <p-toast />
     `,
     styles: `
@@ -164,7 +156,7 @@ interface ExportColumn {
             margin-top: 1.5rem;
         }
     `,
-    providers: [MarcaService, MessageService]
+    providers: [MarcaService, MessageService, ConfirmationService]
 })
 export class Marca {
 
@@ -172,6 +164,7 @@ export class Marca {
 
     // private formBuilder = inject(FormBuilder);
     private marcaService = inject(MarcaService);
+    private confirmationService = inject(ConfirmationService);
     private messageService = inject(MessageService);
 
     // MenuBar BreadcrumbModule
@@ -180,26 +173,15 @@ export class Marca {
 
     // modal Dialog
     marcaDialog: boolean = false;
-    submitted: boolean = false;
 
-    // marcaForm = this.formBuilder.group({
-    //     nombre: ['', [Validators.required, Validators.minLength(2)]],
-    //     descripcion: ['']
-    // });
-
-    cliente = signal<MarcaInput>(
+    marca = signal<MarcaInput>(
         MarcaInput.getInstance()
     );
 
-    marcaForm = form(this.cliente, (schemaPath) => {
+    marcaForm = form(this.marca, (schemaPath) => {
         required(schemaPath.nombre, { message: 'El nombre es requerido.' });
         required(schemaPath.descripcion, { message: 'El descripcion es requerido.' });
     });
-
-    // Table Component
-    @ViewChild('dt') dt!: Table;
-    exportColumns!: ExportColumn[];
-    cols!: Column[];
 
 
     constructor(
@@ -212,13 +194,7 @@ export class Marca {
 
     private loadData(): void {
         this.loadMarcas();
-        this.cols = [
-            { field: 'id', header: 'ID', customExportHeader: 'Cliente Code' },
-            { field: 'nombre', header: 'Nombre' },
-            { field: 'descripcion', header: 'Descripcion' }
-        ];
 
-        this.exportColumns = this.cols.map((col) => ({ title: col.header, dataKey: col.field }));
     }
 
     private loadMarcas(): void {
@@ -232,7 +208,6 @@ export class Marca {
     }
 
     onSubmit(evt: Event) {
-        // TODO: Use EventEmitter with form value
         // console.warn(this.marcaForm.value);
         evt.preventDefault();
         console.log('formCliente: ', this.marcaForm().value());
@@ -267,6 +242,42 @@ export class Marca {
         });
 
     }
+
+    deleteMarca(marca: MarcaOutput) {
+        this.confirmationService.confirm({
+            message: 'Estas seguro de eliminar la marca con id: ' + marca.id + '?',
+            header: 'Confirm',
+            icon: 'pi pi-exclamation-triangle',
+            accept: () => {
+                this.marcaService.deleteMarca(marca)
+                    .subscribe({
+                        next: (resp) => {
+                            console.log('Marca eliminada: ', resp);
+                            this.messageService.add({
+                                severity: 'success',
+                                summary: 'Successful',
+                                detail: 'Marca eliminada correctamente!',
+                                life: 3000
+                            });
+                            this.loadData();
+                        },
+                        error: (e) => {
+                            console.log('Error al eliminar Marca: ', e);
+                            this.messageService.add({
+                                severity: 'error',
+                                summary: 'Error',
+                                detail: 'Error al eliminar Marca: \n' + e.error?.message,
+                                life: 3000
+                            });
+                        }
+                    })
+            },
+            reject: () => {
+                console.log('Reject Solicitud');
+            }
+        });
+    }
+
     showSuccessViaToast() {
         this.messageService.add({
             severity: 'success',
@@ -277,7 +288,6 @@ export class Marca {
     }
 
     openNew() {
-        this.submitted = false;
         this.marcaDialog = true;
     }
 
