@@ -78,12 +78,12 @@ import { form, required, FormField } from "@angular/forms/signals";
                 <td style="min-width: 8rem">{{ unidadMedida.abreviatura }}</td>
                 <td style="min-width: 12rem">{{ unidadMedida.nombre }}</td>
                 <td style="min-width: 4rem">
-                    <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" />
+                    <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" (onClick)="editUnidadMedida(unidadMedida)" [outlined]="true" />
                     <p-button
                         icon="pi pi-trash"
                         severity="danger"
                         [rounded]="true"
-                        (onClick)="deleteUnidadMedida(unidadMedida)"
+                        (onClick)="showDialogRemoveUnidadMedida(unidadMedida)"
                         [outlined]="true"
                     />
                 </td>
@@ -130,126 +130,141 @@ import { form, required, FormField } from "@angular/forms/signals";
     providers: [UnidadMedidaService, ConfirmationService, MessageService]
 })
 export class ListUnidadMedidaPage implements OnInit {
-
-    private unidadMedidaService = inject(UnidadMedidaService);
+    private service = inject(UnidadMedidaService);
     private confirmationService = inject(ConfirmationService);
     private messageService = inject(MessageService);
 
     unidadesMedidas = signal<UnidadMedidaOuput[]>([]);
-
-    // modal Dialog
-    unidadMedidaDialog: boolean = false;
-
-    // MenuBar BreadcrumbModule
-    breadcrumbHome = { icon: 'pi pi-home', to: '/' };
-    breadcrumbItems = [{ label: 'Unidad Medida' }, { label: 'Listar' }, { label: 'Todo' }];
-
     unidadMedida = signal<UnidadMedidaInput>({
         nombre: '',
         abreviatura: '',
         esUnidadMinima: true
     });
-
+    unidadMedidaDialog: boolean = false;
     unidadMedidaForm = form(this.unidadMedida, (schemaPath) => {
         required(schemaPath.abreviatura, { message: 'Abreviatura es requerido.' });
         required(schemaPath.nombre, { message: 'El descripcion es requerido.' });
         required(schemaPath.esUnidadMinima, { message: 'Es unidad Minima es requerido.' });
     });
 
-    constructor() { }
+    // MenuBar BreadcrumbModule
+    breadcrumbHome = { icon: 'pi pi-home', to: '/' };
+    breadcrumbItems = [{ label: 'Unidad Medida' }, { label: 'Listar' }, { label: 'Todo' }];
 
     ngOnInit(): void {
         this.loadData();
     }
 
     onSubmit(evt: Event) {
-
         evt.preventDefault();
-        console.log('formCliente: ', this.unidadMedidaForm().value());
+        const unidadMedidaId = this.unidadMedida().id;
+        const unidadMedidaData = this.unidadMedidaForm().value();
+        if (unidadMedidaId) {
+            this.update(unidadMedidaData, unidadMedidaId);
+        } else {
+            this.save(unidadMedidaData);
+        }
         this.unidadMedidaDialog = false;
-        this.unidadMedidaService.saveUnidadMedida(
-            this.unidadMedidaForm().value()
-        ).subscribe({
-            next: (resp) => {
-                if (resp.success) {
-                    const newData = resp.data;
-                    this.unidadesMedidas.set([newData, ...this.unidadesMedidas()]);
-
-                    this.messageService.add({
-                        severity: 'success',
-                        summary: 'Successful',
-                        detail: 'Unidad Medida ' + resp.message,
-                        life: 3000
-                    });
-                    // this.unidadMedidaForm().reset();
-                }
-            },
-            error: (err) => {
-                console.error(err);
-                this.messageService.add({
-                    severity: 'error',
-                    summary: 'VALIDATION_ERROR',
-                    detail: 'Marca ' + err.error ? JSON.stringify(err.error.message) : 'error al crear.',
-                    life: 3000
-                });
-            },
-            complete: () => console.info('complete')
-        });
-
     }
 
-    private loadData(): void {
-        this.unidadMedidaService.getAllUnidadMedida()
+    editUnidadMedida(unidadMedida: UnidadMedidaOuput) {
+        this.unidadMedida.set({ ...unidadMedida });
+        this.unidadMedidaDialog = true;
+    }
+
+    showDialogRemoveUnidadMedida(unidadMedida: UnidadMedidaOuput) {
+        this.confirmationService.confirm({
+            message: 'Estas seguro de eliminar la Unidad Medida con id: ' + unidadMedida.id + '?',
+            header: 'Confirm',
+            icon: 'pi pi-exclamation-triangle',
+            accept: () => this.deleteUnidadMedida(unidadMedida)
+        });
+    }
+
+    openNew() { this.unidadMedidaDialog = true; }
+
+    hideDialog() { this.unidadMedidaDialog = false; }
+
+    private update(unidadMedida: UnidadMedidaInput, id: number) {
+        this.setUpdateUnidadMedida(unidadMedida, id);
+        this.service.updateUnidadMedida(unidadMedida, id)
             .subscribe({
                 next: (resp) => {
-                    const  data = resp.data.content;
-                    console.log('getAllUnidadMedida: ', resp);
-                    this.unidadesMedidas.set(data);
+                    this.mostrarMsg('success', `Unidad Medidad ${resp.message}`);
+                    this.unidadMedidaForm().reset({
+                        nombre: '',
+                        abreviatura: '',
+                        esUnidadMinima: true
+                    });
+                },
+                error: (err) => {
+                    this.mostrarMsg('error',
+                        `Unidad Medida ${err.error ? JSON.stringify(err.error.message) : 'error al crear.'}`);
+                    this.loadData();
                 }
             });
     }
 
-    deleteUnidadMedida(unidad: UnidadMedidaOuput) {
-        this.confirmationService.confirm({
-            message: 'Estas seguro de eliminar la Unidad Medida con id: ' + unidad.id + '?',
-            header: 'Confirm',
-            icon: 'pi pi-exclamation-triangle',
-            accept: () => {
-                this.unidadMedidaService.deleteUnidadMedida(unidad)
-                    .subscribe({
-                        next: (resp) => {
-                            console.log('Unidad Medida eliminada: ', resp);
-                            this.messageService.add({
-                                severity: 'success',
-                                summary: 'Successful',
-                                detail: 'Unidad Medida eliminada correctamente!',
-                                life: 3000
-                            });
-                            this.loadData();
-                        },
-                        error: (e) => {
-                            console.log('Error al eliminar Unidad Medida: ', e);
-                            this.messageService.add({
-                                severity: 'error',
-                                summary: 'Error',
-                                detail: 'Error al eliminar Unidad Medida: \n' + e.error?.message,
-                                life: 3000
-                            });
-                        }
-                    })
-            },
-            reject: () => {
-                console.log('Reject Solicitud');
-            }
+    private setUpdateUnidadMedida(unidadMedida: UnidadMedidaInput, id: number) {
+        this.unidadesMedidas.update(unidadesMedida =>
+            unidadesMedida.map(m =>
+                m.id === id ? { ...m, ...unidadMedida } : m
+            )
+        );
+    }
+
+    private save(data: UnidadMedidaInput) {
+        this.service.saveUnidadMedida(data)
+            .subscribe({
+                next: (resp) => {
+                    const newData = resp.data;
+                    this.unidadesMedidas.set([newData, ...this.unidadesMedidas()]);
+                    this.mostrarMsg('success', `Unidad Medida ${resp.message}`);
+                    this.unidadMedidaForm().reset({
+                        nombre: '',
+                        abreviatura: '',
+                        esUnidadMinima: true
+                    });
+                },
+                error: (err) =>
+                    this.mostrarMsg('error',
+                        `Unidad Medida  + ${err.error ? JSON.stringify(err.error.message) : 'error al crear.'}`)
+            });
+    }
+
+    private loadData(): void {
+        this.service.getAllUnidadMedida()
+            .subscribe({
+                next: (resp) => {
+                    this.unidadesMedidas.set(resp.data.content);
+                }
+            });
+    }
+
+    private deleteUnidadMedida(data: UnidadMedidaOuput) {
+        this.setDeleteTablaMarcas(data);
+        this.service.deleteUnidadMedida(data)
+            .subscribe({
+                next: () =>
+                    this.mostrarMsg('success', 'Unidad Medida eliminada correctamente.'),
+                error: (e) =>
+                    this.mostrarMsg('error', 'Error al eliminar Unidad Medida: \n' + e.error?.message),
+            });
+    }
+
+    private setDeleteTablaMarcas(unidadMedida: UnidadMedidaOuput) {
+        const unidadesMedidaActuales = this.unidadesMedidas().filter((val) => unidadMedida.id !== val.id);
+        this.unidadesMedidas.set(unidadesMedidaActuales);
+    }
+
+    private mostrarMsg(tipo: string, detalle: string): void {
+        this.messageService.add({
+            severity: tipo,
+            summary: 'Mensaje',
+            detail: detalle,
+            life: 5000
         });
     }
 
-    openNew() {
-        this.unidadMedidaDialog = true;
-    }
-
-    hideDialog() {
-        this.unidadMedidaDialog = false;
-    }
-
+    constructor() { }
 }

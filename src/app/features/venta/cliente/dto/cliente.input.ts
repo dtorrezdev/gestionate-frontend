@@ -1,16 +1,7 @@
 
-export class ClienteInput {
+export interface ClienteInput {
+    id?: number;
     ci: string;
     nombre: string;
     celular: string;
-
-    constructor(ci: string, nombre: string, celular: string) {
-        this.ci = ci;
-        this.nombre = nombre;
-        this.celular = celular;
-    }
-
-    public static getInstance(): ClienteInput {
-        return new ClienteInput('', '', '');
-    }
 }

@@ -335,7 +335,7 @@ export class EditPresentacionPage implements OnInit {
             .subscribe((resp) => {
                 console.log('data getAllProductoBase', resp);
                 const data = resp.content;
-                this.productoBaseOption.push(...data.map(base => new ProductoBaseOption(base.id, base.nombre)));
+                this.productoBaseOption.push(...data.map(base => new ProductoBaseOption(base.id || 0, base.nombre)));
             });
 
         this.unidadMedidaService.getAllUnidadMedida()

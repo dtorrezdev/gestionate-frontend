@@ -15,7 +15,7 @@
     </ng-template>
 </p-toolbar>
 
-<p-table #dt [value]="clientes()" [rows]="10" [columns]="cols" [tableStyle]="{ 'min-width': '75rem' }" [rowHover]="true"
+<p-table #dt [value]="clientes()" [rows]="10" [tableStyle]="{ 'min-width': '75rem' }" [rowHover]="true"
     dataKey="id" showCurrentPageReport="true">
     <ng-template #caption>
         <div class="flex items-center justify-between">
@@ -48,8 +48,9 @@
             <td style="min-width: 16rem">{{ cliente.nombre }}</td>
             <td style="min-width: 8rem">{{ cliente.celular }}</td>
             <td style="min-width: 8rem">
-                <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" />
-                <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" />
+                <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" (onClick)="editCliente(cliente)" [outlined]="true" />
+                <p-button icon="pi pi-trash" severity="danger" [rounded]="true" (onClick)="showDialogRemoveCliente(cliente)"
+                    [outlined]="true" />
             </td>
         </tr>
     </ng-template>
@@ -58,7 +59,7 @@
 <p-dialog [(visible)]="clienteDialog" [style]="{ width: '450px' }" header="Nuevo Cliente" [modal]="true">
 
     <ng-template #content>
-        <form (submit)="saveCliente($event)" action="POST">
+        <form (submit)="onSubmit($event)" action="POST">
             <div class="flex flex-col gap-6">
                 <div>
                     <label for="nombre" class="block font-bold mb-3">Nombre</label>
@@ -98,3 +99,5 @@
 
     </ng-template>
 </p-dialog>
+<p-confirmdialog [style]="{ width: '450px' }" />
+<p-toast />

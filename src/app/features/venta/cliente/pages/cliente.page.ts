@@ -1,63 +1,29 @@
-import { Component, signal, ViewChild } from "@angular/core";
-import { email, form, FormField, maxLength, minLength, required } from '@angular/forms/signals';
+import { Component, inject, signal } from "@angular/core";
+import { form, FormField, maxLength, minLength, required } from '@angular/forms/signals';
+import { ConfirmationService, MessageService } from "primeng/api";
+import { ConfirmDialogModule } from "primeng/confirmdialog";
 import { BreadcrumbModule } from "primeng/breadcrumb";
 import { InputTextModule } from 'primeng/inputtext';
-import { ButtonModule } from 'primeng/button';
-import { ClienteService } from "../../services/cliente.service";
-import { CommonModule } from "@angular/common";
-import { RouterModule } from "@angular/router";
-import { ConfirmDialogModule } from "primeng/confirmdialog";
-import { IconFieldModule } from "primeng/iconfield";
-import { InputIconModule } from "primeng/inputicon";
-import { TagModule } from "primeng/tag";
-import { DialogModule } from "primeng/dialog";
-import { InputNumberModule } from "primeng/inputnumber";
-import { RadioButtonModule } from "primeng/radiobutton";
-import { SelectModule } from "primeng/select";
-import { TextareaModule } from "primeng/textarea";
-import { RatingModule } from "primeng/rating";
 import { ToolbarModule } from "primeng/toolbar";
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from "primeng/dialog";
 import { ToastModule } from "primeng/toast";
-import { RippleModule } from "primeng/ripple";
-import { Table, TableModule } from "primeng/table";
-import { FormsModule } from "@angular/forms";
-import { MessageService } from "primeng/api";
+import { TableModule } from "primeng/table";
+
+import { ClienteService } from "../../services/cliente.service";
 import { ClienteOutput } from "../dto/cliente.output";
 import { ClienteInput } from "../dto/cliente.input";
-
-interface Column {
-    field: string;
-    header: string;
-    customExportHeader?: string;
-}
-
-interface ExportColumn {
-    title: string;
-    dataKey: string;
-}
 
 @Component({
     imports: [
         BreadcrumbModule,
         InputTextModule,
         ButtonModule,
-        CommonModule,
         TableModule,
-        FormsModule,
-        RippleModule,
         ToastModule,
         ToolbarModule,
-        RatingModule,
-        TextareaModule,
-        SelectModule,
-        RadioButtonModule,
-        InputNumberModule,
         DialogModule,
-        TagModule,
-        InputIconModule,
-        IconFieldModule,
         ConfirmDialogModule,
-        RouterModule,
         FormField
     ],
     standalone: true,
@@ -88,16 +54,20 @@ interface ExportColumn {
 
 
     `,
-    providers: [ClienteService, MessageService]
+    providers: [ClienteService, MessageService, ConfirmationService]
 })
 export class ClientePage {
+    private service = inject(ClienteService);
+    private messageService = inject(MessageService);
+    private confirmationService = inject(ConfirmationService);
 
     clientes = signal<ClienteOutput[]>([]);
-
-    cliente = signal<ClienteInput>(
-        ClienteInput.getInstance()
-    );
-
+    cliente = signal<ClienteInput>({
+        ci: '',
+        nombre: '',
+        celular: ''
+    });
+    clienteDialog: boolean = false;
     clienteForm = form(this.cliente, (schemaPath) => {
         required(schemaPath.ci, { message: 'El CI es requerido.' });
         required(schemaPath.nombre, { message: 'El nombre es requerido.' });
@@ -106,80 +76,122 @@ export class ClientePage {
         maxLength(schemaPath.celular, 8, { message: 'El celular debe ser maximo 8 digitos' });
     });
 
-    // modal Dialog
-    clienteDialog: boolean = false;
-    submitted: boolean = false;
-
-    // Table Component
-    @ViewChild('dt') dt!: Table;
-    exportColumns!: ExportColumn[];
-    cols!: Column[];
-
     // MenuBar BreadcrumbModule
     breadcrumbHome = { icon: 'pi pi-home', to: '/' };
     breadcrumbItems = [{ label: 'Cliente' }, { label: 'Listar' }, { label: 'Todo' }];
 
-    constructor(
-        private clienteService: ClienteService,
-        private messageService: MessageService,
-    ) { }
-
     ngOnInit() {
-        this.loadDemoData();
+        this.loadData();
     }
 
-    loadDemoData() {
-        this.clienteService.getAllCliente()
-            .subscribe(items =>
-                this.clientes.set(items.data.content)
-            );
-
-        this.cols = [
-            { field: 'id', header: 'ID', customExportHeader: 'Cliente Code' },
-            { field: 'ci', header: 'CI' },
-            { field: 'nombre', header: 'Nombre' },
-            { field: 'celuar', header: 'Celular' }
-        ];
-
-        this.exportColumns = this.cols.map((col) => ({ title: col.header, dataKey: col.field }));
-    }
-
-    openNew() {
-        // this.cliente = ClienteInput.getInstance();
-        this.submitted = false;
-        this.clienteDialog = true;
-    }
-
-    editProduct(cliente: ClienteInput) {
-        // this.cliente = { ...cliente };
-        this.clienteDialog = true;
-    }
-
-    hideDialog() {
-        this.clienteDialog = false;
-    }
-
-    saveCliente(evt: Event) {
+    onSubmit(evt: Event) {
         evt.preventDefault();
-        // this.submitted = true;
-        console.log('formCliente: ', this.clienteForm().value());
-
+        const clienteId = this.cliente().id;
+        const clienteData = this.clienteForm().value();
+        if (clienteId) {
+            this.updateCliente(clienteData, clienteId);
+        } else {
+            this.saveCliente(clienteData);
+        }
         this.clienteDialog = false;
-
-        this.clienteService.saveCliente(
-            this.clienteForm().value()
-        ).subscribe(item => {
-            console.log('created successfully ', item);
-            this.messageService.add({
-                severity: 'success',
-                summary: 'Successful',
-                detail: 'Cliente Creado',
-                life: 3000
-            });
-            this.clienteForm().reset(ClienteInput.getInstance());
-        });
-
-        // this.cliente = ClienteInput.getInstance();
-
     }
+
+    editCliente(cliente: ClienteInput) {
+        this.cliente.set({ ...cliente });
+        this.clienteDialog = true;
+    }
+
+    showDialogRemoveCliente(cliente: ClienteOutput) {
+        this.confirmationService.confirm({
+            message: 'Estas seguro de eliminar la client con id: ' + cliente.id + '?',
+            header: 'Confirm',
+            icon: 'pi pi-exclamation-triangle',
+            accept: () => this.deleteCliente(cliente)
+        });
+    }
+
+    openNew() { this.clienteDialog = true; }
+
+    hideDialog() { this.clienteDialog = false; }
+
+    private saveCliente(data: ClienteInput) {
+        this.service.saveCliente(data)
+            .subscribe({
+                next: (resp) => {
+                    const newMarca = resp.data;
+                    this.clientes.set([newMarca, ...this.clientes()]);
+                    this.mostrarMsg('success', 'Cliente ' + resp.message);
+                    this.clienteForm().reset({
+                        ci: '',
+                        nombre: '',
+                        celular: ''
+                    });
+                },
+                error: (err) => {
+                    this.mostrarMsg('error',
+                        `Cliente  + ${err.error ? JSON.stringify(err.error.message) : 'error al crear.'}`);
+                }
+            });
+    }
+
+    private updateCliente(data: ClienteInput, id: number) {
+        this.setUpdateCliente(data, id);
+        this.service.updateCliente(data, id)
+            .subscribe({
+                next: (resp) => {
+                    this.mostrarMsg('success', 'Cliente ' + resp.message);
+                    this.clienteForm().reset({
+                        ci: '',
+                        nombre: '',
+                        celular: ''
+                    });
+                },
+                error: (err) => {
+                    this.mostrarMsg('error',
+                        `Cliente ${err.error ? JSON.stringify(err.error.message) : 'error al crear.'}`);
+                    this.loadData();
+                }
+            });
+    }
+
+    private deleteCliente(cliente: ClienteOutput) {
+        this.setDeleteTablaMarcas(cliente);
+        this.service.deleteCliente(cliente)
+            .subscribe({
+                next: () =>
+                    this.mostrarMsg('success', 'Cliente eliminada correctamente.'),
+                error: (e) => {
+                    this.mostrarMsg('error', 'Error al eliminar Cliente: \n' + e.error?.message);
+                }
+            });
+    }
+
+    private setDeleteTablaMarcas(cliente: ClienteOutput) {
+        const clientesActuales = this.clientes().filter((val) => cliente.id !== val.id);
+        this.clientes.set(clientesActuales);
+    }
+
+    private setUpdateCliente(cliente: ClienteInput, id: number) {
+        this.clientes.update(clientesArr =>
+            clientesArr.map(m =>
+                m.id === id ? { ...m, ...cliente } : m
+            )
+        );
+    }
+
+    private loadData() {
+        this.service.getAllCliente()
+            .subscribe(items => this.clientes.set(items.data.content));
+    }
+
+    private mostrarMsg(tipo: string, detalle: string): void {
+        this.messageService.add({
+            severity: tipo,
+            summary: 'Mensaje',
+            detail: detalle,
+            life: 5000
+        });
+    }
+
+    constructor() { }
 }

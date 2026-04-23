@@ -1,21 +1,19 @@
-import { Component, inject, signal } from "@angular/core";
+import { Component, inject, OnInit, signal } from "@angular/core";
+import { form, required, FormField } from "@angular/forms/signals";
 import { ConfirmationService, MessageService } from "primeng/api";
+import { ConfirmDialogModule } from "primeng/confirmdialog";
 import { BreadcrumbModule } from "primeng/breadcrumb";
 import { ButtonModule } from "primeng/button";
 import { ToolbarModule } from "primeng/toolbar";
 import { ToastModule } from 'primeng/toast';
-
-import { CommonModule } from '@angular/common';
 import { InputTextModule } from 'primeng/inputtext';
+import { TableModule } from "primeng/table";
+import { DialogModule } from "primeng/dialog";
 
 import { MarcaService } from "../service/marca.service";
 import { MarcaOutput } from "../dto/marca.output";
-import { TableModule } from "primeng/table";
-import { DialogModule } from "primeng/dialog";
-import { ReactiveFormsModule } from "@angular/forms";
-import { form, required, FormField } from "@angular/forms/signals";
 import { MarcaInput } from "../dto/marca.input";
-import { ConfirmDialogModule } from "primeng/confirmdialog";
+
 
 @Component({
     imports: [
@@ -24,11 +22,9 @@ import { ConfirmDialogModule } from "primeng/confirmdialog";
         ButtonModule,
         TableModule,
         DialogModule,
-        ReactiveFormsModule,
         FormField,
         ToastModule,
         InputTextModule,
-        CommonModule,
         ConfirmDialogModule
     ],
     standalone: true,
@@ -152,7 +148,7 @@ import { ConfirmDialogModule } from "primeng/confirmdialog";
     `,
     providers: [MarcaService, MessageService, ConfirmationService]
 })
-export class Marca {
+export class Marca implements OnInit {
     private service = inject(MarcaService);
     private confirmationService = inject(ConfirmationService);
     private messageService = inject(MessageService);
@@ -198,19 +194,13 @@ export class Marca {
             message: 'Estas seguro de eliminar la marca con id: ' + marca.id + '?',
             header: 'Confirm',
             icon: 'pi pi-exclamation-triangle',
-            accept: () => {
-                this.deleteMarca(marca);
-            }
+            accept: () => this.deleteMarca(marca)
         });
     }
 
-    openDialogMarca() {
-        this.marcaDialog = true;
-    }
+    openDialogMarca() { this.marcaDialog = true; }
 
-    hideDialogMarca() {
-        this.marcaDialog = false;
-    }
+    hideDialogMarca() { this.marcaDialog = false; }
 
     private save(marca: MarcaInput) {
         this.service.saveMarca(marca)
@@ -231,22 +221,19 @@ export class Marca {
             });
     }
     private update(marca: MarcaInput, id: number) {
-
         this.setUpdateMarcas(marca, id);
         this.service.updateMarca(marca, id)
             .subscribe({
                 next: (resp) => {
-                    if (resp.success) {
-                        this.mostrarMsg('success', 'Categoria ' + resp.message);
-                        this.marcaForm().reset({
-                            nombre: '',
-                            descripcion: ''
-                        });
-                    }
+                    this.mostrarMsg('success', 'Categoria ' + resp.message);
+                    this.marcaForm().reset({
+                        nombre: '',
+                        descripcion: ''
+                    });
                 },
                 error: (err) => {
                     this.mostrarMsg('error',
-                        `Marca  + ${err.error ? JSON.stringify(err.error.message) : 'error al crear.'}`);
+                        `Marca ${err.error ? JSON.stringify(err.error.message) : 'error al crear.'}`);
                     this.loadData();
                 }
             });

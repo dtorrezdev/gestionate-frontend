@@ -34,7 +34,7 @@ import { ConfirmationService, MessageService } from "primeng/api";
     </div>
     <p-toolbar styleClass="mb-6 n-border n-border-r">
         <ng-template #start>
-            <p-button label="New" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="openNew()"/>
+            <p-button label="New" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="openDialogUbicacionStock()"/>
             <p-button severity="secondary" label="Import" icon="pi pi-download" outlined/>
         </ng-template>
 
@@ -83,8 +83,8 @@ import { ConfirmationService, MessageService } from "primeng/api";
                 <td style="min-width: 12rem">{{ ubi.estante }}</td>
                 <td style="min-width: 12rem">{{ ubi.nivel }}</td>
                 <td style="min-width: 4rem">
-                    <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" />
-                    <p-button icon="pi pi-trash" severity="danger" [rounded]="true" (onClick)="deleteUbicacionStock(ubi)" [outlined]="true" />
+                    <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" (onClick)="editUbicacionStock(ubi)" [outlined]="true" />
+                    <p-button icon="pi pi-trash" severity="danger" [rounded]="true" (onClick)="showDialogRemoveUbicacionStock(ubi)" [outlined]="true" />
                 </td>
             </tr>
         </ng-template>
@@ -123,7 +123,7 @@ import { ConfirmationService, MessageService } from "primeng/api";
             </div>
 
             <div class="p-dialog-footer mt-1 pb-0">
-                <p-button label="Cancel" icon="pi pi-times" text (click)="hideDialog()" />
+                <p-button label="Cancel" icon="pi pi-times" text (click)="hideDialogUbicacionStock()" />
                 <p-button label="Save" type="submit" icon="pi pi-check" [disabled]="ubicacionForm().invalid()" />
             </div>
             </form>
@@ -178,41 +178,19 @@ export class ListUbicacionStockPage implements OnInit {
         this.ubicacionDialog = true;
     }
 
-    deleteUbicacionStock(ubicacion: UbicacionStockOutput) {
+    showDialogRemoveUbicacionStock(ubicacionStock: UbicacionStockOutput) {
         this.confirmationService.confirm({
-            message: 'Estas seguro de eliminar la ubicacion stock id: ' + ubicacion.id + '?',
+            message: 'Estas seguro de eliminar la ubicacion stock id: ' + ubicacionStock.id + '?',
             header: 'Confirm',
             icon: 'pi pi-exclamation-triangle',
-            accept: () => {
-                this.service.deleteUbicacionStock(ubicacion)
-                    .subscribe({
-                        next: (resp) => {
-                            console.log('Venta anulada: ', resp);
-                            this.messageService.add({
-                                severity: 'success',
-                                summary: 'Successful',
-                                detail: 'Ubicacion Stock eliminada correctamente!',
-                                life: 3000
-                            });
-                            this.loadData();
-                        },
-                        error: (e) => {
-                            console.log('Error al anular venta: ', e);
-                            this.messageService.add({
-                                severity: 'error',
-                                summary: 'Error',
-                                detail: 'Error al eliminar ubicacion stock: \n' + e.error?.message,
-                                life: 3000
-                            });
-                        }
-                    })
-            },
-            reject: () => {
-                console.log('Reject Solicitud');
-            }
+            accept: () =>
+                this.deleteUbicacionStock(ubicacionStock)
         });
-
     }
+
+    openDialogUbicacionStock() { this.ubicacionDialog = true; }
+
+    hideDialogUbicacionStock() { this.ubicacionDialog = false; }
 
     private update(data: UbicacionStockInput, id: number): void {
         this.setUpdateUbicacion(data, id);
@@ -244,14 +222,22 @@ export class ListUbicacionStockPage implements OnInit {
         }
     }
 
-    openNew() {
-        this.ubicacionDialog = true;
+    private deleteUbicacionStock(ubicacion: UbicacionStockOutput) {
+        this.setDeleteTablaUbicacionesStock(ubicacion);
+        this.service.deleteUbicacionStock(ubicacion)
+            .subscribe({
+                next: () =>
+                    this.mostrarMsg('success', 'Ubicacion Stock eliminada correctamente!'),
+                error: (e) => {
+                    this.mostrarMsg('error', 'Error al eliminar Ubicacion Stock: \n' + e.error?.message);
+                }
+            });
     }
 
-
-
-    hideDialog() {
-        this.ubicacionDialog = false;
+    private setDeleteTablaUbicacionesStock(ubicacion: UbicacionStockOutput) {
+        const ubicacionesStockActuales = this.ubicacionStock()
+            .filter((val) => ubicacion.id !== val.id);
+        this.ubicacionStock.set(ubicacionesStockActuales);
     }
 
     private save(data: UbicacionStockInput): void {
