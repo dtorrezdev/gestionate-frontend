@@ -136,63 +136,46 @@ import { ConfirmationService, MessageService } from "primeng/api";
     providers: [UbicacionStockService, ConfirmationService, MessageService]
 })
 export class ListUbicacionStockPage implements OnInit {
-
-    private ubicacionStockService = inject(UbicacionStockService);
+    private service = inject(UbicacionStockService);
     private confirmationService = inject(ConfirmationService);
     private messageService = inject(MessageService);
 
-    ubicacionStock = signal<UbicacionStockOutput[]>([]); //
-
+    ubicacionStock = signal<UbicacionStockOutput[]>([]);
     ubicacionStockInput = signal<UbicacionStockInput>({
         seccion: '',
         estante: '',
         nivel: ''
     });
-
+    ubicacionDialog: boolean = false;
     ubicacionForm = form(this.ubicacionStockInput, (schemaPath) => {
         required(schemaPath.seccion, { message: 'La Seccion es requerido.' });
         required(schemaPath.estante, { message: 'El estante es requerido.' });
         required(schemaPath.nivel, { message: 'El nivel es requerido.' });
     });
 
-
-    // modal Dialog
-    ubicacionDialog: boolean = false;
-    submitted: boolean = false;
-
     // MenuBar BreadcrumbModule
     breadcrumbHome = { icon: 'pi pi-home', to: '/' };
     breadcrumbItems = [{ label: 'Ubicacion' }, { label: 'Stock' }, { label: 'Listar' }];
-
-    constructor() { }
 
     ngOnInit() {
         this.loadData();
     }
 
-    private loadData() {
-        this.ubicacionStockService.getAllUbicacionStock()
-            .subscribe({
-                next: (resp) => {
-                    const items = resp.data.content;
-                    console.log('Ubicacion Stock:', resp);
-                    this.ubicacionStock.set(items);
-                }
-            });
-    }
-
     onSubmit(evt: Event) {
         evt.preventDefault();
-        console.log('formValue: ', this.ubicacionForm().value());
+        const ubicacionId = this.ubicacionStockInput().id;
+        const ubicacionStockData = this.ubicacionForm().value();
+        if (ubicacionId) {
+            this.update(ubicacionStockData, ubicacionId);
+        } else {
+            this.save(ubicacionStockData);
+        }
         this.ubicacionDialog = false;
+    }
 
-        this.ubicacionStockService.saveUbicacionStock(this.ubicacionForm().value())
-            .subscribe({
-                next: (resp) => {
-                    console.log('Add ubicacion', resp);
-
-                },
-            });
+    editUbicacionStock(ubicacionStock: UbicacionStockOutput) {
+        this.ubicacionStockInput.set({ ...ubicacionStock });
+        this.ubicacionDialog = true;
     }
 
     deleteUbicacionStock(ubicacion: UbicacionStockOutput) {
@@ -201,7 +184,7 @@ export class ListUbicacionStockPage implements OnInit {
             header: 'Confirm',
             icon: 'pi pi-exclamation-triangle',
             accept: () => {
-                this.ubicacionStockService.deleteUbicacionStock(ubicacion)
+                this.service.deleteUbicacionStock(ubicacion)
                     .subscribe({
                         next: (resp) => {
                             console.log('Venta anulada: ', resp);
@@ -231,17 +214,79 @@ export class ListUbicacionStockPage implements OnInit {
 
     }
 
+    private update(data: UbicacionStockInput, id: number): void {
+        this.setUpdateUbicacion(data, id);
+        this.service.updateUbicacionStock(data, id)
+            .subscribe({
+                next: (resp) => {
+                    this.mostrarMsg('success', 'Categoria ' + resp.message);
+                    this.ubicacionForm().reset({
+                        seccion: '',
+                        estante: '',
+                        nivel: ''
+                    });
+                },
+                error: (err) => {
+                    this.mostrarMsg('error',
+                        `Marca  + ${err.error ? JSON.stringify(err.error.message) : 'error al crear.'}`);
+                    this.loadData();
+                }
+            });
+    }
+
+    private setUpdateUbicacion(data: UbicacionStockInput, id: number) {
+        const ubicacionStocksActuales = this.ubicacionStock();
+        const indexMarca = ubicacionStocksActuales.findIndex(m => m.id === id);
+        if (indexMarca !== -1) {
+            const nuevaUbicacionStocks = [...ubicacionStocksActuales];
+            nuevaUbicacionStocks[indexMarca] = { ...nuevaUbicacionStocks[indexMarca], ...data };
+            this.ubicacionStock.set(nuevaUbicacionStocks);
+        }
+    }
+
     openNew() {
-        this.submitted = false;
         this.ubicacionDialog = true;
     }
 
-    editProduct(cliente: UbicacionStockOutput) {
-        // this.cliente = { ...cliente };
-        this.ubicacionDialog = true;
-    }
+
 
     hideDialog() {
         this.ubicacionDialog = false;
     }
+
+    private save(data: UbicacionStockInput): void {
+        this.service.saveUbicacionStock(data)
+            .subscribe({
+                next: (resp) => {
+                    console.log('Add ubicacion', resp);
+                    const newUbicacionStock = resp.data;
+                    this.ubicacionStock.set([newUbicacionStock, ...this.ubicacionStock()]);
+                    this.mostrarMsg('success', 'Marca ' + resp.message);
+                    this.ubicacionForm().reset({
+                        seccion: '',
+                        estante: '',
+                        nivel: ''
+                    });
+
+                },
+            });
+    }
+
+    private loadData() {
+        this.service.getAllUbicacionStock()
+            .subscribe({
+                next: (resp) => this.ubicacionStock.set(resp.data.content)
+            });
+    }
+
+    private mostrarMsg(tipo: string, detalle: string): void {
+        this.messageService.add({
+            severity: tipo,
+            summary: 'Mensaje',
+            detail: detalle,
+            life: 5000
+        });
+    }
+
+    constructor() { }
 }

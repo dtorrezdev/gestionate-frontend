@@ -1,13 +1,5 @@
-export class MarcaInput {
+export interface MarcaInput {
+    id?: number;
     nombre: string;
     descripcion: string;
-
-    constructor(nombre: string, descripcion: string) {
-        this.nombre = nombre;
-        this.descripcion = descripcion;
-    }
-
-    public static getInstance(): MarcaInput {
-        return new MarcaInput('', '');
-    }
 }

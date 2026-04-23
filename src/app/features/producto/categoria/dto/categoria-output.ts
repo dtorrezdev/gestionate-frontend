@@ -1,7 +1,7 @@
 
 
 export interface CategoriaOutput {
-    id: number;
+    id?: number;
     nombre: string;
     descripcion: string;
 }

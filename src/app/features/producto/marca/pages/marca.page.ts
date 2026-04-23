@@ -1,5 +1,5 @@
-import { Component, inject, signal, ViewChild } from "@angular/core";
-import { ConfirmationService, MessageService, ToastMessageOptions } from "primeng/api";
+import { Component, inject, signal } from "@angular/core";
+import { ConfirmationService, MessageService } from "primeng/api";
 import { BreadcrumbModule } from "primeng/breadcrumb";
 import { ButtonModule } from "primeng/button";
 import { ToolbarModule } from "primeng/toolbar";
@@ -7,7 +7,6 @@ import { ToastModule } from 'primeng/toast';
 
 import { CommonModule } from '@angular/common';
 import { InputTextModule } from 'primeng/inputtext';
-
 
 import { MarcaService } from "../service/marca.service";
 import { MarcaOutput } from "../dto/marca.output";
@@ -31,20 +30,16 @@ import { ConfirmDialogModule } from "primeng/confirmdialog";
         InputTextModule,
         CommonModule,
         ConfirmDialogModule
-
     ],
     standalone: true,
     template: `
     <div class="card mb-0 pb-1">
         <div class="font-semibold text-xl mb-4">Listar Marcas</div>
-        <p-breadcrumb
-            [model]="breadcrumbItems"
-            [home]="breadcrumbHome">
-        </p-breadcrumb>
+        <p-breadcrumb [model]="breadcrumbItems" [home]="breadcrumbHome"/>
     </div>
     <p-toolbar styleClass="mb-6 n-border n-border-r">
         <ng-template #start>
-            <p-button label="New" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="openNew()"/>
+            <p-button label="New" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="openDialogMarca()"/>
             <p-button severity="secondary" label="Import" icon="pi pi-download" outlined/>
         </ng-template>
 
@@ -89,8 +84,8 @@ import { ConfirmDialogModule } from "primeng/confirmdialog";
                 <td style="min-width: 8rem">{{ marca.nombre }}</td>
                 <td style="min-width: 12rem">{{ marca.descripcion }}</td>
                 <td style="min-width: 4rem">
-                    <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" />
-                    <p-button icon="pi pi-trash" severity="danger" [rounded]="true" (onClick)="deleteMarca(marca)" [outlined]="true" />
+                    <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" [outlined]="true" (onClick)="editMarca(marca)" />
+                    <p-button icon="pi pi-trash" severity="danger" [rounded]="true" (onClick)="showDialogRemoveMarca(marca)" [outlined]="true" />
                 </td>
             </tr>
         </ng-template>
@@ -121,7 +116,7 @@ import { ConfirmDialogModule } from "primeng/confirmdialog";
             </div>
 
             <div class="p-dialog-footer mt-1 pb-0">
-                <p-button label="Cancel" icon="pi pi-times" text (click)="hideDialog()" />
+                <p-button label="Cancel" icon="pi pi-times" text (click)="hideDialogMarca()" />
                 <p-button label="Save" type="submit" icon="pi pi-check" [disabled]="marcaForm().invalid()" />
             </div>
             </form>
@@ -129,7 +124,6 @@ import { ConfirmDialogModule } from "primeng/confirmdialog";
     </p-dialog>
 
     <p-confirmdialog [style]="{ width: '450px' }" />
-
     <p-toast />
     `,
     styles: `
@@ -159,153 +153,148 @@ import { ConfirmDialogModule } from "primeng/confirmdialog";
     providers: [MarcaService, MessageService, ConfirmationService]
 })
 export class Marca {
-
-    marcas = signal<MarcaOutput[]>([]);
-
-    // private formBuilder = inject(FormBuilder);
-    private marcaService = inject(MarcaService);
+    private service = inject(MarcaService);
     private confirmationService = inject(ConfirmationService);
     private messageService = inject(MessageService);
 
-    // MenuBar BreadcrumbModule
-    breadcrumbHome = { icon: 'pi pi-home', to: '/' };
-    breadcrumbItems = [{ label: 'Marcas' }, { label: 'Listar' }, { label: 'Todo' }];
-
-    // modal Dialog
+    marcas = signal<MarcaOutput[]>([]);
+    marca = signal<MarcaInput>({
+        nombre: '',
+        descripcion: ''
+    });
     marcaDialog: boolean = false;
-
-    marca = signal<MarcaInput>(
-        MarcaInput.getInstance()
-    );
-
     marcaForm = form(this.marca, (schemaPath) => {
         required(schemaPath.nombre, { message: 'El nombre es requerido.' });
         required(schemaPath.descripcion, { message: 'El descripcion es requerido.' });
     });
 
-
-    constructor(
-
-    ) { }
+    // MenuBar BreadcrumbModule
+    breadcrumbHome = { icon: 'pi pi-home', to: '/' };
+    breadcrumbItems = [{ label: 'Marcas' }, { label: 'Listar' }, { label: 'Todo' }];
 
     ngOnInit() {
         this.loadData();
     }
 
-    private loadData(): void {
-        this.loadMarcas();
-
-    }
-
-    private loadMarcas(): void {
-        this.marcaService.getAllMarcas()
-            .subscribe(resp => {
-                const items = resp.data.content;
-                console.log('items: ', items)
-                this.marcas.set(items);
-            }
-            );
-    }
-
     onSubmit(evt: Event) {
-        // console.warn(this.marcaForm.value);
         evt.preventDefault();
-        console.log('formCliente: ', this.marcaForm().value());
+        const marcaId = this.marca().id;
+        const marcaData = this.marcaForm().value();
+        if (marcaId) {
+            this.update(marcaData, marcaId);
+        } else {
+            this.save(marcaData);
+        }
         this.marcaDialog = false;
-        this.marcaService.saveMarca(
-            this.marcaForm().value()
-        ).subscribe({
-            next: (resp) => {
-                if (resp.success) {
-                    const newData = resp.data;
-                    this.marcas.set([newData, ...this.marcas()]);
-
-                    this.messageService.add({
-                        severity: 'success',
-                        summary: 'Successful',
-                        detail: 'Marca ' + resp.message,
-                        life: 3000
-                    });
-                    this.marcaForm().reset(MarcaInput.getInstance());
-                }
-            },
-            error: (err) => {
-                console.error(err);
-                this.messageService.add({
-                    severity: 'error',
-                    summary: 'VALIDATION_ERROR',
-                    detail: 'Marca ' + err.error ? JSON.stringify(err.error.message) : 'error al crear.',
-                    life: 3000
-                });
-            },
-            complete: () => console.info('complete')
-        });
-
     }
 
-    deleteMarca(marca: MarcaOutput) {
+    editMarca(marca: MarcaOutput) {
+        this.marca.set({ ...marca });
+        this.marcaDialog = true;
+    }
+
+    showDialogRemoveMarca(marca: MarcaOutput) {
         this.confirmationService.confirm({
             message: 'Estas seguro de eliminar la marca con id: ' + marca.id + '?',
             header: 'Confirm',
             icon: 'pi pi-exclamation-triangle',
             accept: () => {
-                this.marcaService.deleteMarca(marca)
-                    .subscribe({
-                        next: (resp) => {
-                            console.log('Marca eliminada: ', resp);
-                            this.messageService.add({
-                                severity: 'success',
-                                summary: 'Successful',
-                                detail: 'Marca eliminada correctamente!',
-                                life: 3000
-                            });
-                            this.loadData();
-                        },
-                        error: (e) => {
-                            console.log('Error al eliminar Marca: ', e);
-                            this.messageService.add({
-                                severity: 'error',
-                                summary: 'Error',
-                                detail: 'Error al eliminar Marca: \n' + e.error?.message,
-                                life: 3000
-                            });
-                        }
-                    })
-            },
-            reject: () => {
-                console.log('Reject Solicitud');
+                this.deleteMarca(marca);
             }
         });
     }
 
-    showSuccessViaToast() {
-        this.messageService.add({
-            severity: 'success',
-            summary: 'Success Message',
-            detail: 'Message sent',
-            life: 3000
-        });
-    }
-
-    openNew() {
+    openDialogMarca() {
         this.marcaDialog = true;
     }
 
-    editProduct(cliente: MarcaOutput) {
-        // this.cliente = { ...cliente };
-        this.marcaDialog = true;
-    }
-
-    hideDialog() {
+    hideDialogMarca() {
         this.marcaDialog = false;
     }
 
-    // getErrors(control: any): string[] {
-    //     if (!control || !control.errors) return [];
+    private save(marca: MarcaInput) {
+        this.service.saveMarca(marca)
+            .subscribe({
+                next: (resp) => {
+                    const newMarca = resp.data;
+                    this.marcas.set([newMarca, ...this.marcas()]);
+                    this.mostrarMsg('success', 'Marca ' + resp.message);
+                    this.marcaForm().reset({
+                        nombre: '',
+                        descripcion: ''
+                    });
+                },
+                error: (err) => {
+                    this.mostrarMsg('error',
+                        `Marca  + ${err.error ? JSON.stringify(err.error.message) : 'error al crear.'}`);
+                }
+            });
+    }
+    private update(marca: MarcaInput, id: number) {
 
-    //     return Object.keys(control.errors).map(key => {
-    //         const error = control.errors[key];
-    //         return this.validationMessages[key]?.(error) || key;
-    //     });
-    // }
+        this.setUpdateMarcas(marca, id);
+        this.service.updateMarca(marca, id)
+            .subscribe({
+                next: (resp) => {
+                    if (resp.success) {
+                        this.mostrarMsg('success', 'Categoria ' + resp.message);
+                        this.marcaForm().reset({
+                            nombre: '',
+                            descripcion: ''
+                        });
+                    }
+                },
+                error: (err) => {
+                    this.mostrarMsg('error',
+                        `Marca  + ${err.error ? JSON.stringify(err.error.message) : 'error al crear.'}`);
+                    this.loadData();
+                }
+            });
+    }
+
+    private setUpdateMarcas(marca: MarcaInput, id: number) {
+        const marcasActuales = this.marcas();
+        const indexMarca = marcasActuales.findIndex(m => m.id === id);
+        if (indexMarca !== -1) {
+            const nuevasMarcas = [...marcasActuales];
+            nuevasMarcas[indexMarca] = { ...nuevasMarcas[indexMarca], ...marca };
+            this.marcas.set(nuevasMarcas);
+        }
+    }
+
+    private deleteMarca(marca: MarcaOutput) {
+        this.setDeleteTablaMarcas(marca);
+        this.service.deleteMarca(marca)
+            .subscribe({
+                next: () =>
+                    this.mostrarMsg('success', 'Marca eliminada correctamente!'),
+                error: (e) => {
+                    this.mostrarMsg('error', 'Error al eliminar Marca: \n' + e.error?.message);
+                }
+            });
+    }
+
+    private setDeleteTablaMarcas(marca: MarcaOutput) {
+        const marcasActuales = this.marcas().filter((val) => marca.id !== val.id);
+        this.marcas.set(marcasActuales);
+    }
+
+    private loadData(): void {
+        this.service.getAllMarcas()
+            .subscribe({
+                next: (resp) =>
+                    this.marcas.set(resp.data.content)
+            });
+    }
+
+    private mostrarMsg(tipo: string, detalle: string): void {
+        this.messageService.add({
+            severity: tipo,
+            summary: 'Mensaje',
+            detail: detalle,
+            life: 5000
+        });
+    }
+
+    constructor() { }
 }
