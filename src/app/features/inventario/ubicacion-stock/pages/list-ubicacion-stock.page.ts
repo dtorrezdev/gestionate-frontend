@@ -194,7 +194,7 @@ export class ListUbicacionStockPage implements OnInit {
 
     private update(data: UbicacionStockInput, id: number): void {
         this.setUpdateUbicacion(data, id);
-        this.service.updateUbicacionStock(data, id)
+        this.service.update(data, id)
             .subscribe({
                 next: (resp) => {
                     this.mostrarMsg('success', 'Categoria ' + resp.message);
@@ -241,7 +241,7 @@ export class ListUbicacionStockPage implements OnInit {
     }
 
     private save(data: UbicacionStockInput): void {
-        this.service.saveUbicacionStock(data)
+        this.service.save(data)
             .subscribe({
                 next: (resp) => {
                     console.log('Add ubicacion', resp);
@@ -259,7 +259,7 @@ export class ListUbicacionStockPage implements OnInit {
     }
 
     private loadData() {
-        this.service.getAllUbicacionStock()
+        this.service.list()
             .subscribe({
                 next: (resp) => this.ubicacionStock.set(resp.data.content)
             });

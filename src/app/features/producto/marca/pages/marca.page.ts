@@ -203,10 +203,10 @@ export class Marca implements OnInit {
     hideDialogMarca() { this.marcaDialog = false; }
 
     private save(marca: MarcaInput) {
-        this.service.saveMarca(marca)
+        this.service.save(marca)
             .subscribe({
                 next: (resp) => {
-                    const newMarca = resp.data;
+                    const newMarca = resp.data as MarcaOutput;
                     this.marcas.set([newMarca, ...this.marcas()]);
                     this.mostrarMsg('success', 'Marca ' + resp.message);
                     this.marcaForm().reset({
@@ -215,25 +215,26 @@ export class Marca implements OnInit {
                     });
                 },
                 error: (err) => {
+                    console.log('Error: ', err);
+
                     this.mostrarMsg('error',
-                        `Marca  + ${err.error ? JSON.stringify(err.error.message) : 'error al crear.'}`);
+                        `Marca  ${err ? err : 'error al crear.'}`);
                 }
             });
     }
     private update(marca: MarcaInput, id: number) {
         this.setUpdateMarcas(marca, id);
-        this.service.updateMarca(marca, id)
+        this.service.update(marca, id)
             .subscribe({
                 next: (resp) => {
-                    this.mostrarMsg('success', 'Categoria ' + resp.message);
+                    this.mostrarMsg('success', resp.message);
                     this.marcaForm().reset({
                         nombre: '',
                         descripcion: ''
                     });
                 },
                 error: (err) => {
-                    this.mostrarMsg('error',
-                        `Marca ${err.error ? JSON.stringify(err.error.message) : 'error al crear.'}`);
+                    this.mostrarMsg('error', err);
                     this.loadData();
                 }
             });
@@ -251,12 +252,12 @@ export class Marca implements OnInit {
 
     private deleteMarca(marca: MarcaOutput) {
         this.setDeleteTablaMarcas(marca);
-        this.service.deleteMarca(marca)
+        this.service.delete(marca.id)
             .subscribe({
                 next: () =>
                     this.mostrarMsg('success', 'Marca eliminada correctamente!'),
-                error: (e) => {
-                    this.mostrarMsg('error', 'Error al eliminar Marca: \n' + e.error?.message);
+                error: (err) => {
+                    this.mostrarMsg('error', err);
                 }
             });
     }
@@ -267,10 +268,13 @@ export class Marca implements OnInit {
     }
 
     private loadData(): void {
-        this.service.getAllMarcas()
+        this.service.list()
             .subscribe({
-                next: (resp) =>
-                    this.marcas.set(resp.data.content)
+                next: (resp) => {
+                    console.log('Load Data ', resp);
+                    this.marcas.set(resp.data.content);
+                },
+                error: (err) => this.mostrarMsg('error', err)
             });
     }
 

@@ -173,7 +173,7 @@ export class CategoriaPage implements OnInit {
     hideDialog() { this.categoriaDialog = false; }
 
     private saveCategoria(categoria: CategoriaOutput) {
-        this.categoriaService.saveCategoria(categoria)
+        this.categoriaService.save(categoria)
             .subscribe({
                 next: (resp) => {
                     const newData = resp.data;
@@ -185,9 +185,7 @@ export class CategoriaPage implements OnInit {
                     });
                 },
                 error: (err) => {
-                    console.error(err);
-                    this.mostrarMsg('error',
-                        `Categoria  + ${err.error ? JSON.stringify(err.error.message) : 'error al crear.'}`);
+                    this.mostrarMsg('error', err);
                     this.loadData();
                 }
             });
@@ -195,19 +193,17 @@ export class CategoriaPage implements OnInit {
 
     private updateCategoria(categoria: CategoriaOutput, id: number) {
         this.updateDataTableCategorias(categoria, id);
-        this.categoriaService.updateCategoria(categoria, id)
+        this.categoriaService.update(categoria, id)
             .subscribe({
                 next: (resp) => {
-                    this.mostrarMsg('success', 'Categoria ' + resp.message);
+                    this.mostrarMsg('success', resp.message);
                     this.categoriaForm().reset({
                         nombre: '',
                         descripcion: ''
                     });
                 },
-                error: (err) => {
-                    console.error(err);
-                    this.mostrarMsg('error',
-                        `Categoria  + ${err.error ? JSON.stringify(err.error.message) : 'error al crear.'}`);
+                error: (err: string) => {
+                    this.mostrarMsg('error', err);
                     this.loadData();
                 }
             });
@@ -250,7 +246,7 @@ export class CategoriaPage implements OnInit {
     }
 
     private loadData() {
-        this.categoriaService.getAllCategorias()
+        this.categoriaService.list()
             .subscribe({
                 next: (resp) => this.categorias.set(resp.data.content)
             });

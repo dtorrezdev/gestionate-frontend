@@ -7,11 +7,12 @@ import { TableModule } from "primeng/table";
 import { ButtonModule } from "primeng/button";
 import { ConfirmationService, MessageService } from "primeng/api";
 import { ToastModule } from "primeng/toast";
-import { form, required, FormField } from "@angular/forms/signals";
 import { ConfirmDialogModule } from "primeng/confirmdialog";
 import { DialogModule } from "primeng/dialog";
 import { CategoriaService } from "../../categoria/service/categoria.service";
-import { Select, SelectModule } from "primeng/select";
+import { SelectModule } from "primeng/select";
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from "@angular/forms";
+import { CategoriaOutput } from "../../categoria/dto/categoria-output";
 
 @Component({
     imports: [
@@ -20,10 +21,10 @@ import { Select, SelectModule } from "primeng/select";
         TableModule,
         ButtonModule,
         ToastModule,
-        FormField,
         ConfirmDialogModule,
         DialogModule,
-        SelectModule
+        SelectModule,
+        ReactiveFormsModule
     ],
     standalone: true,
     template: `
@@ -97,39 +98,37 @@ import { Select, SelectModule } from "primeng/select";
 
     <p-dialog [(visible)]="productoDialog" [style]="{ width: '450px' }" header="Nuevo Producto" [modal]="true">
         <ng-template #content>
-            <form (submit)="onSubmit($event)" action="POST">
+            <form [formGroup]="productoForm" (submit)="onSubmit($event)" action="POST">
             <div class="flex flex-col gap-6">
                 <div>
                     <label for="name" class="block font-bold mb-3">Name</label>
-                    <input type="text" pInputText id="name" [formField]="productoForm.nombre" autofocus fluid />
-                    @if(productoForm.nombre().touched() && productoForm.nombre().invalid()) {
-                        @for(error of productoForm.nombre().errors(); track error.kind) {
-                            <small class="text-red-500">{{error.message}}</small>
-                        }
+                    <input type="text" pInputText id="name" formControlName="nombre" autofocus fluid />
+                    @if(productoForm.get('nombre')?.invalid &&
+                        productoForm.get('nombre')?.touched ) {
+                        <small class="text-red-500">Nombre no debe ser vacio.</small>
                     }
                 </div>
                 <div>
                     <label for="description" class="block font-bold mb-3">Description</label>
-                    <input id="description" pInputText [formField]="productoForm.descripcion" fluid />
-                    @if(productoForm.descripcion().touched() && productoForm.descripcion().invalid()) {
-                        @for(error of productoForm.descripcion().errors(); track error.kind) {
-                            <small class="text-red-500">{{error.message}}</small>
-                        }
-                    }
+                    <input id="description" pInputText formControlName="descripcion" fluid />
                 </div>
                 <div>
                     <label for="categoria" class="font-semibold">Producto Base(*):</label>
                     <p-select
+                        formControlName="categoriaId"
                         [options]="categoriasOptions"
                         optionLabel="label"
                         placeholder="Seleccionar Categoria" />
-
+                    @if(productoForm.get('categoriaId')?.invalid &&
+                        productoForm.get('categoriaId')?.touched ) {
+                        <small class="text-red-500">Categoria no debe ser nulo.</small>
+                    }
                 </div>
             </div>
 
             <div class="p-dialog-footer mt-1 pb-0">
                 <p-button label="Cancel" icon="pi pi-times" text (click)="hideDialogProducto()" />
-                <p-button label="Save" type="submit" icon="pi pi-check" [disabled]="productoForm().invalid()" />
+                <p-button label="Save" type="submit" icon="pi pi-check" [disabled]="productoForm.invalid" />
             </div>
             </form>
         </ng-template>
@@ -146,19 +145,11 @@ export class ListProductoPage implements OnInit {
     private categoriaService = inject(CategoriaService);
     private confirmationService = inject(ConfirmationService);
     private messageService = inject(MessageService);
+    private formBuilder = inject(FormBuilder);
 
     productos = signal<ProductoBaseOutput[]>([]);
-    producto = signal<ProductoBaseOutput>({
-        nombre: '',
-        descripcion: '',
-        categoriaId: 0
-    });
     productoDialog: boolean = false;
-    productoForm = form(this.producto, (schemaPath) => {
-        required(schemaPath.nombre, { message: 'El nombre es requerido.' });
-        required(schemaPath.descripcion, { message: 'El descripcion es requerido.' });
-        required(schemaPath.categoriaId, { message: 'La categoria es requerido.' });
-    });
+    productoForm!: FormGroup;
 
     categoriasOptions: { label: string, value: number }[] = [];
 
@@ -170,14 +161,91 @@ export class ListProductoPage implements OnInit {
 
     ngOnInit(): void {
         this.loadData();
+        this.productoForm = this.formBuilder.group({
+            id: [null],
+            nombre: ['', [Validators.required, Validators.minLength(4), Validators.maxLength(60)]],
+            descripcion: [null, Validators.maxLength(255)],
+            categoriaId: [null, Validators.required],
+        });
     }
 
     onSubmit(evt: Event): void {
         evt.preventDefault();
+        const productoId = this.productoForm.get('id')?.value;
+        const categoria = this.productoForm.get('categoriaId')?.value;
+        this.productoForm.get('categoriaId')?.setValue(categoria.value);
+        const productoData: ProductoBaseOutput = this.productoForm.value;
+        if (productoId) {
+            this.update(productoData, productoId);
+        } else {
+            this.save(productoData);
+        }
+        this.productoDialog = false;
+    }
+
+    private save(producto: ProductoBaseOutput) {
+        console.log('I will save producto');
+        this.service.save(producto)
+            .subscribe({
+                next: (resp) => {
+                    console.log('create resp: ', resp);
+                    const newProducto = resp.data as ProductoBaseOutput;
+                    this.productos.set([newProducto, ...this.productos()]);
+                    this.mostrarMsg('success', 'Producto creado correctamente.');
+                    this.productoForm.patchValue({
+                        id: null,
+                        nombre: '',
+                        descripcion: '',
+                        categoriaId: null
+                    });
+                },
+                error: (err) => {
+                    this.mostrarMsg('error',
+                        `Producto  + ${err.error ? JSON.stringify(err.error.message) : 'error al crear.'}`);
+                }
+            });
+    }
+
+    private update(producto: ProductoBaseOutput, id: number) {
+        console.log('I will update producto');
+        this.setUpdateProducto(producto, id);
+        this.service.updateProducto(producto, id)
+            .subscribe({
+                next: (resp) => {
+                    console.log('update resp: ', resp);
+
+                    this.mostrarMsg('success', 'Categoria actualizado correctamente.');
+                    this.productoForm.patchValue({
+                        id: null,
+                        nombre: '',
+                        descripcion: '',
+                        categoriaId: null
+                    });
+                },
+                error: (err) => {
+                    this.mostrarMsg('error',
+                        `Producto ${err.error ? JSON.stringify(err.error.message) : 'error al crear.'}`);
+                    this.loadData();
+                }
+            });
+    }
+
+    private setUpdateProducto(producto: ProductoBaseOutput, id: number) {
+        this.productos.update(productosArr =>
+            productosArr.map(m =>
+                m.id === id ? { ...m, ...producto } : m
+            )
+        );
     }
 
     editProducto(producto: ProductoBaseOutput): void {
-        this.producto.set({ ...producto });
+        const categoria = this.categoriasOptions.find(c => c.value === producto.categoriaId);
+        this.productoForm.patchValue({
+            id: producto.id,
+            nombre: producto.nombre,
+            descripcion: producto.descripcion,
+            categoriaId: categoria
+        });
         this.productoDialog = true;
     }
 
@@ -198,21 +266,34 @@ export class ListProductoPage implements OnInit {
 
     private deleteProducto(producto: ProductoBaseOutput) {
         console.log('I will remove producto');
+        this.setDeleteTablaProductos(producto);
+        this.service.deleteProducto(producto)
+            .subscribe({
+                next: () =>
+                    this.mostrarMsg('success', 'Producto eliminada correctamente!'),
+                error: (e) => {
+                    this.mostrarMsg('error', 'Error al eliminar Producto: \n' + e.error?.message);
+                }
+            });
+    }
+
+    private setDeleteTablaProductos(producto: ProductoBaseOutput) {
+        const productosActuales = this.productos().filter((val) => producto.id !== val.id);
+        this.productos.set(productosActuales);
     }
 
     private loadData() {
-
-        this.categoriaService.getAllCategorias()
+        this.categoriaService.list()
             .subscribe({
                 next: (resp) => {
-                    const data = resp.data.content;
+                    const data = resp.data.content as CategoriaOutput[];
                     this.categoriasOptions.push(
                         ...data.map(
                             categoria => ({ label: categoria.nombre, value: categoria.id || 0 })));
                     console.log('Categorias cargadas: ', this.categoriasOptions)
                 },
-                error: (err) =>
-                    this.mostrarMsg('error', 'Error al cargar las categorias: ' + err.error.message)
+                error: (err: string) =>
+                    this.mostrarMsg('error', err)
             });
 
         this.service.getAllProductoBase()

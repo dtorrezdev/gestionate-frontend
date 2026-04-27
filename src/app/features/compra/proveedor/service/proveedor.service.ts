@@ -1,17 +1,16 @@
 import { HttpClient, HttpHeaders } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
 import { CommonResponse, ListResponse } from "../../../venta/cliente/dto/interface";
-import { MarcaInput } from "../dto/marca.input";
-import { MarcaOutput } from "../dto/marca.output";
+import { ProveedorInput } from "../dto/proveedor.input";
+import { ProveedorOutput } from "../dto/proveedor.output";
 import { Observable } from "rxjs";
 import { ServiceBase } from "../../../../core/services/service-base";
 
 
 @Injectable()
-export class MarcaService extends ServiceBase<MarcaInput, CommonResponse<any>> {
+export class ProveedorService extends ServiceBase<ProveedorInput, CommonResponse<any>> {
 
     constructor() {
-        super('marcas');
+        super('proveedores');
     }
-    // ${this._API}marcas?size=1000&sort=marca_id,desc`
 }

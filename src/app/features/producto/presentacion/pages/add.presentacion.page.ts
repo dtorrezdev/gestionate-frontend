@@ -17,7 +17,7 @@ import { FormArray, FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Va
 import { TextareaModule } from 'primeng/textarea';
 import { UnidadMedidaService } from "../../unidad-medida/service/unidad-medida.service";
 import { UnidadMedidaOption } from "../../unidad-medida/dto/unidad-medida.option";
-import { ProductService } from "../../services/producto.service";
+import { ProductService } from "../services/producto.service";
 import { MessageService } from "primeng/api";
 import { ToastModule } from "primeng/toast";
 import { InputNumberModule } from "primeng/inputnumber";
@@ -27,6 +27,10 @@ import { UbicacionStockOption } from "../../../inventario/ubicacion-stock/dtos/u
 import { MovimientoService } from "../../../inventario/movimiento/service/movimiento.service";
 import { catchError, of, switchMap, tap } from "rxjs";
 import { DatePipe } from "@angular/common";
+import { CommonResponse, ListResponse } from "../../../venta/cliente/dto/interface";
+import { MarcaOutput } from "../../marca/dto/marca.output";
+import { UnidadMedidaOuput } from "../../unidad-medida/dto/unidad-medida.output";
+import { UbicacionStockOutput } from "../../../inventario/ubicacion-stock/dtos/ubicacion-stock.outpu";
 
 @Component({
     imports: [
@@ -442,7 +446,7 @@ export class AddPresentacionPage implements OnInit {
 
     private savePresentacionConMovimientoInventario() {
         this.productoPresentacionService
-            .savePresentacion(this.productoPresentacionForm.value)
+            .save(this.productoPresentacionForm.value)
             .pipe(
                 tap(resp => {
                     this.mostrarMsg('success', `${resp.message} la Presentacion PR-${resp.data.id}`);
@@ -458,7 +462,7 @@ export class AddPresentacionPage implements OnInit {
                         get("presentacionId")?.setValue(resp.data.id);
 
                     return this.movimientoService.
-                        saveMovimiento(this.movimientoInventario.value);
+                        save(this.movimientoInventario.value);
                 }),
                 catchError(err => {
                     console.error('Error en flujo:', err);
@@ -475,15 +479,15 @@ export class AddPresentacionPage implements OnInit {
     }
 
     private saveOnlyPresentacionForm() {
-        this.productoPresentacionService.savePresentacion(this.productoPresentacionForm.value)
+        this.productoPresentacionService.save(this.productoPresentacionForm.value)
             .subscribe({
                 next: (value) => {
                     console.log(value);
                     this.mostrarMsg('success', `${value.message} la Presentacion PR-${value.data.id}`)
                     this.navigateToListPresentacion();
                 },
-                error: (err) => {
-                    this.mostrarMsg('error', `${err.error?.message} - fallo`)
+                error: (err: string) => {
+                    this.mostrarMsg('error', err)
                     console.log(err);
                 },
             });
@@ -674,8 +678,8 @@ export class AddPresentacionPage implements OnInit {
     }
 
     private cargarDatosComboBoxs() {
-        this.marcaService.getAllMarcas()
-            .subscribe((resp) => {
+        this.marcaService.list()
+            .subscribe((resp: CommonResponse<ListResponse<MarcaOutput>>) => {
                 const data = resp.data.content;
                 this.marcaOptions.push(...data.map(marca => new MarcaOption(marca.id, marca.nombre)));
             });
@@ -686,9 +690,9 @@ export class AddPresentacionPage implements OnInit {
                 this.productoBaseOption.push(...data.map(base => new ProductoBaseOption(base.id || 0, base.nombre)));
             });
 
-        this.unidadMedidaService.getAllUnidadMedida()
+        this.unidadMedidaService.list()
             .subscribe((resp) => {
-                const data = resp.data.content;
+                const data = resp.data.content as UnidadMedidaOuput[];
                 this.unidadMedidaOption.push(...data.map(
                     base => new UnidadMedidaOption(
                         base.id,
@@ -697,9 +701,9 @@ export class AddPresentacionPage implements OnInit {
                 ));
             });
 
-        this.ubicacionStockService.getAllUbicacionStock()
+        this.ubicacionStockService.list()
             .subscribe((resp) => {
-                const data = resp.data.content;
+                const data = resp.data.content as UbicacionStockOutput[];
                 this.ubicacionStockOption.push(
                     ...data.map(
                         ubi =>

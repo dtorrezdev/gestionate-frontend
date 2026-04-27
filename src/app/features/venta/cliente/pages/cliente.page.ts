@@ -115,7 +115,7 @@ export class ClientePage {
     hideDialog() { this.clienteDialog = false; }
 
     private saveCliente(data: ClienteInput) {
-        this.service.saveCliente(data)
+        this.service.save(data)
             .subscribe({
                 next: (resp) => {
                     const newMarca = resp.data;
@@ -136,7 +136,7 @@ export class ClientePage {
 
     private updateCliente(data: ClienteInput, id: number) {
         this.setUpdateCliente(data, id);
-        this.service.updateCliente(data, id)
+        this.service.update(data, id)
             .subscribe({
                 next: (resp) => {
                     this.mostrarMsg('success', 'Cliente ' + resp.message);
@@ -146,9 +146,8 @@ export class ClientePage {
                         celular: ''
                     });
                 },
-                error: (err) => {
-                    this.mostrarMsg('error',
-                        `Cliente ${err.error ? JSON.stringify(err.error.message) : 'error al crear.'}`);
+                error: (err: any) => {
+                    this.mostrarMsg('error', err);
                     this.loadData();
                 }
             });
@@ -180,7 +179,7 @@ export class ClientePage {
     }
 
     private loadData() {
-        this.service.getAllCliente()
+        this.service.list()
             .subscribe(items => this.clientes.set(items.data.content));
     }
 

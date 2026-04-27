@@ -2,7 +2,7 @@ import { ChangeDetectorRef, Component, inject, OnInit } from "@angular/core";
 import { ActivatedRoute, Router, RouterModule } from "@angular/router";
 import { BreadcrumbModule } from "primeng/breadcrumb";
 import { ButtonModule } from "primeng/button";
-import { ProductService } from "../../../producto/services/producto.service";
+import { ProductService } from "../../../producto/presentacion/services/producto.service";
 import { ClienteService } from "../../services/cliente.service";
 import { VentaService } from "../../services/venta.service";
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from "@angular/forms";
@@ -24,6 +24,8 @@ import { ToastModule } from "primeng/toast";
 import { RippleModule } from "primeng/ripple";
 import { PagoOutput } from "../../pago/dto/pago.output";
 import { StockService } from "../../../inventario/stock/service/stock.service";
+import { ClienteOutput } from "../../cliente/dto/cliente.output";
+import { CommonResponse } from "../../cliente/dto/interface";
 
 
 @Component({
@@ -464,7 +466,7 @@ export class EditVerVentaPage implements OnInit {
     }
 
     private saveVentaForm(): void {
-        this.ventaService.updateVenta(this.ventaForm.value, this.id)
+        this.ventaService.update(this.ventaForm.value, this.id)
             .subscribe({
                 next: (resp) => {
                     console.log(resp);
@@ -486,13 +488,13 @@ export class EditVerVentaPage implements OnInit {
     }
 
     private getVenta(id: number): void {
-        this.ventaService.getVenta(id).subscribe({
-            next: (resp) => {
+        this.ventaService.get(id).subscribe({
+            next: (resp: CommonResponse<VentaOutput>) => {
                 console.log(resp);
 
                 this.setValuesVentaForm(resp.data);
             },
-            error: (err) => console.error(err)
+            error: (err: any) => console.error(err)
         });
     }
 
@@ -696,9 +698,9 @@ export class EditVerVentaPage implements OnInit {
 
     private loadDataToVentaForm(ventaId: number) {
 
-        this.clienteService.getAllCliente()
+        this.clienteService.list()
             .subscribe((resp) => {
-                const clientes = resp.data.content;
+                const clientes = resp.data.content as ClienteOutput[];
                 this.clienteOptions.push(
                     ...clientes.map(cliente =>
                         new ClienteOption(cliente.id,
@@ -708,7 +710,7 @@ export class EditVerVentaPage implements OnInit {
                 )
             });
 
-        this.productService.getAllProdutos()
+        this.productService.list()
             .subscribe(resp => {
                 const prodPresentacion = resp.data.content;
                 this.productoPresentacionOptions.push(...prodPresentacion);

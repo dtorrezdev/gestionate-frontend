@@ -1,0 +1,41 @@
+import { HttpClient, HttpHeaders } from "@angular/common/http";
+import { inject } from "@angular/core";
+import { Observable } from "rxjs";
+import { IService } from "../interface/iservice";
+import { Paginacion } from "../interface/paginacion";
+import { ServiceUtil } from "../utils/service.util";
+
+
+export class ServiceBase<I, O> implements IService<I,O> {
+
+    protected http = inject(HttpClient);
+    // protected config = inject('config');
+    protected readonly _API: string = 'http://localhost:8080/modulobase/api/v1/';
+    protected readonly _TOKEN: string = 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJyb2wiOiJTdXBlciBBZG1pbmlzdHJhZG9yIiwic3ViIjoiYWRtaW4iLCJpYXQiOjE3NzczMjUxOTEsImV4cCI6MTc3NzMzMjM5MX0.GLTpblwMmt1-ITmmkjIEQZ76kRZDNLIsE2dDK61k7X8';
+
+    constructor(private endpoint: string) { }
+
+    list(param?: I, page?: Paginacion): Observable<any> {
+        return ServiceUtil.list(this.http, this.getUrl(), undefined, undefined);
+    }
+    get(id: number): Observable<O> {
+        return ServiceUtil.get(this.http, `${this.getUrl()}/${id}`);
+    }
+
+    save(data: I): Observable<O> {
+        return ServiceUtil.create<I, O>(this.http, this.getUrl(), data);
+    }
+
+    update(data: I, id: number): Observable<O> {
+        return ServiceUtil.update<I, O>(this.http, `${this.getUrl()}/${id}`, data);
+    }
+
+    delete(id: number): Observable<any> {
+        return ServiceUtil.delete(this.http, `${this.getUrl()}/${id}`);
+    }
+
+    protected getUrl(): string {
+        return `${this._API}${this.endpoint}`;
+    }
+
+}

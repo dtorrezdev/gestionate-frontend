@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from "@angular/core";
-import { ProductService } from "../../../producto/services/producto.service";
+import { ProductService } from "../../../producto/presentacion/services/producto.service";
 import { PresentacionOuput } from "../../../producto/presentacion/dto/presentacion.output";
 import { Table, TableModule } from "primeng/table";
 import { ButtonModule } from "primeng/button";
@@ -202,7 +202,7 @@ export class ListStockPage implements OnInit {
 
                 const stockMap = resp.data as Record<string, StockByProductoOutput[]>;
                 console.log('stockMap ', stockMap, typeof stockMap);
-                return this.productService.getAllProdutos().pipe(
+                return this.productService.list().pipe(
                     map((respProd: CommonResponse<ListResponse<PresentacionOuput>>) => {
 
                         const productos = respProd.data.content as PresentacionOuput[];

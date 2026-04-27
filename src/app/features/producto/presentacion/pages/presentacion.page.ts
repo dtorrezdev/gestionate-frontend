@@ -10,11 +10,12 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TagModule } from 'primeng/tag';
 import { InputIconModule } from 'primeng/inputicon';
 import { IconFieldModule } from 'primeng/iconfield';
-import { ProductService } from "../../services/producto.service";
+import { ProductService } from "../services/producto.service";
 import { RouterModule } from '@angular/router';
 import { BreadcrumbModule } from 'primeng/breadcrumb';
 import { PresentacionOuput } from '../dto/presentacion.output';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { StatusStock } from '../../../../shared/enums/status-stock.enum';
 
 @Component({
     imports: [
@@ -113,7 +114,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
                 <td>{{ product.categoria }}</td>
                 <td>{{ product.unidadMedida }}</td>
                 <td>
-                    <p-tag [value]="statuses.get(getSeverity(product))" [severity]="getSeverity(product)" />
+                    <p-tag [value]="product.estadoStock" [severity]="getStockStatusClass(product.estadoStock)" />
                 </td>
                 <td>{{ product.precioVenta | currency: 'Bs' }}</td>
                 <td>
@@ -160,7 +161,6 @@ export class PresentacionPage implements OnInit {
     private confirmationService = inject(ConfirmationService);
 
     products = signal<PresentacionOuput[]>([]);
-    statuses!: Map<string, string>;
 
     // MenuBar BreadcrumbModule
     breadcrumbHome = { icon: 'pi pi-home', to: '/' };
@@ -199,36 +199,29 @@ export class PresentacionPage implements OnInit {
         });
     }
 
-
     private loadDataTable(): void {
-        this.productService.getAllProdutos()
+        this.productService.list()
             .subscribe((value) => {
                 console.log('getAllProdutos: ', value);
                 this.products.set(value.data.content);
             })
-        this.statuses = new Map<string, string>();
-        this.statuses.set('success', 'INSTOCK');
-        this.statuses.set('warn', 'LOWSTOCK');
-        this.statuses.set('danger', 'OUTOFSTOCK');
-        this.statuses.set('info', 'S/N');
     }
 
     onGlobalFilter(table: Table, event: Event) {
         table.filterGlobal((event.target as HTMLInputElement).value, 'contains');
     }
 
-    getSeverity(producto: PresentacionOuput) {
-        const minimoStock = producto.cantidadMinimoStock ? producto.cantidadMinimoStock : 0;
-        const disponibleStock = producto.cantidadDisponibleStock ?
-            producto.cantidadDisponibleStock : 0;
-        if (disponibleStock > minimoStock) {
-            return 'success';
-        } else if (disponibleStock == 0) {
-            return 'danger';
-        } else if (disponibleStock <= minimoStock) {
-            return 'warn';
+    getStockStatusClass(estadoStock: StatusStock) {
+        switch (estadoStock) {
+            case StatusStock.HAY_STOCK:
+                return 'success';
+            case StatusStock.POCO_STOCK:
+                return 'warn';
+            case StatusStock.AGOTADO:
+                return 'danger';
+            default:
+                return 'info';
         }
-        return 'info';
     }
 
 }

@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, inject, OnInit } from "@angular/core";
 import { ButtonModule } from "primeng/button";
 import { ActivatedRoute, Router, RouterModule } from "@angular/router";
-import { ProductService } from "../../services/producto.service";
+import { ProductService } from "../services/producto.service";
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from "@angular/forms";
 import { MarcaOption } from "../../marca/dto/marca.option";
 import { ProductoBaseOption } from "../../base/dto/producto.base.option";
@@ -19,6 +19,10 @@ import { InputTextModule } from "primeng/inputtext";
 import { InputNumberModule } from "primeng/inputnumber";
 import { TextareaModule } from "primeng/textarea";
 import { PresentacionOuput } from "../dto/presentacion.output";
+import { CommonResponse, ListResponse } from "../../../venta/cliente/dto/interface";
+import { MarcaOutput } from "../../marca/dto/marca.output";
+import { UnidadMedidaOuput } from "../../unidad-medida/dto/unidad-medida.output";
+import { UbicacionStockOutput } from "../../../inventario/ubicacion-stock/dtos/ubicacion-stock.outpu";
 
 
 @Component({
@@ -323,8 +327,8 @@ export class EditPresentacionPage implements OnInit {
 
     private loadDataToProductoForm(id: number) {
 
-        this.marcaService.getAllMarcas()
-            .subscribe((resp) => {
+        this.marcaService.list()
+            .subscribe((resp: CommonResponse<ListResponse<MarcaOutput>>) => {
                 console.log('data getAllMarcas', resp);
 
                 const data = resp.data.content;
@@ -338,10 +342,10 @@ export class EditPresentacionPage implements OnInit {
                 this.productoBaseOption.push(...data.map(base => new ProductoBaseOption(base.id || 0, base.nombre)));
             });
 
-        this.unidadMedidaService.getAllUnidadMedida()
+        this.unidadMedidaService.list()
             .subscribe((resp) => {
                 console.log('data getAllUnidadMedida', resp);
-                const data = resp.data.content;
+                const data = resp.data.content as UnidadMedidaOuput[];
                 this.unidadMedidaOption.push(...data.map(
                     base => new UnidadMedidaOption(
                         base.id,
@@ -350,10 +354,10 @@ export class EditPresentacionPage implements OnInit {
                 ));
             });
 
-        this.ubicacionStockService.getAllUbicacionStock()
+        this.ubicacionStockService.list()
             .subscribe((resp) => {
                 console.log('data getAllUbicacionStock', resp);
-                const data = resp.data.content;
+                const data = resp.data.content as UbicacionStockOutput[];
                 this.ubicacionStockOption.push(
                     ...data.map(
                         ubi =>
@@ -368,7 +372,7 @@ export class EditPresentacionPage implements OnInit {
 
     }
     private getProductoPresentacion(id: number) {
-        this.productService.getProdutoPresentacion(id).subscribe({
+        this.productService.get(id).subscribe({
             next: (resp) => {
                 console.log('data getProdutoPresentacion', resp);
                 const data = resp.data;

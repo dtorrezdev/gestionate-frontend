@@ -15,7 +15,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { TagModule } from 'primeng/tag';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 
-import { ProductService } from "../../../../producto/services/producto.service";
+import { ProductService } from "../../../../producto/presentacion/services/producto.service";
 import { ClienteService } from '../../../services/cliente.service';
 import { ClienteOption } from '../../../cliente/dto/cliente.option';
 import { PresentacionOuput } from '../../../../producto/presentacion/dto/presentacion.output';
@@ -23,6 +23,7 @@ import { VentaService } from '../../../services/venta.service';
 import { StockByProductoOutput } from '../../../../inventario/stock/dtos/stock-by-producto.output';
 import { StatusStock } from '../../../../../shared/enums/status-stock.enum';
 import { StockService } from '../../../../inventario/stock/service/stock.service';
+import { ClienteOutput } from '../../../cliente/dto/cliente.output';
 
 @Component({
     imports: [
@@ -125,7 +126,7 @@ export class AddVentaPage implements OnInit {
     }
 
     private saveVentaForm(): void {
-        this.ventaService.saveVenta(this.ventaForm.value)
+        this.ventaService.save(this.ventaForm.value)
                 .subscribe({
                     next: (resp) => {
                         console.log(resp);
@@ -273,9 +274,9 @@ export class AddVentaPage implements OnInit {
     }
 
     private loadDataToVentaForm(): void {
-        this.clienteService.getAllCliente()
+        this.clienteService.list()
             .subscribe((resp) => {
-                const clientes = resp.data.content;
+                const clientes = resp.data.content as ClienteOutput[];
                 this.clienteOptions.push(
                     ...clientes.map(cliente =>
                         new ClienteOption(cliente.id,
@@ -285,7 +286,7 @@ export class AddVentaPage implements OnInit {
                 )
             });
 
-        this.productService.getAllProdutos()
+        this.productService.list()
             .subscribe(resp => {
                 const prodPresentacion = resp.data.content;
                 this.productoPresentacionOptions.push(...prodPresentacion);

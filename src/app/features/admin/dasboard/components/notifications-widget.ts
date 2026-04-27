@@ -102,7 +102,7 @@ export class NotificationsWidget implements OnInit {
     ngOnInit(): void {
         console.log('init');
         //this.notificaciones = [];
-        this.notificacionService.getAllEventoNotificacion().subscribe({
+        this.notificacionService.list().subscribe({
             next: (resp) => {
                 console.log('resp', resp);
                 //this.notificaciones.push(...resp.data.content);

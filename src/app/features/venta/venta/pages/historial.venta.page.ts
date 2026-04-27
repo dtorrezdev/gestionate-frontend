@@ -173,7 +173,7 @@ export class HistorialVentaPage implements OnInit {
 
     public loadData(): void {
 
-        this.ventaServive.getAllVenta()
+        this.ventaServive.list()
             .subscribe((resp) => {
                 const ventas = resp.data.content;
                 this.ventas.set(ventas);

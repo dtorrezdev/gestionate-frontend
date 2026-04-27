@@ -187,7 +187,7 @@ export class ListUnidadMedidaPage implements OnInit {
 
     private update(unidadMedida: UnidadMedidaInput, id: number) {
         this.setUpdateUnidadMedida(unidadMedida, id);
-        this.service.updateUnidadMedida(unidadMedida, id)
+        this.service.update(unidadMedida, id)
             .subscribe({
                 next: (resp) => {
                     this.mostrarMsg('success', `Unidad Medidad ${resp.message}`);
@@ -197,9 +197,8 @@ export class ListUnidadMedidaPage implements OnInit {
                         esUnidadMinima: true
                     });
                 },
-                error: (err) => {
-                    this.mostrarMsg('error',
-                        `Unidad Medida ${err.error ? JSON.stringify(err.error.message) : 'error al crear.'}`);
+                error: (err: any) => {
+                    this.mostrarMsg('error', err);
                     this.loadData();
                 }
             });
@@ -214,7 +213,7 @@ export class ListUnidadMedidaPage implements OnInit {
     }
 
     private save(data: UnidadMedidaInput) {
-        this.service.saveUnidadMedida(data)
+        this.service.save(data)
             .subscribe({
                 next: (resp) => {
                     const newData = resp.data;
@@ -233,7 +232,7 @@ export class ListUnidadMedidaPage implements OnInit {
     }
 
     private loadData(): void {
-        this.service.getAllUnidadMedida()
+        this.service.list()
             .subscribe({
                 next: (resp) => {
                     this.unidadesMedidas.set(resp.data.content);

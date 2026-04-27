@@ -173,9 +173,9 @@ export class ListVentaDiaPage implements OnInit {
 
     public loadData(): void {
 
-        this.ventaServive.getAllVenta()
+        this.ventaServive.list()
             .subscribe((resp) => {
-                const ventas = resp.data.content;
+                const ventas = resp.data.content as VentaOutput[];
                 this.ventas.set(ventas);
             });
 
