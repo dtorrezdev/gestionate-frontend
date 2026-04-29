@@ -108,6 +108,9 @@ export class NotificationsWidget implements OnInit {
                 //this.notificaciones.push(...resp.data.content);
                 this.notificaciones.set(resp.data.content);
                 console.log('init ', this.notificaciones);
+            },
+            error: (err) => {
+                console.error(err);
             }
         })
 

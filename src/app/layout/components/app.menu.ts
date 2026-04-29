@@ -200,7 +200,7 @@ export class AppMenu {
                     {
                         label: 'Proveedor',
                         icon: 'pi pi-fw pi-car',
-                        routerLink: ['/proveedor']
+                        routerLink: ['/compra/proveedor']
                     }
                 ]
             },

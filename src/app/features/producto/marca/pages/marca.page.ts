@@ -216,9 +216,8 @@ export class Marca implements OnInit {
                 },
                 error: (err) => {
                     console.log('Error: ', err);
-
                     this.mostrarMsg('error',
-                        `Marca  ${err ? err : 'error al crear.'}`);
+                        `Marca ${err ? err : 'error al crear.'}`);
                 }
             });
     }

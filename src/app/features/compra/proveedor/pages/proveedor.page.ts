@@ -12,6 +12,8 @@ import { DialogModule } from "primeng/dialog";
 
 import { ProveedorService } from "../service/proveedor.service";
 import { ProveedorOutput } from "../dto/proveedor.output";
+import { ProveedorInput } from "../dto/proveedor.input";
+import { CommonResponse } from "../../../venta/cliente/dto/interface";
 
 
 @Component({
@@ -48,7 +50,7 @@ import { ProveedorOutput } from "../dto/proveedor.output";
         [paginator]="true"
         [rowsPerPageOptions]="[10, 20, 50,100]"
         [rows]="10"
-        [tableStyle]="{ 'min-width': '75rem' }"
+        [tableStyle]="{ 'min-width': '65rem' }"
         [rowHover]="true"
         dataKey="id"
         [showCurrentPageReport]="true"
@@ -149,7 +151,7 @@ import { ProveedorOutput } from "../dto/proveedor.output";
 })
 export class ProveedorPage implements OnInit {
 
-    private proveedorService = inject(ProveedorService);
+    private service = inject(ProveedorService);
     private messageService = inject(MessageService);
     private confirmationService = inject(ConfirmationService);
 
@@ -164,7 +166,8 @@ export class ProveedorPage implements OnInit {
     breadcrumbHome = { icon: 'pi pi-home', to: '/' };
     breadcrumbItems = [
         { label: 'Compra', routerLink: '/compra' },
-        { label: 'Proveedores' }
+        { label: 'Proveedores' },
+        { label: 'Listar' }, { label: 'Todo' }
     ];
 
     proveedorForm = form(this.selectedProveedor, (schemaPath) => {
@@ -177,15 +180,13 @@ export class ProveedorPage implements OnInit {
     }
 
     loadProveedores(): void {
-        this.proveedorService.list().subscribe({
-            next: (response: any) => {
+        this.service.list().subscribe({
+            next: (response) => {
                 if (response.success && response.data && response.data.content) {
                     this.proveedores.set(response.data.content);
                 }
             },
-            error: (error: any) => {
-                this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error al cargar proveedores' });
-            }
+            error: (err) => this.mostrarMsg('error', err)
         });
     }
 
@@ -207,39 +208,53 @@ export class ProveedorPage implements OnInit {
     onSubmit(event: Event): void {
         event.preventDefault();
 
-        if (this.proveedorForm().invalid()) {
-            this.messageService.add({ severity: 'warn', summary: 'Warning', detail: 'Por favor completa todos los campos' });
-            return;
-        }
-
-        const formValue = this.proveedorForm().value();
+        const data = this.proveedorForm().value();
 
         if (this.isEditMode()) {
             const id = this.selectedProveedor()?.id;
             if (id) {
-                this.proveedorService.update(formValue, id).subscribe({
-                    next: (response: any) => {
-                        this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Proveedor actualizado correctamente' });
-                        this.loadProveedores();
-                        this.hideDialogProveedor();
-                    },
-                    error: (error: any) => {
-                        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error al actualizar el proveedor' });
-                    }
-                });
+                this.updateProveedor(data, id);
             }
         } else {
-            this.proveedorService.save(formValue).subscribe({
-                next: (response: any) => {
-                    this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Proveedor creado correctamente' });
-                    this.loadProveedores();
-                    this.hideDialogProveedor();
-                },
-                error: (error: any) => {
-                    this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error al crear el proveedor' });
-                }
-            });
+            this.saveProveedor(data);
         }
+        this.hideDialogProveedor();
+    }
+
+    private updateProveedor(data: ProveedorInput, id: number): void {
+        this.setUpdateProveedores(data, id);
+        this.service.update(data, id).subscribe({
+            next: (resp) => {
+                this.mostrarMsg('success', resp.message);
+                this.resetForm();
+                    },
+            error: (err) => {
+                this.mostrarMsg('error', err);
+                this.loadProveedores();
+                    }
+                });
+    }
+
+    private setUpdateProveedores(data: ProveedorInput, id: number) {
+        const proveedoresActuales = this.proveedores();
+        const indexProveedor = proveedoresActuales.findIndex(m => m.id === id);
+        if (indexProveedor !== -1) {
+            const nuevasMarcas = [...proveedoresActuales];
+            nuevasMarcas[indexProveedor] = { ...nuevasMarcas[indexProveedor], ...data };
+            this.proveedores.set(nuevasMarcas);
+        }
+    }
+
+    private saveProveedor(data: ProveedorInput): void {
+        this.service.save(data).subscribe({
+            next: (resp) => {
+                const newProveedor = resp.data as ProveedorOutput;
+                this.proveedores.set([newProveedor, ...this.proveedores()]);
+                this.mostrarMsg('success', resp.message);
+                this.resetForm();
+            },
+            error: (err) => this.mostrarMsg('error', err)
+        });
     }
 
     showDialogRemoveProveedor(proveedor: ProveedorOutput): void {
@@ -254,8 +269,7 @@ export class ProveedorPage implements OnInit {
     }
 
     deleteProveedor(proveedor: ProveedorOutput): void {
-        const proveedorId = proveedor.id || 0;
-        this.proveedorService.delete(proveedorId).subscribe({
+        this.service.deleteProveedor(proveedor).subscribe({
             next: (response: any) => {
                 this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Proveedor eliminado correctamente' });
                 this.loadProveedores();
@@ -263,6 +277,23 @@ export class ProveedorPage implements OnInit {
             error: (error: any) => {
                 this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error al eliminar el proveedor' });
             }
+        });
+    }
+
+    private resetForm(): void {
+        this.selectedProveedor.set({
+            nombre: '',
+            descripcion: ''
+        });
+        this.proveedorForm().reset();
+    }
+
+    private mostrarMsg(tipo: string, detalle: string): void {
+        this.messageService.add({
+            severity: tipo,
+            summary: 'Mensaje',
+            detail: detalle,
+            life: 4000
         });
     }
 }

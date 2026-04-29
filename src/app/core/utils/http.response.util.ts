@@ -12,7 +12,7 @@ export class HttpResponseUtil {
     return throwError(() => message);
   }
 
-  // Separación de responsabilidades
+
   private static resolveErrorMessage(response: HttpErrorResponse): string {
 
     // Error de red o servidor
@@ -26,8 +26,14 @@ export class HttpResponseUtil {
         return `${response.error?.message ?? 'Solicitud inválida.'}`;
 
       case 401:
-        // emitir evento global o interceptor
-        return `${response.error?.message ?? 'Sesión expirada. Token inválido.'}`;
+            let responseMsg = 'Sesión expirada. Token inválido.'
+            if (response.error) {
+                responseMsg = `${response.error.error}: ${response.error.message}`
+            }
+            console.log('responseMsg ', responseMsg);
+
+            // emitir evento global o interceptor
+            return responseMsg;
 
       case 403:
         return HttpResponseUtil.buildForbiddenMessage(response);

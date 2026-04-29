@@ -9,6 +9,8 @@ import { RippleModule } from 'primeng/ripple';
 import { AppFloatingConfigurator } from '../../../layout/components/app.floating.configurator';
 import { AuthService } from '../services/auth-service';
 import { LoginInput } from '../interface/login.input';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
 
 
 @Component({
@@ -24,6 +26,7 @@ import { LoginInput } from '../interface/login.input';
         FormsModule,
         RippleModule,
         AppFloatingConfigurator,
+        ToastModule
     ],
     template: `
         <app-floating-configurator />
@@ -73,24 +76,24 @@ import { LoginInput } from '../interface/login.input';
                 </div>
             </form>
         </div>
-    `
+        <p-toast />
+    `,
+    providers: [MessageService]
 })
 export class LoginPage {
 
     private auth = inject(AuthService);
     private router = inject(Router);
+    private messageService = inject(MessageService);
 
     loginForm = new FormGroup({
         nombreUsuario: new FormControl(''),
         contrasena: new FormControl(''),
-        // checked: new FormControl(false)
     });
 
     onLogin() {
         console.log('submit form login: ', this.loginForm.value);
         const dataLogin = this.loginForm.value as LoginInput;
-        //const fakeToken = '123456';
-        //this.auth.loginFake(fakeToken);
         this.auth.login(dataLogin)
         .subscribe({
             next: (success: Boolean) => {
@@ -100,10 +103,18 @@ export class LoginPage {
                 }
             },
             error: (error) => {
+                this.mostrarMsg('error', `${JSON.stringify(error)} Error al iniciar sesión. Por favor, verifica tus credenciales.`);
                 console.error('Error during authentication:', error);
             }
         });
+    }
 
-
+    private mostrarMsg(tipo: string, detalle: string): void {
+        this.messageService.add({
+            severity: tipo,
+            summary: 'Mensaje',
+            detail: detalle,
+            life: 5000
+        });
     }
 }
