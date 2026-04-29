@@ -1,9 +1,6 @@
-import { HttpClient, HttpHeaders } from "@angular/common/http";
-import { inject, Injectable } from "@angular/core";
-import { CommonResponse, ListResponse } from "../../../venta/cliente/dto/interface";
+import { Injectable } from "@angular/core";
+import { CommonResponse } from "../../../venta/cliente/dto/interface";
 import { MarcaInput } from "../dto/marca.input";
-import { MarcaOutput } from "../dto/marca.output";
-import { Observable } from "rxjs";
 import { ServiceBase } from "../../../../core/services/service-base";
 
 

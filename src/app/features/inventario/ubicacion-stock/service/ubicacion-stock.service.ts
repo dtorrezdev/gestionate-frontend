@@ -37,7 +37,7 @@ export class UbicacionStockService extends ServiceBase<UbicacionStockInput, Comm
         let headers = new HttpHeaders();
         headers = headers.set('Content-Type', 'application/json');
         headers = headers.set('Authorization', this._TOKEN);
-        return this.http.delete(this._API, { headers, body: JSON.stringify(ubicacion) });
+        return this.http.delete(this.getUrl(), { headers, body: JSON.stringify(ubicacion) });
     }
 
     constructor() {

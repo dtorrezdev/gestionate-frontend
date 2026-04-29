@@ -1,15 +1,8 @@
 import { Routes } from '@angular/router';
-import { ProveedorPage } from './proveedor/pages/proveedor.page';
 
-export const compraRoutes: Routes = [
+export default [
     {
-        path: 'proveedores',
-        component: ProveedorPage,
-        data: { title: 'Proveedores' }
-    },
-    {
-        path: '',
-        redirectTo: 'proveedores',
-        pathMatch: 'full'
+        path: 'proveedor',
+        loadComponent: () => import('./proveedor/pages/proveedor.page').then(p => p.ProveedorPage),
     }
-];
+] as Routes;

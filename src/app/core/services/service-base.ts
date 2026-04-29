@@ -11,9 +11,11 @@ export class ServiceBase<I, O> implements IService<I,O> {
     protected http = inject(HttpClient);
     // protected config = inject('config');
     protected readonly _API: string = 'http://localhost:8080/modulobase/api/v1/';
-    protected readonly _TOKEN: string = 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJyb2wiOiJTdXBlciBBZG1pbmlzdHJhZG9yIiwic3ViIjoiYWRtaW4iLCJpYXQiOjE3NzczMjUxOTEsImV4cCI6MTc3NzMzMjM5MX0.GLTpblwMmt1-ITmmkjIEQZ76kRZDNLIsE2dDK61k7X8';
+    protected _TOKEN: string = 'XYZ';
 
-    constructor(private endpoint: string) { }
+    constructor(private endpoint: string) {
+        this._TOKEN = localStorage.getItem('token') || '';
+    }
 
     list(param?: I, page?: Paginacion): Observable<any> {
         return ServiceUtil.list(this.http, this.getUrl(), undefined, undefined);

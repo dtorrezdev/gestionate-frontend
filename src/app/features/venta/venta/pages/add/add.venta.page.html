@@ -241,7 +241,6 @@
             <div class="flex gap-2 w-full flex-cc">
                 Total Pago: {{ totalPago }}
             </div>
-
         </div>
         <p-table
             #dt2
@@ -307,6 +306,7 @@
             <p-button label="Guardar" [disabled]="ventaForm.invalid" type="submit" />
             <p-button label="Preventa" [disabled]="isPreventaDisable()" severity="info" (onClick)="submitForm()" />
             <p-button label="Cancelar" severity="secondary" routerLink="/venta" />
+            <p-button label="Imprimir" severity="secondary" (onClick)="exportPdf()" />
         </div>
     </div>
      <p-toast />

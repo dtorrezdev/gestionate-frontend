@@ -24,6 +24,12 @@ import { StockByProductoOutput } from '../../../../inventario/stock/dtos/stock-b
 import { StatusStock } from '../../../../../shared/enums/status-stock.enum';
 import { StockService } from '../../../../inventario/stock/service/stock.service';
 import { ClienteOutput } from '../../../cliente/dto/cliente.output';
+// @ts-ignore
+import pdfMake from 'pdfmake/build/pdfmake';
+// @ts-ignore
+import pdfFonts from 'pdfmake/build/vfs_fonts';
+
+(pdfMake as any).vfs = pdfFonts.vfs;
 
 @Component({
     imports: [
@@ -88,7 +94,7 @@ export class AddVentaPage implements OnInit {
     expandedRows: any = {};
 
     public metodoValues = [
-        { name: 'Efectivo', code: 'EF' },
+        { name: 'EFECTIVO', code: 'EF' },
         { name: 'QR/TRANSFERENCIA', code: 'QR_TR' },
         { name: 'TARJETA', code: 'TAR' }
     ];
@@ -422,4 +428,35 @@ export class AddVentaPage implements OnInit {
             this.router.navigate(['/venta']), 3000);
         ;
     }
+
+    exportPdf() {
+        const docDefinition = {
+            content: [
+                { text: 'Invoice', style: 'header' },
+                {
+                    table: {
+                        widths: ['*', 'auto', 'auto'],
+                        body: [
+                            ['Item', 'Quantity', 'Price'],
+                            ['Service A', '1', '$100'],
+                            ['Product B', '2', '$50']
+                        ]
+                    }
+                }
+            ],
+            styles: {
+                header: { fontSize: 18, bold: true }
+            }
+        };
+        pdfMake.createPdf(docDefinition).download('invoice.pdf');
+        /*
+        Revisar esta codigo
+        https://stackblitz.com/edit/ng-pdfmake-invoice-generator-dwsxa2?file=package.json
+        https://stackblitz.com/edit/export-pdf-angular?file=package.json
+        https://stackblitz.com/edit/angular-pdfmake-example-ntk7up?file=src%2Fapp%2Fapp.component.ts
+        https://dev.to/ankitprajapati/angular-export-to-pdf-using-pdfmake-client-side-pdf-generation-1jlk
+
+        */
+    }
+
 }
