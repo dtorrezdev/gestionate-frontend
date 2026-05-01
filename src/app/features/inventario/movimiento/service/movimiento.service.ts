@@ -14,10 +14,7 @@ export class MovimientoService extends ServiceBase<MovimientoInput, CommonRespon
     }
 
     // saveMovimiento(movimiento: MovimientoInput) {
-    //     let headers = new HttpHeaders();
-    //     headers = headers.set('Content-Type', 'application/json');
-    //     headers = headers.set('Authorization', this._TOKEN);
-    //     return this.http.post(this.getUrl(), JSON.stringify(movimiento), { headers });
+    //     return this.http.post(this.getUrl(), JSON.stringify(movimiento));
     // }
 
 }

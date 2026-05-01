@@ -4,7 +4,7 @@ import { StockByProductoOutput } from "./stock-by-producto.output";
 export interface ProductoStockOutput {
     id: number;
     productoId: number;
-    nombre: string;
+    presentacion: string;
     concepto: string;
     descripcion: string;
     unidadMedidaId: number;

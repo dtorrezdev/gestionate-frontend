@@ -172,14 +172,14 @@ export class AddVentaPage implements OnInit {
         if (productoPre.id == 0) return false;
         const findIndexInDetalle = this.findIndexDelProductoEnDetalle(productoPre);
         if(findIndexInDetalle > -1) {
-            this.mostrarMsg('info', 'El producto ' + productoPre.nombre
+            this.mostrarMsg('info', 'El producto ' + productoPre.presentacion
                 + ' esta en la fila nro ' + (findIndexInDetalle + 1));
             return false;
         }
         if(productoPre.estadoStock === 'AGOTADO') {
             this.mostrarMsg(
                 'warn',
-                'El producto ' + productoPre.nombre + ' esta AGOTADO.'
+                'El producto ' + productoPre.presentacion + ' esta AGOTADO.'
             );
             return false;
         }
@@ -315,7 +315,7 @@ export class AddVentaPage implements OnInit {
     private crearDetalle(presentacionProducto?: PresentacionOuput, stocks?: FormArray,): FormGroup {
         return this.formBuilder.group({
             presentacionId: [presentacionProducto?.id || null, Validators.required],
-            nombre: [presentacionProducto?.nombre || ''],
+            nombre: [presentacionProducto?.presentacion || ''],
             productoId: [presentacionProducto?.productoId || null, Validators.required],
             precio: [presentacionProducto?.precioVenta || 0, [Validators.required, Validators.min(1)]],
             cantidad: [1, [Validators.required, Validators.min(1)]],

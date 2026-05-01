@@ -27,7 +27,7 @@ export class AppMenu {
                 label: 'Home',
                 items: [{ label: 'Dashboard', icon: 'pi pi-fw pi-home', routerLink: ['/'] }]
             },
-            {
+            /*{
                 label: 'Administracion',
                 items: [
                     {
@@ -48,7 +48,7 @@ export class AppMenu {
                         target: '_blank'
                     }
                 ]
-            },
+            },*/
             {
                 label: 'Ventas',
                 icon: 'pi pi-fw pi-briefcase',

@@ -163,7 +163,7 @@ import { CommonResponse } from "../../cliente/dto/interface";
                 >
                     <td style="min-width: 2rem; text-align: center;">P-{{ product.value.presentacionId }}</td>
                     <td style="min-width: 18rem">
-                        {{ product.value.nombre }}
+                        {{ product.value.presentacion }}
                     </td>
                     <td style="min-width: 8rem">
                         <p-tag [value]="product.value.estadoStock" [severity]="getStockStatusClass(product.value.estadoStock)" />
@@ -640,14 +640,14 @@ export class EditVerVentaPage implements OnInit {
         if (productoPre && productoPre.id == 0) return false;
         const findIndexInDetalle = this.findIndexDelProductoEnDetalle(productoPre);
         if (findIndexInDetalle > -1) {
-            this.mostrarMsg('info', 'El producto ' + productoPre.nombre
+            this.mostrarMsg('info', 'El producto ' + productoPre.presentacion
                 + ' esta en la fila nro ' + (findIndexInDetalle + 1));
             return false;
         }
         if (productoPre.estadoStock === 'AGOTADO') {
             this.mostrarMsg(
                 'warn',
-                'El producto ' + productoPre.nombre + ' esta AGOTADO.'
+                'El producto ' + productoPre.presentacion + ' esta AGOTADO.'
             );
             return false;
         }
@@ -655,10 +655,12 @@ export class EditVerVentaPage implements OnInit {
     }
 
     private crearDetalle(presentacionProducto?: PresentacionOuput, stocks?: FormArray, cantidad: number = 1): FormGroup {
+        console.log('** presentacion', presentacionProducto);
+
         const subtotal = (presentacionProducto?.precioVenta || 0) * cantidad;
         return this.formBuilder.group({
             presentacionId: [presentacionProducto?.id || null, Validators.required],
-            nombre: [presentacionProducto?.nombre || ''],
+            nombre: [presentacionProducto?.presentacion || ''],
             productoId: [presentacionProducto?.productoId || null, Validators.required],
             precio: [presentacionProducto?.precioVenta || 0, [Validators.required, Validators.min(1)]],
             // Venta siempre realizar en cantidad minima (cantidad base)

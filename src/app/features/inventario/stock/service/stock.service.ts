@@ -12,22 +12,12 @@ export class StockService extends ServiceBase<StockByProductoOutput, CommonRespo
     }
 
     getStockByProducto(presentacionId: number) {
-        let headers = new HttpHeaders();
-        headers = headers.set('Content-Type', 'application/json');
-        headers = headers.set('Authorization', this._TOKEN);
-        return this.http.get<CommonResponse<ListStockOutput>>(
-            `${this.getUrl()}/${presentacionId}`,
-            { headers }
-        );
+
+        return this.http.get<CommonResponse<ListStockOutput>>(`${this.getUrl()}/${presentacionId}`);
     }
 
     getStocksAll() {
-        let headers = new HttpHeaders();
-        headers = headers.set('Content-Type', 'application/json');
-        headers = headers.set('Authorization', this._TOKEN);
-        return this.http.get<CommonResponse<Record<string, StockByProductoOutput[]>>>(
-            `${this.getUrl()}`,
-            { headers }
-        );
+
+        return this.http.get<CommonResponse<Record<string, StockByProductoOutput[]>>>(`${this.getUrl()}`);
     }
 }

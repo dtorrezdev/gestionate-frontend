@@ -2,7 +2,7 @@
 export class PresentacionOuput {
     id: number;
     productoId: number;
-    nombre: string;
+    presentacion: string;
     concepto: string;
     descripcion: string;
     unidadMedidaId: number;
@@ -20,7 +20,7 @@ export class PresentacionOuput {
     constructor(
         id: number,
         productoId: number,
-        nombre: string,
+        presentacion: string,
         concepto: string,
         descripcion: string,
         unidadMedidaId: number,
@@ -37,7 +37,7 @@ export class PresentacionOuput {
     ) {
         this.id = id;
         this.productoId = productoId;
-        this.nombre = nombre;
+        this.presentacion = presentacion;
         this.concepto = concepto;
         this.descripcion = descripcion;
         this.unidadMedidaId = unidadMedidaId;

@@ -11,14 +11,12 @@ export class ServiceBase<I, O> implements IService<I,O> {
     protected http = inject(HttpClient);
     // protected config = inject('config');
     protected readonly _API: string = 'http://localhost:8080/modulobase/api/v1/';
-    protected _TOKEN: string = 'XYZ';
 
     constructor(private endpoint: string) {
-        this._TOKEN = localStorage.getItem('token') || '';
     }
 
     list(param?: I, page?: Paginacion): Observable<any> {
-        return ServiceUtil.list(this.http, this.getUrl(), undefined, undefined);
+        return ServiceUtil.list(this.http, this.getUrl(), undefined, page);
     }
     get(id: number): Observable<O> {
         return ServiceUtil.get(this.http, `${this.getUrl()}/${id}`);

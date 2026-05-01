@@ -13,10 +13,7 @@ export class EventoNotificacionService extends ServiceBase<EventoNotificacion, C
     }
 
     // getAllEventoNotificacion() {
-    //     let headers = new HttpHeaders();
-    //     headers = headers.set('Content-Type', 'application/json');
-    //     headers = headers.set('Authorization', this._TOKEN);
 
-    //     return this.http.get<CommonResponse<ListResponse<EventoNotificacion>>>(`${this.getUrl()}?size=1000&sort=presentacion_id,desc`, { headers: headers });
+    //     return this.http.get<CommonResponse<ListResponse<EventoNotificacion>>>(`${this.getUrl()}?size=1000&sort=presentacion_id,desc`);
     // }
 }

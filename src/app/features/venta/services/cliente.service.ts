@@ -15,9 +15,6 @@ export class ClienteService extends ServiceBase<ClienteInput, CommonResponse<any
     }
 
     deleteCliente(data: ClienteOutput) {
-        let headers = new HttpHeaders();
-        headers = headers.set('Content-Type', 'application/json');
-        headers = headers.set('Authorization', this._TOKEN);
-        return this.http.delete(this.getUrl(), { headers, body: JSON.stringify(data) });
+        return this.http.delete(this.getUrl(), { body: JSON.stringify(data) });
     }
 }

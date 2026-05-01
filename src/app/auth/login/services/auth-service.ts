@@ -33,9 +33,8 @@ export class AuthService {
     }
 
     private autenticar(data: LoginInput): Observable<LoguinOutput> {
-        let headers = new HttpHeaders();
-        headers = headers.set('Content-Type', 'application/json');
-        return this.http.post(this._apiLoginUrl, JSON.stringify(data), { headers })
+
+        return this.http.post(this._apiLoginUrl, JSON.stringify(data))
             .pipe(
                 map((resp: any) => {
                     return {
@@ -48,5 +47,9 @@ export class AuthService {
                 })
             );
 
+    }
+
+    getAuthToken(): string {
+        return localStorage.getItem('token') || ''
     }
 }

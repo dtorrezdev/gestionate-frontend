@@ -5,9 +5,10 @@ import { provideRouter, RouterOutlet, withEnabledBlockingInitialNavigation, with
 
 import { Component } from '@angular/core';
 import { Routes } from '@angular/router';
-import { LoginPage } from './auth/login/pages/login.page';
 import { authGuard } from './core/guards/auth.guard';
 import { guestGuard } from './core/guards/guest.guard';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { requestInterceptor } from './core/interceptors/request.interceptor';
 
 @Component({
     standalone: true,
@@ -54,7 +55,7 @@ export const routes: Routes = [
 export const appConfig: ApplicationConfig = {
     providers: [
         provideBrowserGlobalErrorListeners(),
-        //provideRouter(routes)
+        provideHttpClient(withInterceptors([requestInterceptor])),
         provideRouter(routes, withInMemoryScrolling({ anchorScrolling: 'enabled', scrollPositionRestoration: 'enabled' }), withEnabledBlockingInitialNavigation()),
     ]
 };

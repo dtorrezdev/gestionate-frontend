@@ -394,7 +394,7 @@ export class EditPresentacionPage implements OnInit {
         this.productoForm.patchValue({
             id: presentacion.id,
             productoId: productoBase,
-            nombre: presentacion.nombre,
+            nombre: presentacion.presentacion,
             concepto: presentacion.concepto,
             descripcion: presentacion.descripcion,
             unidadMedidaId: unidadMedida,

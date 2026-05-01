@@ -27,7 +27,7 @@ export class PresentacionOption {
         return new PresentacionOption(
             presentacion.id,
             presentacion.productoId,
-            `${presentacion.marca} - ${presentacion.nombre}`,
+            `${presentacion.marca} - ${presentacion.presentacion}`,
             presentacion.precioVenta
         );
     }

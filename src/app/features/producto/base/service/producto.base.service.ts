@@ -14,31 +14,19 @@ export class ProductoBaseService extends ServiceBase<ProductoBaseOutput, CommonR
     }
 
     getAllProductoBase() {
-        let headers = new HttpHeaders();
-        headers = headers.set('Content-Type', 'application/json');
-        headers = headers.set('Authorization', this._TOKEN);
         return this.http.get<ListResponse<ProductoBaseOutput>>
-            (`${this.getUrl()}?size=1000&page=0&sort=producto_id,desc&codigo=&nombre&descripcion`, { headers: headers });
+            (`${this.getUrl()}?size=1000&page=0&sort=producto_id,desc&codigo=&nombre&descripcion`);
     }
 
     saveProducto(data: ProductoBaseOutput): Observable<ProductoBaseOutput> {
-        let headers = new HttpHeaders();
-        headers = headers.set('Content-Type', 'application/json');
-        headers = headers.set('Authorization', this._TOKEN);
-        return this.http.post<ProductoBaseOutput>(this.getUrl(), JSON.stringify(data), { headers });
+        return this.http.post<ProductoBaseOutput>(this.getUrl(), JSON.stringify(data));
     }
 
     updateProducto(data: ProductoBaseOutput, id: number): Observable<ProductoBaseOutput> {
-        let headers = new HttpHeaders();
-        headers = headers.set('Content-Type', 'application/json');
-        headers = headers.set('Authorization', this._TOKEN);
-        return this.http.put<ProductoBaseOutput>(`${this.getUrl()}/${id}`, JSON.stringify(data), { headers });
+        return this.http.put<ProductoBaseOutput>(`${this.getUrl()}/${id}`, JSON.stringify(data));
     }
 
     deleteProducto(marca: ProductoBaseOutput) {
-        let headers = new HttpHeaders();
-        headers = headers.set('Content-Type', 'application/json');
-        headers = headers.set('Authorization', this._TOKEN);
-        return this.http.delete(`${this.getUrl()}/${marca.id}`, { headers });
+        return this.http.delete(`${this.getUrl()}/${marca.id}`);
     }
 }

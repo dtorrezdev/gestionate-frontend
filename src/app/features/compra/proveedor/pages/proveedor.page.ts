@@ -14,6 +14,7 @@ import { ProveedorService } from "../service/proveedor.service";
 import { ProveedorOutput } from "../dto/proveedor.output";
 import { ProveedorInput } from "../dto/proveedor.input";
 import { CommonResponse } from "../../../venta/cliente/dto/interface";
+import { Paginacion } from "../../../../core/interface/paginacion";
 
 
 @Component({
@@ -180,7 +181,8 @@ export class ProveedorPage implements OnInit {
     }
 
     loadProveedores(): void {
-        this.service.list().subscribe({
+
+        this.service.list(undefined, this.getPagination()).subscribe({
             next: (response) => {
                 if (response.success && response.data && response.data.content) {
                     this.proveedores.set(response.data.content);
@@ -295,5 +297,16 @@ export class ProveedorPage implements OnInit {
             detail: detalle,
             life: 4000
         });
+    }
+
+    private getPagination(): Paginacion {
+        return {
+            size: 1000,
+            page: 0,
+            sort: {
+                col: 'proveedor_id',
+                type: 'desc'
+            }
+        };
     }
 }

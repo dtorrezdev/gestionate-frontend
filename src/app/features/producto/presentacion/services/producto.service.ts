@@ -16,17 +16,11 @@ export class ProductService extends ServiceBase<PresentacionInput, CommonRespons
 
     // Refacrotizar
     updatePresentacion(presentacion: PresentacionInput, id: number) {
-        let headers = new HttpHeaders();
-        headers = headers.set('Content-Type', 'application/json');
-        headers = headers.set('Authorization', this._TOKEN);
-        return this.http.put<PresentacionSave>(`http://localhost:8080/modulobase/api/v1/producto_presentacion/${id}`, JSON.stringify(presentacion), { headers });
+        return this.http.put<PresentacionSave>(`http://localhost:8080/modulobase/api/v1/producto_presentacion/${id}`, JSON.stringify(presentacion));
     }
     // Refacrotizar
     deletePresentacion(id: number) {
-        let headers = new HttpHeaders();
-        headers = headers.set('Content-Type', 'application/json');
-        headers = headers.set('Authorization', this._TOKEN);
-        return this.http.delete(`${this.getUrl()}`, { headers, body: JSON.stringify({ id }) });
+        return this.http.delete(`${this.getUrl()}`, { body: JSON.stringify({ id }) });
     }
 
 }
