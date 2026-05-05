@@ -154,7 +154,8 @@ export class AddVentaPage implements OnInit {
                         const stocks = resp.data.stocks || [];
                         const newDetalle = this.crearDetalle(presentacionProducto, this.crearFormArrayStock(stocks));
                         newDetalle.valueChanges.subscribe((presentacion) => {
-                            const total = presentacion.precio * presentacion.cantidad;
+                            //const total = presentacion.precio * presentacion.cantidad;
+                            const total = Math.ceil((presentacion.precio * presentacion.cantidad) * 100) / 100;
                             newDetalle.get('subtotal')?.setValue(total, { emitEvent: false });
                         });
 

@@ -15,10 +15,8 @@ import { ConfirmDialogModule } from "primeng/confirmdialog";
 import { RouterModule } from "@angular/router";
 import { ConfirmationService, MessageService } from "primeng/api";
 import { DatePipe } from "@angular/common";
-import { VentaService } from "../../../venta/services/venta.service";
-import { VentaOutput } from "../../../venta/venta/dto/venta.output";
-import { VentaDelete } from "../../../venta/venta/dto/venta.delete";
 import { CompraOutput } from "../../solicitud/dto/compra.output";
+import { RecepcionService } from "../service/recepcion.service";
 
 
 @Component({
@@ -42,13 +40,13 @@ import { CompraOutput } from "../../solicitud/dto/compra.output";
     template: `
 
     <div class="card mb-0 pb-1">
-        <div class="font-semibold text-xl mb-4">Listado de Compras</div>
+        <div class="font-semibold text-xl mb-4">Listado de Recepcion Compras</div>
         <p-breadcrumb [model]="breadcrumbItems" [home]="breadcrumbHome"></p-breadcrumb>
     </div>
 
     <p-toolbar styleClass="mb-6 n-border n-border-r">
         <ng-template #start>
-            <p-button label="New" icon="pi pi-plus" [routerLink]="'/compra/solicitud-add'" severity="secondary" class="mr-2"/>
+            <p-button label="New" icon="pi pi-plus" [routerLink]="'/compra/recepcion-add'" severity="secondary" class="mr-2"/>
             <p-button severity="secondary" label="Delete" icon="pi pi-trash" outlined/>
         </ng-template>
 
@@ -68,7 +66,7 @@ import { CompraOutput } from "../../solicitud/dto/compra.output";
         >
     <ng-template #caption>
         <div class="flex items-center justify-between">
-            <h5 class="m-0">Lista de Compras</h5>
+            <h5 class="m-0">Lista de Recepcion Compras</h5>
             <p-iconfield>
                 <p-inputicon styleClass="pi pi-search" />
                 <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Search..." />
@@ -80,6 +78,10 @@ import { CompraOutput } from "../../solicitud/dto/compra.output";
             <th style="min-width: 2rem; text-align: center;">Nro</th>
             <th pSortableColumn="fechaRegistro" style="min-width:3rem">
                 Fecha
+                <p-sortIcon field="fechaRegistro" />
+            </th>
+            <th pSortableColumn="fechaRegistro" style="min-width:3rem">
+                Codigo Compra
                 <p-sortIcon field="fechaRegistro" />
             </th>
             <th pSortableColumn="cliente" style="min-width: 6rem">
@@ -101,7 +103,8 @@ import { CompraOutput } from "../../solicitud/dto/compra.output";
         <tr>
             <td style="text-align: center">{{ venta.codigo }}</td>
             <td>{{ venta.fechaRegistro | date: 'dd/MM/yyyy HH:mm' }}</td>
-            <td>{{ venta.cliente }}</td>
+            <td>C-{{ venta.compraId }}</td>
+            <td>{{ venta.proveedor }}</td>
             <td>{{ venta.vendedor ?? 'admin' }}</td>
             <td>{{ venta.total | currency: 'Bs' }}</td>
             <td>
@@ -129,17 +132,14 @@ import { CompraOutput } from "../../solicitud/dto/compra.output";
     <p-toast />
     <p-confirmdialog [style]="{ width: '450px' }" />
     `,
-    providers: [VentaService, ConfirmationService, MessageService]
+    providers: [RecepcionService, ConfirmationService, MessageService]
 })
 export class ListRecepcionPage implements OnInit {
-
-    private service = inject(VentaService);
+    private service = inject(RecepcionService);
     private confirmationService = inject(ConfirmationService);
     private messageService = inject(MessageService);
 
     compras = signal<CompraOutput[]>([]);
-
-    venta!: CompraOutput;
 
     // MenuBar BreadcrumbModule
     breadcrumbHome = { icon: 'pi pi-home', to: '/' };
@@ -170,7 +170,7 @@ export class ListRecepcionPage implements OnInit {
             header: 'Confirm',
             icon: 'pi pi-exclamation-triangle',
             accept: () => {
-                this.service.deleteVenta(this.buildBodyVentaDelete(compra))
+                this.service.delete((compra.id))
                     .subscribe({
                         next: (resp) => {
                             console.log('Venta anulada: ', resp);
@@ -192,20 +192,8 @@ export class ListRecepcionPage implements OnInit {
                             });
                         }
                     })
-            },
-            reject: () => {
-                console.log('Reject Solicitud');
             }
         });
 
-    }
-
-    private buildBodyVentaDelete(venta: VentaOutput): VentaDelete {
-        return {
-            ventaId: venta.id,
-            glosa: 'Anulacion de venta ' + venta.codigo,
-            clienteId: venta.clienteId,
-            movimientoId: venta.movimientoId
-        };
     }
 }

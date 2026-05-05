@@ -22,6 +22,9 @@ import { StatusStock } from '../../../../shared/enums/status-stock.enum';
 import { ProveedorService } from '../../proveedor';
 import { ProveedorOutput } from '../../proveedor/dto/proveedor.output';
 import { CompraService } from '../../compra/service/compra.service';
+import { RecepcionService } from '../service/recepcion.service';
+import { CompraOutput } from '../../solicitud/dto/compra.output';
+
 
 @Component({
     imports: [
@@ -38,31 +41,30 @@ import { CompraService } from '../../compra/service/compra.service';
         ToggleSwitchModule,
         RippleModule
     ],
-    standalone: true,
     template: `
 <div class="card mb-0">
-    <div class="font-semibold text-xl mb-4">Nueva Solicitud Compra</div>
+    <div class="font-semibold text-xl mb-4">Nueva Recepcion Compra</div>
     <p-breadcrumb [model]="breadcrumbItems" [home]="breadcrumbHome"></p-breadcrumb>
 </div>
 <form [formGroup]="compraForm" (submit)="submitForm()" class="md:w-1/1">
     <div class="card flex flex-col gap-6 w-full mb-0">
         <div class="font-semibold text-xl">
-            Solicitud Compra {{compraForm.get('codigo')?.value}}
+            Recepcion Compra {{compraForm.get('codigo')?.value}}
         </div>
-        <!-- Proveedor -->
+        <!-- Compras -->
         <div class="flex flex-col md:flex-row gap-6">
             <div class="flex flex-wrap gap-2 w-full">
-                <label class="font-semibold" for="proveedor">Proveedor: </label>
-                <p-select id="proveedor"
-                    formControlName="proveedorId"
-                    [options]="proveedorOptions"
+                <label class="font-semibold" for="compra">Compras: </label>
+                <p-select id="compra"
+                    formControlName="compraId"
+                    [options]="compraOptions"
                     size="large"
-                    optionLabel="nombre"
-                    placeholder="Seleccione Proveedor"
+                    optionLabel="codigo"
+                    placeholder="Seleccione Compras"
                     class="w-full">
                 </p-select>
-                @if( compraForm.get('proveedorId')?.invalid && (compraForm.get('proveedorId')?.touched || compraForm.get('proveedorId')?.dirty) ) {
-                    <small class="text-red">Proveedor no debe ser vacio.</small>
+                @if( compraForm.get('compraId')?.invalid && (compraForm.get('compraId')?.touched || compraForm.get('compraId')?.dirty) ) {
+                    <small class="text-red">Compra no debe ser vacio.</small>
                 }
             </div>
             <div class="flex gap-2 w-full flex-cc">
@@ -104,7 +106,7 @@ import { CompraService } from '../../compra/service/compra.service';
         >
         <ng-template #caption>
             <div class="flex items-center justify-between">
-                <h5 class="pl-1">Detalle Solicitud</h5>
+                <h5 class="pl-1">Detalle Recepcion</h5>
             </div>
         </ng-template>
         <ng-template #header>
@@ -209,7 +211,7 @@ import { CompraService } from '../../compra/service/compra.service';
      <p-toast />
 </form>
     `,
-    styles: `
+     styles: `
         .mt-1 {
             margin-bottom: 1.5rem;
         }
@@ -236,10 +238,11 @@ import { CompraService } from '../../compra/service/compra.service';
             display: none;
         }
     `,
-    providers: [CompraService, ProductService, ProveedorService, MessageService]
+    providers: [RecepcionService, CompraService, ProductService, ProveedorService, MessageService]
 })
-export class AddSolicitudPage {
-    private service = inject(CompraService);
+export class AddRecepcionPage {
+    private recepcionService = inject(RecepcionService);
+    private compraService = inject(CompraService);
     private productService = inject(ProductService);
     private proveedorService = inject(ProveedorService);
     private formBuilder = inject(FormBuilder);
@@ -249,11 +252,12 @@ export class AddSolicitudPage {
 
     public compraForm!: FormGroup;
     public proveedorOptions!: ProveedorOutput[];
+    public compraOptions!: CompraOutput[];
     public productoPresentacionOptions!: PresentacionOuput[];
 
     // MenuBar BreadcrumbModule
     public breadcrumbHome = { icon: 'pi pi-home', to: '/' };
-    public breadcrumbItems = [{ label: 'Compras' }, { label: 'Nueva Solicitud' }];
+    public breadcrumbItems = [{ label: 'Compras' }, { label: 'Nueva Recepcion' }];
 
     constructor() {
         this.buildFormAndInitValues();
@@ -270,21 +274,21 @@ export class AddSolicitudPage {
             console.log(JSON.stringify(this.compraForm.value));
             this.saveCompraForm();
             //this.navigateToListVentas();
-            this.mostrarMsg('success', 'Solicitud Compra Formulario exito');
+            this.mostrarMsg('success', 'Recepcion Compra Formulario exito');
         } else {
             this.mostrarMsg('warn', 'Compra Formulario es invalido');
         }
     }
 
     private cargarDatosToCompraForm() {
-        const proveedorSelected = this.compraForm.get('proveedorId')?.value;
-        if(proveedorSelected) {
-            this.compraForm.get('proveedorId')?.setValue(proveedorSelected.id);
+        const compraSelected = this.compraForm.get('compraId')?.value;
+        if(compraSelected) {
+            this.compraForm.get('compraId')?.setValue(compraSelected.id);
         }
     }
 
     private saveCompraForm(): void {
-        this.service.save(this.compraForm.value)
+        this.recepcionService.save(this.compraForm.value)
             .subscribe({
                 next: (resp) => {
                     console.log(resp);
@@ -354,10 +358,9 @@ export class AddSolicitudPage {
 
     private crearCompraForm(): FormGroup {
         return this.formBuilder.group({
-            proveedorId: [null, Validators.required],
-            codigo: ['SC-1', Validators.required],
+            compraId: [null, Validators.required],
+            codigo: ['RC-1', Validators.required],
             glosa: [''],
-            estado: ['SOLICITUD'],
             detalle: this.formBuilder.array([]),
             total: [0, [Validators.required, Validators.min(1)]],
         });
@@ -372,6 +375,13 @@ export class AddSolicitudPage {
                 console.log('proveedores ', proveedores);
                 this.proveedorOptions = [...proveedores];
             });
+        this.compraService.list()
+            .subscribe((resp) => {
+                const compras = resp.data.content;
+                this.compraOptions = []
+                console.log('compras ', compras);
+                this.compraOptions = [...compras];
+             });
 
         this.productService.list()
             .subscribe(resp => {
@@ -380,13 +390,13 @@ export class AddSolicitudPage {
             });
 
 
-        this.service.getLastCompra()
+        this.recepcionService.getLastRecepcion()
             .subscribe(resp => {
                 const compras = resp.data.content;
 
                 console.log('ultima venta ', resp);
                 if (compras && compras.length) {
-                    const codigoVenta = 'SC-' + (compras[0].id + 1);
+                    const codigoVenta = 'RC-' + (compras[0].id + 1);
                     this.compraForm.get('codigo')?.setValue(codigoVenta);
                 }
             });
@@ -444,7 +454,7 @@ export class AddSolicitudPage {
 
     navigateToListVentas(): void {
         setTimeout(() =>
-            this.router.navigate(['/compra/solicitud']), 3000);
+            this.router.navigate(['/compra/recepcion']), 3000);
         ;
     }
 }

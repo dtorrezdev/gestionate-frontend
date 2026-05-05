@@ -19,6 +19,7 @@ import { VentaService } from "../../../venta/services/venta.service";
 import { VentaOutput } from "../../../venta/venta/dto/venta.output";
 import { VentaDelete } from "../../../venta/venta/dto/venta.delete";
 import { CompraOutput } from "../../solicitud/dto/compra.output";
+import { CompraService } from "../service/compra.service";
 
 
 @Component({
@@ -76,9 +77,9 @@ import { CompraOutput } from "../../solicitud/dto/compra.output";
     </ng-template>
     <ng-template #header>
         <tr>
-            <th style="min-width: 2rem; text-align: center;">Nro</th>
+            <th style="min-width: 2rem; text-align: center;">Codigo</th>
             <th pSortableColumn="fechaRegistro" style="min-width:3rem">
-                Fecha
+                Fecha Compra
                 <p-sortIcon field="fechaRegistro" />
             </th>
             <th pSortableColumn="cliente" style="min-width: 6rem">
@@ -93,16 +94,21 @@ import { CompraOutput } from "../../solicitud/dto/compra.output";
                 Monto total
                 <p-sortIcon field="total" />
             </th>
+            <th pSortableColumn="total" style="min-width:2rem">
+                Nro Items
+                <p-sortIcon field="total" />
+            </th>
             <th></th>
         </tr>
     </ng-template>
     <ng-template #body let-venta>
         <tr>
             <td style="text-align: center">{{ venta.codigo }}</td>
-            <td>{{ venta.fechaRegistro | date: 'dd/MM/yyyy HH:mm' }}</td>
-            <td>{{ venta.cliente }}</td>
+            <td>{{ venta.fechaCompra | date: 'dd/MM/yyyy HH:mm' }}</td>
+            <td>{{ venta.proveedor }}</td>
             <td>{{ venta.vendedor ?? 'admin' }}</td>
             <td>{{ venta.total | currency: 'Bs' }}</td>
+            <td>{{ venta.nroItems }}</td>
             <td>
                 <p-button icon="pi pi-eye" severity="info" class="mr-2"
                         pTooltip="Ver detalle" tooltipPosition="top"
@@ -128,11 +134,11 @@ import { CompraOutput } from "../../solicitud/dto/compra.output";
     <p-toast />
     <p-confirmdialog [style]="{ width: '450px' }" />
     `,
-    providers: [VentaService, ConfirmationService, MessageService]
+    providers: [CompraService, ConfirmationService, MessageService]
 })
 export class ListCompraPage {
 
-    private service = inject(VentaService);
+    private service = inject(CompraService);
     private confirmationService = inject(ConfirmationService);
     private messageService = inject(MessageService);
 
@@ -169,7 +175,7 @@ export class ListCompraPage {
             header: 'Confirm',
             icon: 'pi pi-exclamation-triangle',
             accept: () => {
-                this.service.deleteVenta(this.buildBodyVentaDelete(compra))
+                this.service.delete((compra.id))
                     .subscribe({
                         next: (resp) => {
                             console.log('Venta anulada: ', resp);
@@ -196,15 +202,5 @@ export class ListCompraPage {
                 console.log('Reject Solicitud');
             }
         });
-
     }
-    private buildBodyVentaDelete(venta: VentaOutput): VentaDelete {
-        return {
-            ventaId: venta.id,
-            glosa: 'Anulacion de venta ' + venta.codigo,
-            clienteId: venta.clienteId,
-            movimientoId: venta.movimientoId
-        };
-    }
-
 }

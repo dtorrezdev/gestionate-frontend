@@ -621,7 +621,8 @@ export class EditVerVentaPage implements OnInit {
                     const newDetalle = this.crearDetalle(presentacionProducto, this.crearFormArrayStock(stocks), cantidad);
                     newDetalle.valueChanges.subscribe((presentacion) => {
                         console.log("add detalle ", presentacion);
-                        const total = presentacion.precio * presentacion.cantidad;
+                        // const total = presentacion.precio * presentacion.cantidad;
+                        const total = Math.ceil((presentacion.precio * presentacion.cantidad) * 100) / 100;
                         newDetalle.get('subtotal')?.setValue(total, { emitEvent: false });
                     });
                     console.log('new Detalle with stock ');

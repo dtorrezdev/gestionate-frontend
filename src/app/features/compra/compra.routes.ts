@@ -5,6 +5,7 @@ export default [
     { path: 'solicitud', loadComponent: () => import('./solicitud/pages/list.solicitud.page').then(v => v.ListSolicitudCompraPage) },
     { path: 'solicitud-add', loadComponent: () => import('./solicitud/pages/add.solicitud.page').then(v => v.AddSolicitudPage) },
     { path: 'recepcion', loadComponent: () => import('./recepcion/pages/lista.recepcion.page').then(v => v.ListRecepcionPage) },
+    { path: 'recepcion-add', loadComponent: () => import('./recepcion/pages/add.recepcion.page').then(v => v.AddRecepcionPage) },
     {
         path: 'proveedor',
         loadComponent: () => import('./proveedor/pages/proveedor.page').then(p => p.ProveedorPage),

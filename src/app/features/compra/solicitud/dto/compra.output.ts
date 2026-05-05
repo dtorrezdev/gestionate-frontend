@@ -1,4 +1,3 @@
-import { PagoOutput } from "../../../venta/pago/dto/pago.output";
 import { DetalleVenta } from "../../../venta/venta/dto/venta.input";
 
 
@@ -7,11 +6,15 @@ export interface CompraOutput {
     codigo: string;
     glosa: string;
     total: number;
-    fechaRegistro: Date;
-    cliente: string;
+    fechaRegistro?: Date;
+    fechaCompra: Date;
+    fechaSolicitud: Date;
+    cliente?: string;
+    proveedor?: string;
+    proveedorId: number;
     estado: string;
-    movimientoId: number;
     clienteId: number;
-    detalle?: DetalleVenta[],
-    pagos?: PagoOutput[]
+    nroItems: number;
+    movimientoId?: number;
+    detalles: DetalleVenta[];
 }

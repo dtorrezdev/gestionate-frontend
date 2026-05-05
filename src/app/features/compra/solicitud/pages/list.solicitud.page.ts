@@ -15,9 +15,6 @@ import { ConfirmDialogModule } from "primeng/confirmdialog";
 import { RouterModule } from "@angular/router";
 import { ConfirmationService, MessageService } from "primeng/api";
 import { DatePipe } from "@angular/common";
-import { VentaService } from "../../../venta/services/venta.service";
-import { VentaOutput } from "../../../venta/venta/dto/venta.output";
-import { VentaDelete } from "../../../venta/venta/dto/venta.delete";
 import { CompraOutput } from "../dto/compra.output";
 import { CompraService } from "../../compra/service/compra.service";
 
@@ -77,9 +74,9 @@ import { CompraService } from "../../compra/service/compra.service";
     </ng-template>
     <ng-template #header>
         <tr>
-            <th style="min-width: 2rem; text-align: center;">Nro</th>
+            <th style="min-width: 2rem; text-align: center;">Codigo</th>
             <th pSortableColumn="fechaRegistro" style="min-width:3rem">
-                Fecha
+                Fecha Solicitud
                 <p-sortIcon field="fechaRegistro" />
             </th>
             <th pSortableColumn="cliente" style="min-width: 6rem">
@@ -94,16 +91,21 @@ import { CompraService } from "../../compra/service/compra.service";
                 Monto total
                 <p-sortIcon field="total" />
             </th>
+            <th pSortableColumn="total" style="min-width:2rem">
+                Nro Items
+                <p-sortIcon field="total" />
+            </th>
             <th></th>
         </tr>
     </ng-template>
     <ng-template #body let-venta>
         <tr>
             <td style="text-align: center">{{ venta.codigo }}</td>
-            <td>{{ venta.fechaRegistro | date: 'dd/MM/yyyy HH:mm' }}</td>
-            <td>{{ venta.cliente }}</td>
+            <td>{{ venta.fechaSolicitud | date: 'dd/MM/yyyy HH:mm' }}</td>
+            <td>{{ venta.proveedor }}</td>
             <td>{{ venta.vendedor ?? 'admin' }}</td>
             <td>{{ venta.total | currency: 'Bs' }}</td>
+            <td>{{ venta.nroItems }}</td>
             <td>
                 <p-button icon="pi pi-eye" severity="info" class="mr-2"
                         pTooltip="Ver detalle" tooltipPosition="top"
@@ -129,18 +131,15 @@ import { CompraService } from "../../compra/service/compra.service";
     <p-toast />
     <p-confirmdialog [style]="{ width: '450px' }" />
     `,
-    providers: [CompraService, VentaService, ConfirmationService, MessageService]
+    providers: [CompraService, ConfirmationService, MessageService]
 })
 export class ListSolicitudCompraPage implements OnInit {
 
-    private service = inject(VentaService);
     private compraService = inject(CompraService);
     private confirmationService = inject(ConfirmationService);
     private messageService = inject(MessageService);
 
     compras = signal<CompraOutput[]>([]);
-
-    venta!: CompraOutput;
 
     // MenuBar BreadcrumbModule
     breadcrumbHome = { icon: 'pi pi-home', to: '/' };
@@ -153,9 +152,11 @@ export class ListSolicitudCompraPage implements OnInit {
     }
 
     public loadData(): void {
-        this.service.list()
+        const request = { estado: "SOLICITUD" } as CompraOutput;
+        this.compraService.list(request)
             .subscribe((resp) => {
                 const compras = resp.data.content;
+                console.log(compras);
                 this.compras.set(compras);
             });
     }
@@ -171,10 +172,10 @@ export class ListSolicitudCompraPage implements OnInit {
             header: 'Confirm',
             icon: 'pi pi-exclamation-triangle',
             accept: () => {
-                this.service.deleteVenta(this.buildBodyVentaDelete(compra))
+                this.compraService.delete(compra.id)
                     .subscribe({
                         next: (resp) => {
-                            console.log('Venta anulada: ', resp);
+                            console.log('Compra anulada: ', resp);
                             this.messageService.add({
                                 severity: 'success',
                                 summary: 'Successful',
@@ -199,13 +200,5 @@ export class ListSolicitudCompraPage implements OnInit {
             }
         });
 
-    }
-    private buildBodyVentaDelete(venta: VentaOutput): VentaDelete {
-        return {
-            ventaId: venta.id,
-            glosa: 'Anulacion de venta ' + venta.codigo,
-            clienteId: venta.clienteId,
-            movimientoId: venta.movimientoId
-        };
     }
 }
