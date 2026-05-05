@@ -186,16 +186,22 @@ export class AppMenu {
             },
             {
                 label: 'Compras',
+                path: '/compra',
                 items: [
                     {
                         label: 'Solicitud Compra',
                         icon: 'pi pi-fw pi-cart-plus',
-                        routerLink: ['/documentation']
+                        routerLink: ['/compra/solicitud']
+                    },
+                    {
+                        label: 'Compra',
+                        icon: 'pi pi-fw pi-cart-plus',
+                        routerLink: ['/compra']
                     },
                     {
                         label: 'Recepcion Compra',
                         icon: 'pi pi-fw pi-shopping-bag',
-                        routerLink: ['/recpcion']
+                        routerLink: ['/compra/recepcion']
                     },
                     {
                         label: 'Proveedor',
