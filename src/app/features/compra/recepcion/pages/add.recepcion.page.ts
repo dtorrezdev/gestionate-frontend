@@ -24,6 +24,12 @@ import { ProveedorOutput } from '../../proveedor/dto/proveedor.output';
 import { CompraService } from '../../compra/service/compra.service';
 import { RecepcionService } from '../service/recepcion.service';
 import { CompraOutput } from '../../solicitud/dto/compra.output';
+import { InputIconModule } from 'primeng/inputicon';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputTextModule } from 'primeng/inputtext';
+import { BadgeModule } from 'primeng/badge';
+import { TooltipModule } from 'primeng/tooltip';
+import { StockByProductoOutput } from '../../../inventario/stock/dtos/stock-by-producto.output';
 
 
 @Component({
@@ -39,7 +45,12 @@ import { CompraOutput } from '../../solicitud/dto/compra.output';
         TagModule,
         ToastModule,
         ToggleSwitchModule,
-        RippleModule
+        RippleModule,
+        InputIconModule,
+        IconFieldModule,
+        InputTextModule,
+        BadgeModule,
+        TooltipModule
     ],
     template: `
 <div class="card mb-0">
@@ -100,7 +111,7 @@ import { CompraOutput } from '../../solicitud/dto/compra.output';
     <p-table
         #dt
         [value]="detalle.controls"
-        [tableStyle]="{ 'min-width': '75rem' }"
+        [tableStyle]="{ 'min-width': '65rem' }"
         [rowHover]="false"
         dataKey="id"
         >
@@ -131,7 +142,7 @@ import { CompraOutput } from '../../solicitud/dto/compra.output';
                 <th style="min-width: 8rem"></th>
             </tr>
         </ng-template>
-        <ng-template #body let-product let-editing="editing" let-index="rowIndex">
+        <ng-template #body let-product let-editing="editing" let-index="rowIndex" let-expanded="expanded">
             <tr
                 [formGroup]="product"
             >
@@ -183,7 +194,101 @@ import { CompraOutput } from '../../solicitud/dto/compra.output';
 
                 <td style="min-width: 4rem">{{ product.value.subtotal }}</td>
                 <td style="min-width: 8rem;">
+                    <p-button
+                        [id]="index"
+                        pTooltip="Ver detalle Stock" tooltipPosition="top"
+                        class="mr-2"
+                        pRipple
+                        [pRowToggler]="product"
+                        [rounded]="true"
+                        [outlined]="true"
+                        severity="info"
+                        (onClick)="eventoClick($event, product.value.presentacionId)"
+                        [icon]="expanded ? 'pi pi-eye-slash' : 'pi pi-eye'"
+                    />
                     <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" (click)="removeDetalle(index)" />
+                </td>
+            </tr>
+        </ng-template>
+        <ng-template #expandedrow let-product let-indexDetalle="rowIndex">
+            <tr>
+                <td colspan="7">
+                    <div class="p-4">
+                        <h5>Stock for {{ product.value.nombre }}</h5>
+                        <br>
+                        <p-table [value]="product.get('stocks').controls"  dataKey="id">
+                            <ng-template #header>
+                                <tr>
+                                    <th>
+                                        <div class="flex items-center gap-2">Lote</div>
+                                    </th>
+                                    <th>
+                                        <div class="flex items-center gap-2">Fech. Vencimiento</div>
+                                    </th>
+                                    <th>
+                                        <div class="flex items-center gap-2">Ubicacion Stock</div>
+                                    </th>
+                                    <th>
+                                        <div class="flex items-center gap-2">Cantidad</div>
+                                    </th>
+                                    <th>
+                                        Acciones
+                                    </th>
+                                </tr>
+                            </ng-template>
+                            <ng-template #body let-stock let-indexStock="rowIndex" let-editing="editing">
+                                <tr [formGroup]="stock">
+                                    <td
+                                        style="min-width: 3rem"
+                                        [pEditableColumn]="stock.get('lote')" pEditableColumnField="lote">
+                                        <p-cellEditor>
+                                            <ng-template #input>
+                                                <input pInputText type="text" inputId="lote" formControlName="lote" />
+                                            </ng-template>
+                                            <ng-template #output>
+                                                {{ stock.value.lote }}
+                                            </ng-template>
+                                        </p-cellEditor>
+                                    </td>
+                                    <td
+                                        style="min-width: 3rem"
+                                        [pEditableColumn]="stock.get('expiracion')" pEditableColumnField="expiracion">
+                                        <p-cellEditor>
+                                            <ng-template #input>
+                                                <input pInputText type="text" inputId="expiracion" formControlName="expiracion" />
+                                            </ng-template>
+                                            <ng-template #output>
+                                                {{ stock.value.expiracion }}
+                                            </ng-template>
+                                        </p-cellEditor>
+
+                                    </td>
+                                    @if(stock.value.seccion) {
+                                        <td>Seccion: {{ stock.value.seccion }}->Estante: {{ stock.value.estante }}->Nivel: {{ stock.value.nivel }}</td>
+                                    }@else {
+                                        <td>S/N</td>
+                                    }
+
+                                    <td
+                                        style="min-width: 3rem"
+                                        [pEditableColumn]="stock.get('cantidad')" pEditableColumnField="cantidad">
+                                        <p-cellEditor>
+                                            <ng-template #input>
+                                                <p-inputnumber inputId="cantidad" formControlName="cantidad" />
+                                            </ng-template>
+                                            <ng-template #output>
+                                                {{ stock.value.cantidad }}
+                                            </ng-template>
+                                        </p-cellEditor>
+                                    </td>
+                                    <td>
+                                        <p-button icon="pi pi-save" severity="success" [rounded]="true" [outlined]="true" (click)="addStock(indexDetalle)" />
+                                        <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" (click)="removeStock(indexDetalle, indexStock)" />
+                                    </td>
+                                </tr>
+                            </ng-template>
+                        </p-table>
+                    </div>
                 </td>
             </tr>
         </ng-template>
@@ -267,6 +372,12 @@ export class AddRecepcionPage {
         this.loadDataToCompraForm();
     }
 
+    eventoClick(evt: Event, presentacionId: number) {
+        // evt.stopPropagation();
+        // evt.stopImmediatePropagation();
+        // console.log(`click prod ${presentacionId} evt: `, evt.target);
+    }
+
     submitForm() {
         console.log(this.compraForm);
         if (this.compraForm.valid) {
@@ -300,11 +411,46 @@ export class AddRecepcionPage {
             });
     }
 
+    addStock(index: number) {
+        const stocksFormArray = this.detalle.at(index).get('stocks') as FormArray;
+
+        const stocksVacio = {
+            cantidad: 1,
+            estante: 'dsdssa',
+            expiracion: null,
+            id: 1,
+            lote: 'aassd',
+            nivel: 'asds',
+            movimientoProductoId: 0,
+            seccion: 'asdsas',
+        } as unknown as StockByProductoOutput;
+        stocksFormArray.push(this.crearStock(stocksVacio));
+    }
+
+    removeStock(indexDetalle: number, indexStock: number) {
+        const stocksFormArray = this.detalle.at(indexDetalle).get('stocks') as FormArray;
+        stocksFormArray.removeAt(indexStock);
+    }
+
     addDetalle(presentacionProducto: PresentacionOuput) {
         console.log('addDetalle ', presentacionProducto);
 
         if (this.esValidoProducto(presentacionProducto)) {
-            const newDetalle = this.crearDetalle(presentacionProducto);
+            const stocksVacio = {
+                cantidad: 1,
+                estante: 'dsdssa',
+                expiracion: null,
+                id: 1,
+                lote: 'aassd',
+                nivel: 'asds',
+                movimientoProductoId: 0,
+                seccion: 'asdsas',
+            } as unknown as StockByProductoOutput;
+
+            const stocksFormArray = this.crearFormArrayStock([stocksVacio]);
+            console.log('stocksFormArray', stocksFormArray);
+
+            const newDetalle = this.crearDetalle(presentacionProducto, stocksFormArray);
             newDetalle.valueChanges.subscribe((presentacion) => {
                 //const total = presentacion.precio * presentacion.cantidad;
                 const total = Math.ceil((presentacion.precio * presentacion.cantidad) * 100) / 100;
@@ -315,6 +461,30 @@ export class AddRecepcionPage {
 
             this.detalle.push(newDetalle);
         }
+    }
+
+    private crearFormArrayStock(stocks: StockByProductoOutput[]): FormArray {
+        console.log('crearFormArraysStocks ', stocks);
+        if (stocks.length == 0) {
+            return this.formBuilder.array([]);
+        }
+        const stocksFormGroup = stocks.map(stock => this.crearStock(stock));
+
+        return this.formBuilder.array(stocksFormGroup);
+    }
+
+    private crearStock(stock: StockByProductoOutput): FormGroup {
+        console.log('llego crearStock ', stock);
+
+        return this.formBuilder.group({
+            id: [stock?.id || null],
+            lote: [stock?.lote || ''],
+            expiracion: [stock?.expiracion || ''],
+            seccion: [stock?.seccion || ''],
+            estante: [stock?.estante || ''],
+            nivel: [stock?.nivel || ''],
+            cantidad: [stock?.cantidad || 0],
+        });
     }
 
     private esValidoProducto(productoPre: PresentacionOuput): boolean {
@@ -402,7 +572,9 @@ export class AddRecepcionPage {
             });
     }
 
-    private crearDetalle(presentacionProducto?: PresentacionOuput): FormGroup {
+    private crearDetalle(presentacionProducto?: PresentacionOuput, stocks?: FormArray): FormGroup {
+        console.log('stocks ', stocks);
+
         return this.formBuilder.group({
             presentacionId: [presentacionProducto?.id || null, Validators.required],
             nombre: [presentacionProducto?.presentacion || ''],
@@ -411,6 +583,7 @@ export class AddRecepcionPage {
             cantidad: [1, [Validators.required, Validators.min(1)]],
             subtotal: [presentacionProducto ? presentacionProducto.precioUnitario : 0, [Validators.required, Validators.min(1)]],
             estadoStock: [presentacionProducto?.estadoStock || ''],
+            stocks: stocks,
         });
     }
 
@@ -422,6 +595,8 @@ export class AddRecepcionPage {
 
     //GETTERs
     get detalle(): FormArray { return this.compraForm.get('detalle') as FormArray; }
+
+    // get stocks(): FormArray { return this.compraForm.get('detalle') as FormArray; }
 
     get total(): number {
         const total = this.detalle.controls
@@ -455,6 +630,5 @@ export class AddRecepcionPage {
     navigateToListVentas(): void {
         setTimeout(() =>
             this.router.navigate(['/compra/recepcion']), 3000);
-        ;
     }
 }
