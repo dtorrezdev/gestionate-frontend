@@ -17,6 +17,13 @@ import { PresentacionOuput } from '../dto/presentacion.output';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { StatusStock } from '../../../../shared/enums/status-stock.enum';
 
+interface Column {
+    field: string;
+    header: string;
+    width: string;
+    visible: boolean;
+}
+
 @Component({
     imports: [
         CommonModule,
@@ -53,10 +60,11 @@ import { StatusStock } from '../../../../shared/enums/status-stock.enum';
     <p-table
         #dt
         [value]="products()"
+        [columns]="columns"
         [rows]="10"
         [paginator]="true"
         [globalFilterFields]="['name', 'country.name', 'representative.name', 'status']"
-        [tableStyle]="{ 'min-width': '65rem' }"
+        [tableStyle]="{ 'min-width': '55rem' }"
         [rowHover]="true"
         dataKey="id"
         currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
@@ -74,64 +82,59 @@ import { StatusStock } from '../../../../shared/enums/status-stock.enum';
         </ng-template>
         <ng-template #header>
             <tr>
-                <th style="min-width: 5rem">Code</th>
-                <th pSortableColumn="marcaId" style="min-width:16rem">
-                    Nombre
-                    <p-sortIcon field="marcaId" />
+            @for (col of columns; track col) {
+                @if(col.visible) {
+                <th [style]="col.width"
+                    [pSortableColumn]="col.field">
+                    {{ col.header }}
+                    <p-sortIcon [field]="col.field" />
                 </th>
-                <!-- <th>Image</th> -->
-                <th pSortableColumn="productoId" style="min-width: 10rem">
-                    Marca
-                    <p-sortIcon field="productoId" />
-                </th>
-                <th pSortableColumn="nombre" style="min-width:8rem">
-                    Categoria
-                    <p-sortIcon field="nombre" />
-                </th>
-                <th pSortableColumn="unidadMedidaId" style="min-width: 4rem">
-                    U. Medida
-                    <p-sortIcon field="unidadMedidaId" />
-                </th>
-                <th pSortableColumn="stock" style="min-width: 5rem">
-                    Stock
-                    <p-sortIcon field="stock" />
-                </th>
-                <th pSortableColumn="precioVenta" style="min-width: 5rem">
-                    Precio Venta
-                    <p-sortIcon field="precioVenta" />
-                </th>
-                <th style="min-width: 8rem"></th>
+                }
+            }
             </tr>
         </ng-template>
         <ng-template #body let-product>
             <tr>
-                <td>PR-{{ product.id }}</td>
-                <td>{{ product.presentacion }}</td>
-                <td>{{ product.marca }}</td>
-                <!-- <td>
-                    <img [src]="'https://primefaces.org/cdn/primeng/images/demo/product/' + product.image" [alt]="product.name" style="width: 64px" class="rounded" />
-                </td> -->
-                <td>{{ product.categoria }}</td>
-                <td>{{ product.unidadMedida }}</td>
-                <td>
-                    <p-tag [value]="product.estadoStock" [severity]="getStockStatusClass(product.estadoStock)" />
-                </td>
-                <td>{{ product.precioVenta | currency: 'Bs' }}</td>
-                <td>
-                    <p-button icon="pi pi-pencil"
-                        class="mr-2"
-                        [rounded]="true"
-                        [outlined]="true"
-                        routerLink="/producto/edit-producto/{{product.id}}"
-                    />
-                    <p-button
-                        icon="pi pi-trash"
-                        severity="danger"
-                        (onClick)="deleteProducto(product)"
-                        [rounded]="true"
-                        [outlined]="true"
-                    />
-                </td>
+            @for (col of columns; track col) {
+                @if(col.visible) {
+                    @switch (col.field) {
+                        @case ('codigo') {
+                        <td>PR-{{ product.id }}</td>
+                        }
+                        @case ('estadoStock') {
+                        <td>
+                            <p-tag [value]="product.estadoStock"
+                                [severity]="getStockStatusClass(product.estadoStock)" />
+                        </td>
+                        }
+                        @case ('precioVenta') {
+                        <td>{{ product.precioVenta | currency: 'Bs' }}</td>
+                        }
+                        @case('') {
+                        <td>
+                            <p-button icon="pi pi-pencil"
+                                class="mr-2"
+                                [rounded]="true"
+                                [outlined]="true"
+                                routerLink="/producto/edit-producto/{{product.id}}"
+                            />
+                            <p-button
+                                icon="pi pi-trash"
+                                severity="danger"
+                                (onClick)="deleteProducto(product)"
+                                [rounded]="true"
+                                [outlined]="true"
+                            />
+                        </td>
+                        }
+                        @default {
+                        <td>
+                            {{ product[col.field] }}
+                        </td>
+                        }
+                    }
+                }
+            }
             </tr>
         </ng-template>
     </p-table>
@@ -161,6 +164,7 @@ export class PresentacionPage implements OnInit {
     private confirmationService = inject(ConfirmationService);
 
     products = signal<PresentacionOuput[]>([]);
+    columns!: Column[];
 
     // MenuBar BreadcrumbModule
     breadcrumbHome = { icon: 'pi pi-home', to: '/' };
@@ -204,7 +208,17 @@ export class PresentacionPage implements OnInit {
             .subscribe((value) => {
                 console.log('getAllProdutos: ', value);
                 this.products.set(value.data.content);
-            })
+            });
+        this.columns = [
+            { field: 'codigo', header: 'Código', width: 'min-width: 5rem', visible: true },
+            { field: 'presentacion', header: 'Nombre', width: 'min-width:16rem', visible: true },
+            { field: 'marca', header: 'Macra', width: 'min-width: 10rem', visible: false },
+            { field: 'categoria', header: 'Categoria', width: 'min-width:8rem', visible: false },
+            { field: 'unidadMedida', header: 'U. Medida', width: 'min-width: 4rem', visible: false },
+            { field: 'estadoStock', header: 'Stock', width: 'min-width: 5rem', visible: true },
+            { field: 'precioVenta', header: 'Precio Venta', width: 'min-width: 5rem', visible: false },
+            { field: '', header: 'Acciones', width: 'min-width: 8rem', visible: true }
+        ];
     }
 
     onGlobalFilter(table: Table, event: Event) {
