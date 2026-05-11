@@ -2,7 +2,7 @@ import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } fr
 import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterModule } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
@@ -30,6 +30,11 @@ import { InputTextModule } from 'primeng/inputtext';
 import { BadgeModule } from 'primeng/badge';
 import { TooltipModule } from 'primeng/tooltip';
 import { StockByProductoOutput } from '../../../inventario/stock/dtos/stock-by-producto.output';
+import { StockInput } from '../../../inventario/stock/dtos/stock-input';
+import { DatePickerModule } from 'primeng/datepicker';
+import { UbicacionStockService } from '../../../inventario/ubicacion-stock/service/ubicacion-stock.service';
+import { UbicacionStockOption } from '../../../inventario/ubicacion-stock/dtos/ubicacion-stock.option';
+import { UbicacionStockOutput } from '../../../inventario/ubicacion-stock/dtos/ubicacion-stock.outpu';
 
 
 @Component({
@@ -50,7 +55,9 @@ import { StockByProductoOutput } from '../../../inventario/stock/dtos/stock-by-p
         IconFieldModule,
         InputTextModule,
         BadgeModule,
-        TooltipModule
+        TooltipModule,
+        DatePickerModule,
+        DatePipe
     ],
     template: `
 <div class="card mb-0">
@@ -178,7 +185,7 @@ import { StockByProductoOutput } from '../../../inventario/stock/dtos/stock-by-p
                     [pEditableColumn]="product.cantidad" pEditableColumnField="cantidad">
                     <p-cellEditor>
                         <ng-template #input>
-                            <p-inputnumber inputId="cantidad" formControlName="cantidad" [minFractionDigits]="2" />
+                            <p-inputnumber inputId="cantidad" formControlName="cantidad" />
                             @if(product.value.cantidad <= 0) {
                             <small class="text-red">cantidad debe ser mayor a 0</small>
                             }
@@ -255,19 +262,31 @@ import { StockByProductoOutput } from '../../../inventario/stock/dtos/stock-by-p
                                         [pEditableColumn]="stock.get('expiracion')" pEditableColumnField="expiracion">
                                         <p-cellEditor>
                                             <ng-template #input>
-                                                <input pInputText type="text" inputId="expiracion" formControlName="expiracion" />
+                                                <p-datepicker  appendTo="body" formControlName="expiracion" dateFormat="dd/mm/yy" />
                                             </ng-template>
                                             <ng-template #output>
-                                                {{ stock.value.expiracion }}
+                                                {{ stock.value.expiracion | date: 'dd/MM/yyyy' }}
                                             </ng-template>
                                         </p-cellEditor>
 
                                     </td>
-                                    @if(stock.value.seccion) {
-                                        <td>Seccion: {{ stock.value.seccion }}->Estante: {{ stock.value.estante }}->Nivel: {{ stock.value.nivel }}</td>
-                                    }@else {
-                                        <td>S/N</td>
-                                    }
+                                    <td
+                                        style="min-width: 3rem"
+                                        [pEditableColumn]="stock.get('ubicacionStockId')" pEditableColumnField="ubicacionStockId">
+                                        <p-cellEditor>
+                                            <ng-template #input>
+                                                <p-select
+                                                    formControlName="ubicacionStockId"
+                                                    [options]="ubicacionStockOption"
+                                                    optionLabel="nombre"
+                                                    placeholder="Seleccione Ubicacion"
+                                                     appendTo="body" />
+                                            </ng-template>
+                                            <ng-template #output>
+                                                {{ stock.value.ubicacionStockId.nombre }}
+                                            </ng-template>
+                                        </p-cellEditor>
+                                    </td>
 
                                     <td
                                         style="min-width: 3rem"
@@ -316,7 +335,7 @@ import { StockByProductoOutput } from '../../../inventario/stock/dtos/stock-by-p
      <p-toast />
 </form>
     `,
-     styles: `
+    styles: `
         .mt-1 {
             margin-bottom: 1.5rem;
         }
@@ -343,13 +362,21 @@ import { StockByProductoOutput } from '../../../inventario/stock/dtos/stock-by-p
             display: none;
         }
     `,
-    providers: [RecepcionService, CompraService, ProductService, ProveedorService, MessageService]
+    providers: [
+        RecepcionService,
+        CompraService,
+        ProductService,
+        ProveedorService,
+        UbicacionStockService,
+        MessageService
+    ]
 })
 export class AddRecepcionPage {
     private recepcionService = inject(RecepcionService);
     private compraService = inject(CompraService);
     private productService = inject(ProductService);
     private proveedorService = inject(ProveedorService);
+    private ubicacionStockService = inject(UbicacionStockService);
     private formBuilder = inject(FormBuilder);
     private messageService = inject(MessageService);
     private readonly cdr = inject(ChangeDetectorRef);
@@ -359,6 +386,8 @@ export class AddRecepcionPage {
     public proveedorOptions!: ProveedorOutput[];
     public compraOptions!: CompraOutput[];
     public productoPresentacionOptions!: PresentacionOuput[];
+
+    public ubicacionStockOption!: UbicacionStockOption[];
 
     // MenuBar BreadcrumbModule
     public breadcrumbHome = { icon: 'pi pi-home', to: '/' };
@@ -376,6 +405,7 @@ export class AddRecepcionPage {
         // evt.stopPropagation();
         // evt.stopImmediatePropagation();
         // console.log(`click prod ${presentacionId} evt: `, evt.target);
+
     }
 
     submitForm() {
@@ -384,7 +414,6 @@ export class AddRecepcionPage {
             this.cargarDatosToCompraForm();
             console.log(JSON.stringify(this.compraForm.value));
             this.saveCompraForm();
-            //this.navigateToListVentas();
             this.mostrarMsg('success', 'Recepcion Compra Formulario exito');
         } else {
             this.mostrarMsg('warn', 'Compra Formulario es invalido');
@@ -393,9 +422,23 @@ export class AddRecepcionPage {
 
     private cargarDatosToCompraForm() {
         const compraSelected = this.compraForm.get('compraId')?.value;
-        if(compraSelected) {
+        if (compraSelected) {
             this.compraForm.get('compraId')?.setValue(compraSelected.id);
         }
+
+        const detalle = this.detalle.controls.map(d => {
+            const detalleValue = d.value;
+            const stocks = detalleValue.stocks.map((s: any) => {
+                return {
+                    ubicacionStockId: s.ubicacionStockId ? s.ubicacionStockId.id : null
+                } as StockInput;
+            });
+            return {
+                stocks: stocks
+            };
+        });
+        this.compraForm.get('detalle')?.patchValue(detalle);
+
     }
 
     private saveCompraForm(): void {
@@ -416,14 +459,11 @@ export class AddRecepcionPage {
 
         const stocksVacio = {
             cantidad: 1,
-            estante: 'dsdssa',
             expiracion: null,
             id: 1,
             lote: 'aassd',
-            nivel: 'asds',
-            movimientoProductoId: 0,
-            seccion: 'asdsas',
-        } as unknown as StockByProductoOutput;
+            ubicacionStockId: null,
+        } as unknown as StockInput;
         stocksFormArray.push(this.crearStock(stocksVacio));
     }
 
@@ -438,14 +478,10 @@ export class AddRecepcionPage {
         if (this.esValidoProducto(presentacionProducto)) {
             const stocksVacio = {
                 cantidad: 1,
-                estante: 'dsdssa',
                 expiracion: null,
-                id: 1,
-                lote: 'aassd',
-                nivel: 'asds',
-                movimientoProductoId: 0,
-                seccion: 'asdsas',
-            } as unknown as StockByProductoOutput;
+                lote: 'LOTE-000',
+                ubicacionStockId: null,
+            } as unknown as StockInput;
 
             const stocksFormArray = this.crearFormArrayStock([stocksVacio]);
             console.log('stocksFormArray', stocksFormArray);
@@ -463,7 +499,7 @@ export class AddRecepcionPage {
         }
     }
 
-    private crearFormArrayStock(stocks: StockByProductoOutput[]): FormArray {
+    private crearFormArrayStock(stocks: StockInput[]): FormArray {
         console.log('crearFormArraysStocks ', stocks);
         if (stocks.length == 0) {
             return this.formBuilder.array([]);
@@ -473,16 +509,13 @@ export class AddRecepcionPage {
         return this.formBuilder.array(stocksFormGroup);
     }
 
-    private crearStock(stock: StockByProductoOutput): FormGroup {
+    private crearStock(stock: StockInput): FormGroup {
         console.log('llego crearStock ', stock);
 
         return this.formBuilder.group({
-            id: [stock?.id || null],
             lote: [stock?.lote || ''],
             expiracion: [stock?.expiracion || ''],
-            seccion: [stock?.seccion || ''],
-            estante: [stock?.estante || ''],
-            nivel: [stock?.nivel || ''],
+            ubicacionStockId: [stock?.ubicacionStockId || ''],
             cantidad: [stock?.cantidad || 0],
         });
     }
@@ -516,9 +549,11 @@ export class AddRecepcionPage {
     }
 
     private buildFormAndInitValues(): void {
+        this.compraOptions = [];
         this.productoPresentacionOptions = [
             PresentacionOuput.getInstance()
         ];
+        this.ubicacionStockOption = [];
         this.compraForm = this.crearCompraForm();
         // change detection para cambios en Forms
         this.compraForm.valueChanges
@@ -538,6 +573,17 @@ export class AddRecepcionPage {
 
     private loadDataToCompraForm(): void {
 
+        this.recepcionService.getLastRecepcion()
+            .subscribe(resp => {
+                const compras = resp.data.content;
+
+                console.log('ultima venta ', resp);
+                if (compras && compras.length) {
+                    const codigoVenta = 'RC-' + (compras[0].id + 1);
+                    this.compraForm.get('codigo')?.setValue(codigoVenta);
+                }
+            });
+
         this.proveedorService.list()
             .subscribe((resp) => {
                 const proveedores = resp.data.content;
@@ -548,10 +594,10 @@ export class AddRecepcionPage {
         this.compraService.list()
             .subscribe((resp) => {
                 const compras = resp.data.content;
-                this.compraOptions = []
+
                 console.log('compras ', compras);
                 this.compraOptions = [...compras];
-             });
+            });
 
         this.productService.list()
             .subscribe(resp => {
@@ -559,16 +605,17 @@ export class AddRecepcionPage {
                 this.productoPresentacionOptions.push(...prodPresentacion);
             });
 
-
-        this.recepcionService.getLastRecepcion()
-            .subscribe(resp => {
-                const compras = resp.data.content;
-
-                console.log('ultima venta ', resp);
-                if (compras && compras.length) {
-                    const codigoVenta = 'RC-' + (compras[0].id + 1);
-                    this.compraForm.get('codigo')?.setValue(codigoVenta);
-                }
+        this.ubicacionStockService.list()
+            .subscribe((resp) => {
+                const data = resp.data.content as UbicacionStockOutput[];
+                this.ubicacionStockOption.push(
+                    ...data.map(
+                        ubi =>
+                            new UbicacionStockOption(ubi.id,
+                                `${ubi.seccion}->${ubi.estante}->${ubi.nivel}`
+                            )
+                    )
+                );
             });
     }
 
@@ -595,8 +642,6 @@ export class AddRecepcionPage {
 
     //GETTERs
     get detalle(): FormArray { return this.compraForm.get('detalle') as FormArray; }
-
-    // get stocks(): FormArray { return this.compraForm.get('detalle') as FormArray; }
 
     get total(): number {
         const total = this.detalle.controls
