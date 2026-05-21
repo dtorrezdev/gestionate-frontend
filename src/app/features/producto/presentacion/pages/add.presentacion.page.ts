@@ -31,6 +31,7 @@ import { CommonResponse, ListResponse } from "../../../venta/cliente/dto/interfa
 import { MarcaOutput } from "../../marca/dto/marca.output";
 import { UnidadMedidaOuput } from "../../unidad-medida/dto/unidad-medida.output";
 import { UbicacionStockOutput } from "../../../inventario/ubicacion-stock/dtos/ubicacion-stock.outpu";
+import { ProductoBaseOutput } from "../../base/dto/producto.base.output";
 
 @Component({
     imports: [
@@ -61,7 +62,7 @@ import { UbicacionStockOutput } from "../../../inventario/ubicacion-stock/dtos/u
             <p-tabs value="0">
                 <p-tablist>
                     <p-tab value="0">Presentacion (*)</p-tab>
-                    <p-tab value="1">Inv. Existencia</p-tab>
+                    <p-tab value="1" [disabled]="!seVaControlarStock">Inv. Existencia</p-tab>
                     <p-tab value="2" disabled>Proveedor</p-tab>
                 </p-tablist>
 
@@ -127,12 +128,8 @@ import { UbicacionStockOutput } from "../../../inventario/ubicacion-stock/dtos/u
                                     }
                                 </div>
                                 <div class="flex flex-col gap-2 flex-cc">
-                                    <label for="categoria" class="font-semibold">Es unidad Minima:</label>
-                                    <p-toggleswitch formControlName="esUnidadMinima" />
-                                </div>
-                                <div class="flex flex-col basis-0 gap-2 ">
-                                    <label for="factor_conver" class="font-semibold">Factor de conversion:</label>
-                                    <p-inputnumber formControlName="factorConversion" inputId="factor_conver" />
+                                    <label for="categoria" class="font-semibold">Se va Controlar Stock:</label>
+                                    <p-toggleswitch formControlName="seControlaStock" />
                                 </div>
 
                             </div>
@@ -408,7 +405,7 @@ export class AddPresentacionPage implements OnInit {
 
             console.log(this.productoPresentacionForm.value);
             console.log(JSON.stringify(this.productoPresentacionForm.value));
-            if (this.tieneDetalleMovimientoForm()) {
+            if (this.seVaControlarStock) {
                 this.savePresentacionConMovimientoInventario();
                 console.log('tieneDetalleMovimientoForm guardar todo');
             } else {
@@ -427,21 +424,21 @@ export class AddPresentacionPage implements OnInit {
         ;
     }
 
-    private tieneDetalleMovimientoForm(): boolean {
-        if (!this.esValidoCantidadDisponibleStock() ||
-            this.esVacioDetalleMovimiento()
-        ) {
+    private esValidoFormMovimiento(): boolean {
+        let esValido = true;
+
+        if (!this.esValidoCantidadDisponibleStock()) {
+            this.mostrarMsg('warn', 'En Inv. Existencia \n Debe ingresar Existencia Disponible.');
             return false;
         }
-        return true;
-    }
-
-    private esValidoFormMovimiento(): boolean {
-        const esValid = this.totalCantidadDetalle == this.cantidadDisponibleStock.value;
-        if (!esValid) {
-            this.mostrarMsg('warn', 'En Inv. Existencia \n Debe ser iguales Existencia Disponible \n y total Cantidad del Detalle.');
+        if (!this.esVacioDetalleMovimiento()) {
+            esValido = this.totalCantidadDetalle == this.cantidadDisponibleStock.value;
+            if (!esValido) {
+                this.mostrarMsg('warn', 'En Inv. Existencia \n Debe ser iguales Existencia Disponible \n y total Cantidad del Detalle.');
+            }
         }
-        return esValid;
+
+        return esValido;
     }
 
     private savePresentacionConMovimientoInventario() {
@@ -524,22 +521,19 @@ export class AddPresentacionPage implements OnInit {
         if (!this.productoPresentacionForm.get('precioUnitario')?.value) {
             this.productoPresentacionForm.get('precioUnitario')?.setValue(1);
         }
-
-        this.agregarStockLotePorDefaultSiRequiere();
+        if (this.seVaControlarStock && this.esVacioDetalleMovimiento()) {
+            this.agregarStockLotePorDefaultSiRequiere();
+        }
     }
 
     private agregarStockLotePorDefaultSiRequiere() {
-        console.log('agregarStockLotePorDefaultSiRequiere ');
-        if (this.esValidoCantidadDisponibleStock() &&
-            this.esVacioDetalleMovimiento()) {
-            console.log(" Se va cargar un detalle Lote Stock Por Default");
-            const randomNumber = Math.round(Math.random() * 10000);
-            console.log(" Se va cargar un detalle Lote Stock Por Default LOTE-" + randomNumber);
-            const newDetalle = this.crearDetalleMovimiento("LOTE-" + randomNumber, null, this.cantidadDisponibleStock.value);
-            this.detalleMovimiento.push(newDetalle);
-            console.log('agregarStockLotePorDefaultSiRequiere agrego ', newDetalle);
-            this.movimientoInventario.get('totalCantidadDetalle')?.setValue(this.cantidadDisponibleStock.value);
-        }
+        console.log(" Se va cargar un detalle Lote Stock Por Default");
+        const randomNumber = Math.round(Math.random() * 10000);
+        console.log(" Se va cargar un detalle Lote Stock Por Default LOTE-" + randomNumber);
+        const newDetalle = this.crearDetalleMovimiento("LOTE-" + randomNumber, null, this.cantidadDisponibleStock.value);
+        this.detalleMovimiento.push(newDetalle);
+        console.log('agregarStockLotePorDefaultSiRequiere agrego ', newDetalle);
+        this.movimientoInventario.get('totalCantidadDetalle')?.setValue(this.cantidadDisponibleStock.value);
     }
 
     private buildFormAndInitValues() {
@@ -556,7 +550,7 @@ export class AddPresentacionPage implements OnInit {
             descripcion: [null, Validators.maxLength(255)],
             unidadMedidaId: [null, Validators.required],
             esUnidadMinima: [true], // analizar esUnidadMinima
-            factorConversion: [1],
+            seControlaStock: [false], // se va registar en Inventario o no
             precioUnitario: [null],
             precioVenta: [0, [Validators.required, Validators.min(1)]],
             marcaId: [null, [Validators.required]],
@@ -654,6 +648,8 @@ export class AddPresentacionPage implements OnInit {
         return cantidadStock;
     }
 
+    get seVaControlarStock(): boolean { return this.productoPresentacionForm.get('seControlaStock')?.value || false; }
+
     // OnChange Input
     onCambioExistenciaDisponibleStock(value: any) {
         this.cantidadDisponibleStock.setValue(value);
@@ -667,7 +663,6 @@ export class AddPresentacionPage implements OnInit {
     onCambioDiasAntesExpiracion(value: any) {
         this.productoPresentacionForm.get('diasAntesExpiracion')?.setValue(value);
     }
-
 
     private crearDetalleMovimiento(lote: string, fechaExpiracion: Date | null, cantidadStock: number): FormGroup {
         return this.formBuilder.group({
@@ -684,9 +679,9 @@ export class AddPresentacionPage implements OnInit {
                 this.marcaOptions.push(...data.map(marca => new MarcaOption(marca.id, marca.nombre)));
             });
 
-        this.productoBaseService.getAllProductoBase()
+        this.productoBaseService.list()
             .subscribe((resp) => {
-                const data = resp.content;
+                const data = resp.data.content as ProductoBaseOutput[];
                 this.productoBaseOption.push(...data.map(base => new ProductoBaseOption(base.id || 0, base.nombre)));
             });
 
@@ -730,7 +725,7 @@ export class AddPresentacionPage implements OnInit {
 
     private esValidoFormulario(): boolean {
         let isValidoFormMovimiento = true;
-        if (this.tieneDetalleMovimientoForm()) {
+        if (this.seVaControlarStock) {
             isValidoFormMovimiento = this.esValidoFormMovimiento();
         }
         return !this.productoPresentacionForm.invalid && isValidoFormMovimiento;

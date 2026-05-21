@@ -126,9 +126,6 @@ import { CommonResponse } from "../../cliente/dto/interface";
             [tableStyle]="{ 'min-width': '65rem' }"
             [rowHover]="false"
             dataKey="id"
-            [expandedRowKeys]="expandedRows"
-            (onRowExpand)="onRowExpand($event)"
-            (onRowCollapse)="onRowCollapse($event)"
             >
             <ng-template #caption>
                 <div class="flex items-center justify-between">
@@ -163,7 +160,7 @@ import { CommonResponse } from "../../cliente/dto/interface";
                 >
                     <td style="min-width: 2rem; text-align: center;">P-{{ product.value.presentacionId }}</td>
                     <td style="min-width: 18rem">
-                        {{ product.value.presentacion }}
+                        {{ product.value.nombre }}
                     </td>
                     <td style="min-width: 8rem">
                         <p-tag [value]="product.value.estadoStock" [severity]="getStockStatusClass(product.value.estadoStock)" />
@@ -209,6 +206,7 @@ import { CommonResponse } from "../../cliente/dto/interface";
 
                     <td style="min-width: 4rem">{{ product.value.subtotal }}</td>
                     <td style="min-width: 8rem;">
+                        @if(product.value.seControlaStock) {
                         <p-button
                             [id]="product.value.presentacionId"
                             type="button"
@@ -219,11 +217,14 @@ import { CommonResponse } from "../../cliente/dto/interface";
                             [rounded]="true"
                             [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
                         />
+                        }
                         <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" [disabled]="isDisableAccion()" (click)="removeDetalle(index)" />
                     </td>
                 </tr>
+
             </ng-template>
             <ng-template #expandedrow let-product>
+                @if(product.value.seControlaStock) {
                 <tr>
                     <td colspan="8">
                         <div class="p-4">
@@ -262,6 +263,7 @@ import { CommonResponse } from "../../cliente/dto/interface";
                         </div>
                     </td>
                 </tr>
+                }
             </ng-template>
             <ng-template #footer>
                 <tr class="font-bold">
@@ -412,13 +414,10 @@ export class EditVerVentaPage implements OnInit {
     private readonly cdr = inject(ChangeDetectorRef);
     private router = inject(Router);
 
-
     // Field Forms
     public ventaForm!: FormGroup;
     public editMode: boolean = false;
     public id!: number;
-
-    expandedRows: { [key: string]: boolean } = {};
 
     clienteOptions!: ClienteOption[];
     public productoPresentacionOptions!: PresentacionOuput[];
@@ -669,6 +668,7 @@ export class EditVerVentaPage implements OnInit {
             subtotal: [subtotal, [Validators.required, Validators.min(1)]],
             stocks: stocks,
             estadoStock: [presentacionProducto?.estadoStock || ''],
+            seControlaStock: [presentacionProducto?.seControlaStock || false],
         });
     }
 
@@ -719,33 +719,6 @@ export class EditVerVentaPage implements OnInit {
                 this.productoPresentacionOptions.push(...prodPresentacion);
             });
         setTimeout(() => { this.getVenta(ventaId) }, 0);
-    }
-
-    onRowExpand(event: TableRowExpandEvent) {
-        //console.log('event: ', event);
-        const presentacion = event.data;
-        this.messageService.add({
-            severity: 'info',
-            summary: 'Product Expanded',
-            detail: `${presentacion.nombre} PR-${presentacion.presentacionId}`,
-            life: 3000
-        });
-        // this.expandedRows = {
-        //     [presentacion.presentacionId]: true
-        // };
-        //console.log(this.expandedRows);
-
-    }
-
-    onRowCollapse(event: TableRowCollapseEvent) {
-        console.log('event: ', event);
-        this.messageService.add({
-            severity: 'success',
-            summary: 'Product Collapsed',
-            detail: event.data.name,
-            life: 3000
-        });
-        this.expandedRows = {};
     }
 
     removeDetalle(index: number) {

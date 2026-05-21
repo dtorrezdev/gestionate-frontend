@@ -23,6 +23,7 @@ import { CommonResponse, ListResponse } from "../../../venta/cliente/dto/interfa
 import { MarcaOutput } from "../../marca/dto/marca.output";
 import { UnidadMedidaOuput } from "../../unidad-medida/dto/unidad-medida.output";
 import { UbicacionStockOutput } from "../../../inventario/ubicacion-stock/dtos/ubicacion-stock.outpu";
+import { ProductoBaseOutput } from "../../base/dto/producto.base.output";
 
 
 @Component({
@@ -256,11 +257,11 @@ export class EditPresentacionPage implements OnInit {
     }
 
     private updateProductoPresentacion() {
-        this.productService.updatePresentacion(this.productoForm.value, this.presentacionId)
+        this.productService.update(this.productoForm.value, this.presentacionId)
             .subscribe({
-                next: (value) => {
-                    console.log(value);
-                    this.mostrarMsg('success', `Producto PR-${value.id} actualizado correctamente!`);
+                next: (resp) => {
+                    console.log(resp);
+                    this.mostrarMsg('success', resp.message);
                     this.navigateToListPresentacion();
                 },
                 error: (err) => {
@@ -311,7 +312,6 @@ export class EditPresentacionPage implements OnInit {
             descripcion: [null, Validators.maxLength(255)],
             unidadMedidaId: [null, Validators.required],
             esUnidadMinima: [true], // analizar esUnidadMinima
-            factorConversion: [1],
             precioUnitario: [null],
             precioVenta: [0, [Validators.required, Validators.min(1)]],
             marcaId: [null, [Validators.required]],
@@ -335,10 +335,10 @@ export class EditPresentacionPage implements OnInit {
                 this.marcaOptions.push(...data.map(marca => new MarcaOption(marca.id, marca.nombre)));
             });
 
-        this.productoBaseService.getAllProductoBase()
+        this.productoBaseService.list()
             .subscribe((resp) => {
-                console.log('data getAllProductoBase', resp);
-                const data = resp.content;
+                console.log('data producto ', resp);
+                const data = resp.data.content as ProductoBaseOutput[];
                 this.productoBaseOption.push(...data.map(base => new ProductoBaseOption(base.id || 0, base.nombre)));
             });
 
@@ -399,7 +399,6 @@ export class EditPresentacionPage implements OnInit {
             descripcion: presentacion.descripcion,
             unidadMedidaId: unidadMedida,
             esUnidadMinima: presentacion.esUnidadMinima,
-            factorConversion: presentacion.factorConversion,
             precioUnitario: presentacion.precioUnitario,
             precioVenta: presentacion.precioVenta,
             marcaId: marca,
@@ -412,7 +411,6 @@ export class EditPresentacionPage implements OnInit {
     navigateToListPresentacion(): void {
         setTimeout(() =>
             this.router.navigate(['/producto/presentacion']), 3000);
-        ;
     }
 
      private mostrarMsg(tipo: string, detalle: string): void {

@@ -209,7 +209,7 @@ export class ListProductoPage implements OnInit {
     private update(producto: ProductoBaseOutput, id: number) {
         console.log('I will update producto');
         this.setUpdateProducto(producto, id);
-        this.service.updateProducto(producto, id)
+        this.service.update(producto, id)
             .subscribe({
                 next: (resp) => {
                     console.log('update resp: ', resp);
@@ -296,9 +296,12 @@ export class ListProductoPage implements OnInit {
                     this.mostrarMsg('error', err)
             });
 
-        this.service.getAllProductoBase()
+        this.service.list()
             .subscribe({
-                next: (resp) => this.productos.set(resp.content),
+                next: (resp) => {
+                    console.log('resp: ', resp);
+                    this.productos.set(resp.data.content as ProductoBaseOutput[]);
+                },
                 error: (err) =>
                     this.mostrarMsg('error', 'Error al cargar los datos: ' + err.error.message)
 

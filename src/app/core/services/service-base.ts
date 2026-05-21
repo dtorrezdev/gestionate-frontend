@@ -37,5 +37,4 @@ export class ServiceBase<I, O> implements IService<I,O> {
     protected getUrl(): string {
         return `${this._API}${this.endpoint}`;
     }
-
 }

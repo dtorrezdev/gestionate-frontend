@@ -10,7 +10,10 @@ export function requestInterceptor(
     next: HttpHandlerFn,
 ): Observable<HttpEvent<unknown>> {
 
-    const authToken = inject(AuthService).getAuthToken();
+    const authService = inject(AuthService);
+
+    const authToken = authService.getAuthToken();
+    const tenantId = authService.getAuthTenantId();
     const currentUrl = inject(Router).url;
 
     let headers = new HttpHeaders(); // enviar por Interceptor
@@ -21,11 +24,11 @@ export function requestInterceptor(
 
     if(!req.url.includes('/v1/autenticacion')) {
         headers = headers.set('Authorization', authToken);
-        headers = headers.set('Tenant-Id', "100");
+        headers = headers.set('Tenant-Id', tenantId);
     }
 
     const newReq = req.clone({ headers });
-    console.log(newReq);
+    // console.log(newReq);
 
     return next(newReq)
     // .pipe(

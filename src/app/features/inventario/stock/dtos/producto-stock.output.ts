@@ -9,7 +9,6 @@ export interface ProductoStockOutput {
     descripcion: string;
     unidadMedidaId: number;
     esUnidadMinima: boolean;
-    factorConversion: number;
     precioUnitario: number;
     precioVenta: number;
     cantidadMinimoStock: number;

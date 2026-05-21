@@ -19,6 +19,7 @@ export class AuthService {
             .pipe(
                 map((resp: LoguinOutput) => {
                     localStorage.setItem('token', `Bearer ${resp.token}`);
+                    localStorage.setItem('tenant', `${resp.tenantId}`);
                     return true;
                 })
             )
@@ -42,6 +43,7 @@ export class AuthService {
                         rol: resp.rol,
                         rolId: resp.rolId,
                         nombre: resp.nombre,
+                        tenantId: resp.tenantId,
                         id: resp.id
                     };
                 })
@@ -51,5 +53,9 @@ export class AuthService {
 
     getAuthToken(): string {
         return localStorage.getItem('token') || ''
+    }
+
+    getAuthTenantId(): string {
+        return localStorage.getItem('tenant') || ''
     }
 }

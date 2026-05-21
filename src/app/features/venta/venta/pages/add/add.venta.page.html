@@ -40,12 +40,14 @@
                     placeholder="Seleccione Producto" class="w-full">
                     <ng-template #selectedItem let-productoPre>
                         <div class="flex items-center gap-2">
-                            <div>{{ productoPre.marca }} - {{ productoPre.presentacion }} - Disponible: {{ productoPre.cantidadDisponibleStock}}</div>
+                            <div>{{ productoPre.marca }} - {{ productoPre.presentacion }} x {{productoPre.unidadMedida}} - Disponible: {{
+                                productoPre.cantidadDisponibleStock}}</div>
                         </div>
                     </ng-template>
                     <ng-template let-producto #item>
                         <div class="flex items-center gap-2">
-                            <div>{{ producto.marca }} - {{ producto.presentacion }} - Disponible: {{producto.cantidadDisponibleStock}}</div>
+                            <div>{{ producto.marca }} - {{ producto.presentacion }} x {{producto.unidadMedida}} - Disponible:
+                                {{producto.cantidadDisponibleStock}}</div>
                         </div>
                     </ng-template>
                 </p-select>
@@ -63,9 +65,6 @@
         [tableStyle]="{ 'min-width': '75rem' }"
         [rowHover]="false"
         dataKey="id"
-        [expandedRowKeys]="expandedRows"
-        (onRowExpand)="onRowExpand($event)"
-        (onRowCollapse)="onRowCollapse($event)"
         >
         <ng-template #caption>
             <div class="flex items-center justify-between">
@@ -146,21 +145,17 @@
 
                 <td style="min-width: 4rem">{{ product.value.subtotal }}</td>
                 <td style="min-width: 8rem;">
-                    <p-button
-                        [id]="product.presentacionId"
-                        type="button"
-                        pRipple
-                        [pRowToggler]="product.value"
-                        [text]="true"
-                        severity="secondary"
-                        [rounded]="true"
-                        [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
-                    />
+                    @if(product.value.seControlaStock) {
+                    <p-button [id]="product.presentacionId" type="button" pRipple [pRowToggler]="product.value" [text]="true"
+                        severity="secondary" [rounded]="true" [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" />
+                    }
+
                     <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" (click)="removeDetalle(index)" />
                 </td>
             </tr>
         </ng-template>
         <ng-template #expandedrow let-product>
+            @if(product.value.seControlaStock) {
             <tr>
                 <td colspan="8">
                     <div class="p-4">
@@ -199,6 +194,7 @@
                     </div>
                 </td>
             </tr>
+            }
         </ng-template>
         <ng-template #footer>
             <tr class="font-bold">

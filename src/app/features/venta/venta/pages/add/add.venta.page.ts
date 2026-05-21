@@ -91,8 +91,6 @@ export class AddVentaPage implements OnInit {
     public clienteOptions!: ClienteOption[];
     public productoPresentacionOptions!: PresentacionOuput[];
 
-    expandedRows: any = {};
-
     public metodoValues = [
         { name: 'EFECTIVO', code: 'EF' },
         { name: 'QR/TRANSFERENCIA', code: 'QR_TR' },
@@ -323,6 +321,7 @@ export class AddVentaPage implements OnInit {
             subtotal: [presentacionProducto ? presentacionProducto.precioVenta : 0, [Validators.required, Validators.min(1)]],
             stocks: stocks,
             estadoStock: [presentacionProducto?.estadoStock || ''],
+            seControlaStock: [presentacionProducto?.seControlaStock || false]
         });
     }
 
@@ -344,21 +343,6 @@ export class AddVentaPage implements OnInit {
             estante: [stock?.estante || ''],
             nivel: [stock?.nivel || ''],
             cantidad: [stock?.cantidad || 0],
-        });
-    }
-
-    onRowExpand(event: TableRowExpandEvent) {
-        console.log('event: ', event);
-        this.messageService.add({ severity: 'info', summary: 'Product Expanded', detail: event.data, life: 3000 });
-    }
-
-    onRowCollapse(event: TableRowCollapseEvent) {
-        console.log('event: ', event);
-        this.messageService.add({
-            severity: 'success',
-            summary: 'Product Collapsed',
-            detail: event.data.name,
-            life: 3000
         });
     }
 

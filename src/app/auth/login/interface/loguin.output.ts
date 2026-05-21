@@ -6,4 +6,5 @@ export interface LoguinOutput  {
     rolId: number;
     nombre: string;
     id: number;
+    tenantId: number;
 }

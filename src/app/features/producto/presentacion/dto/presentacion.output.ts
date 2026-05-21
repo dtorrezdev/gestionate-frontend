@@ -7,7 +7,6 @@ export class PresentacionOuput {
     descripcion: string;
     unidadMedidaId: number;
     esUnidadMinima: boolean;
-    factorConversion: number;
     precioUnitario: number;
     precioVenta: number;
     cantidadMinimoStock: number;
@@ -16,6 +15,7 @@ export class PresentacionOuput {
     marcaId: number;
     marca: string;
     estadoStock: string;
+    seControlaStock: boolean;
 
     constructor(
         id: number,
@@ -25,7 +25,6 @@ export class PresentacionOuput {
         descripcion: string,
         unidadMedidaId: number,
         esUnidadMinima: boolean,
-        factorConversion: number,
         precioUnitario: number,
         precioVenta: number,
         cantidadMinimoStock: number,
@@ -33,7 +32,8 @@ export class PresentacionOuput {
         diasAntesExpiracion: number,
         marcaId: number,
         marca: string,
-        estadoStock: string
+        estadoStock: string,
+        seControlaStock: boolean
     ) {
         this.id = id;
         this.productoId = productoId;
@@ -42,7 +42,6 @@ export class PresentacionOuput {
         this.descripcion = descripcion;
         this.unidadMedidaId = unidadMedidaId;
         this.esUnidadMinima = esUnidadMinima;
-        this.factorConversion = factorConversion;
         this.precioUnitario = precioUnitario;
         this.precioVenta = precioVenta;
         this.cantidadDisponibleStock = cantidadDisponibleStock;
@@ -51,10 +50,11 @@ export class PresentacionOuput {
         this.marcaId = marcaId;
         this.marca = marca;
         this.estadoStock = estadoStock;
+        this.seControlaStock = seControlaStock;
     }
 
     public static getInstance(): PresentacionOuput {
-        return new PresentacionOuput(0, 0, '', '', '', 0, false, 0, 0, 0, 0, 0, 0, 0, '', '');
+        return new PresentacionOuput(0, 0, '', '', '', 0, false, 0, 0, 0, 0, 0, 0, '', '', false);
     }
 
 }

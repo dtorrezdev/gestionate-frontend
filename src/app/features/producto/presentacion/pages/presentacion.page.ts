@@ -16,13 +16,10 @@ import { BreadcrumbModule } from 'primeng/breadcrumb';
 import { PresentacionOuput } from '../dto/presentacion.output';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { StatusStock } from '../../../../shared/enums/status-stock.enum';
-
-interface Column {
-    field: string;
-    header: string;
-    width: string;
-    visible: boolean;
-}
+import { StorageService } from '../../../../core/services/storage-service';
+import { ViewConfig } from '../../../../core/interface/view-config';
+import { DrawerModule } from 'primeng/drawer';
+import { CheckboxModule } from 'primeng/checkbox';
 
 @Component({
     imports: [
@@ -39,6 +36,8 @@ interface Column {
         InputIconModule,
         IconFieldModule,
         ConfirmDialogModule,
+        DrawerModule,
+        CheckboxModule
     ],
     standalone: true,
     template: `
@@ -53,6 +52,23 @@ interface Column {
         </ng-template>
 
         <ng-template #end>
+            <p-button icon="pi pi-arrow-left" (click)="visibleRight = true" [style]="{ marginRight: '0.25em' }" />
+            <p-drawer [(visible)]="visibleRight" header="Drawer" position="right">
+                <div class="font-semibold text-xl">Columnas</div>
+                <div class="flex flex-col gap-4">
+                        @for(col of viewConfig.columns; track col.field) {
+                            <!-- @if(col.field !== '') { -->
+                            <div class="flex items-center">
+                                <label [for]="col.field" class="ml-2">{{col.header}}</label>
+                                <p-checkbox
+                                    [id]="col.field"
+                                    [binary]="true"
+                                    [(ngModel)]="col.visible" />
+                            </div>
+                            <!-- } -->
+                        }
+                    </div>
+            </p-drawer>
             <p-button label="Export" icon="pi pi-upload" severity="secondary"/>
         </ng-template>
     </p-toolbar>
@@ -60,10 +76,9 @@ interface Column {
     <p-table
         #dt
         [value]="products()"
-        [columns]="columns"
+        [columns]="viewConfig.columns"
         [rows]="10"
         [paginator]="true"
-        [globalFilterFields]="['name', 'country.name', 'representative.name', 'status']"
         [tableStyle]="{ 'min-width': '55rem' }"
         [rowHover]="true"
         dataKey="id"
@@ -82,7 +97,7 @@ interface Column {
         </ng-template>
         <ng-template #header>
             <tr>
-            @for (col of columns; track col) {
+            @for (col of viewConfig.columns; track col.field) {
                 @if(col.visible) {
                 <th [style]="col.width"
                     [pSortableColumn]="col.field">
@@ -95,7 +110,7 @@ interface Column {
         </ng-template>
         <ng-template #body let-product>
             <tr>
-            @for (col of columns; track col) {
+            @for (col of viewConfig.columns; track col) {
                 @if(col.visible) {
                     @switch (col.field) {
                         @case ('codigo') {
@@ -155,16 +170,21 @@ interface Column {
             border-radius: 0;
         }
     `,
-    providers: [ProductService, MessageService, ConfirmationService]
+    providers: [ProductService, StorageService, MessageService, ConfirmationService]
 })
 export class PresentacionPage implements OnInit {
 
     private productService = inject(ProductService);
     private messageService = inject(MessageService);
     private confirmationService = inject(ConfirmationService);
+    private storageService = inject(StorageService);
 
     products = signal<PresentacionOuput[]>([]);
-    columns!: Column[];
+    //columns!: TableColumnConfig[];
+
+    viewConfig!: ViewConfig;
+
+    visibleRight: boolean = false;
 
     // MenuBar BreadcrumbModule
     breadcrumbHome = { icon: 'pi pi-home', to: '/' };
@@ -173,6 +193,7 @@ export class PresentacionPage implements OnInit {
     constructor() { }
 
     ngOnInit() {
+
         this.loadDataTable();
     }
 
@@ -209,16 +230,38 @@ export class PresentacionPage implements OnInit {
                 console.log('getAllProdutos: ', value);
                 this.products.set(value.data.content);
             });
-        this.columns = [
-            { field: 'codigo', header: 'Código', width: 'min-width: 5rem', visible: true },
-            { field: 'presentacion', header: 'Nombre', width: 'min-width:16rem', visible: true },
-            { field: 'marca', header: 'Macra', width: 'min-width: 10rem', visible: false },
-            { field: 'categoria', header: 'Categoria', width: 'min-width:8rem', visible: false },
-            { field: 'unidadMedida', header: 'U. Medida', width: 'min-width: 4rem', visible: false },
-            { field: 'estadoStock', header: 'Stock', width: 'min-width: 5rem', visible: true },
-            { field: 'precioVenta', header: 'Precio Venta', width: 'min-width: 5rem', visible: false },
-            { field: '', header: 'Acciones', width: 'min-width: 8rem', visible: true }
-        ];
+        const config =
+            this.storageService.getViewConfig<ViewConfig>(
+                'tenant-110',
+                'user-1',
+                'view-presentacion'
+            );
+
+        if (config) {
+            this.viewConfig = config;
+        } else {
+            this.viewConfig = {
+                columns: [{ field: 'codigo', header: 'Código', width: 'min-width: 5rem', visible: true },
+                    { field: 'marca', header: 'Macra', width: 'min-width: 10rem', visible: true },
+                    { field: 'presentacion', header: 'Nombre', width: 'min-width:16rem', visible: true },
+                    { field: 'unidadMedida', header: 'En', width: 'min-width: 4rem', visible: true },
+                    { field: 'categoria', header: 'Categoria', width: 'min-width:8rem', visible: false },
+                    { field: 'estadoStock', header: 'Stock', width: 'min-width: 5rem', visible: true },
+                    { field: 'precioVenta', header: 'Precio Venta', width: 'min-width: 5rem', visible: true },
+                    { field: '', header: 'Acciones', width: 'min-width: 8rem', visible: true }],
+            };
+
+        }
+        // this.columns = [
+        //     { field: 'codigo', header: 'Código', width: 'min-width: 5rem', visible: true },
+        //     { field: 'marca', header: 'Macra', width: 'min-width: 10rem', visible: true },
+        //     { field: 'presentacion', header: 'Nombre', width: 'min-width:16rem', visible: true },
+        //     { field: 'unidadMedida', header: 'En', width: 'min-width: 4rem', visible: true },
+        //     { field: 'categoria', header: 'Categoria', width: 'min-width:8rem', visible: false },
+        //     { field: 'estadoStock', header: 'Stock', width: 'min-width: 5rem', visible: true },
+        //     { field: 'precioVenta', header: 'Precio Venta', width: 'min-width: 5rem', visible: true },
+        //     { field: '', header: 'Acciones', width: 'min-width: 8rem', visible: true }
+        // ];
     }
 
     onGlobalFilter(table: Table, event: Event) {

@@ -13,19 +13,6 @@ export class ProductoBaseService extends ServiceBase<ProductoBaseOutput, CommonR
         super('productos');
     }
 
-    getAllProductoBase() {
-        return this.http.get<ListResponse<ProductoBaseOutput>>
-            (`${this.getUrl()}?size=1000&page=0&sort=producto_id,desc&codigo=&nombre&descripcion`);
-    }
-
-    saveProducto(data: ProductoBaseOutput): Observable<ProductoBaseOutput> {
-        return this.http.post<ProductoBaseOutput>(this.getUrl(), JSON.stringify(data));
-    }
-
-    updateProducto(data: ProductoBaseOutput, id: number): Observable<ProductoBaseOutput> {
-        return this.http.put<ProductoBaseOutput>(`${this.getUrl()}/${id}`, JSON.stringify(data));
-    }
-
     deleteProducto(marca: ProductoBaseOutput) {
         return this.http.delete(`${this.getUrl()}/${marca.id}`);
     }
