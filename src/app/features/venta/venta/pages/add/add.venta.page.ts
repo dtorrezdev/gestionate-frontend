@@ -1,4 +1,4 @@
-import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterModule } from '@angular/router';
@@ -28,6 +28,10 @@ import { ClienteOutput } from '../../../cliente/dto/cliente.output';
 import pdfMake from 'pdfmake/build/pdfmake';
 // @ts-ignore
 import pdfFonts from 'pdfmake/build/vfs_fonts';
+import { ViewConfig } from '../../../../../core/interface/view-config';
+import { StorageService } from '../../../../../core/services/storage-service';
+import { DrawerModule } from 'primeng/drawer';
+import { CheckboxModule } from 'primeng/checkbox';
 
 (pdfMake as any).vfs = pdfFonts.vfs;
 
@@ -36,6 +40,7 @@ import pdfFonts from 'pdfmake/build/vfs_fonts';
         ReactiveFormsModule,
         RouterModule,
         CommonModule,
+        FormsModule,
         TableModule,
         ButtonModule,
         BreadcrumbModule,
@@ -44,7 +49,9 @@ import pdfFonts from 'pdfmake/build/vfs_fonts';
         TagModule,
         ToastModule,
         ToggleSwitchModule,
-        RippleModule
+        RippleModule,
+        DrawerModule,
+        CheckboxModule
     ],
     standalone: true,
     templateUrl: "./add.venta.page.html",
@@ -75,21 +82,29 @@ import pdfFonts from 'pdfmake/build/vfs_fonts';
             display: none;
         }
     `,
-    providers: [ProductService, ClienteService, VentaService, StockService, MessageService]
+    providers: [ProductService, ClienteService, VentaService, StockService, StorageService, MessageService]
 })
 export class AddVentaPage implements OnInit {
     private productService = inject(ProductService);
     private clienteService = inject(ClienteService);
     private ventaService = inject(VentaService);
     private stockService = inject(StockService);
+    private storageService = inject(StorageService);
     private formBuilder = inject(FormBuilder);
     private messageService = inject(MessageService);
     private readonly cdr = inject(ChangeDetectorRef);
+
     private router = inject(Router);
 
     public ventaForm!: FormGroup;
     public clienteOptions!: ClienteOption[];
     public productoPresentacionOptions!: PresentacionOuput[];
+
+    viewConfig!: ViewConfig;
+
+    visibleRight: boolean = false;
+
+    columnasSpan: number = 5;
 
     public metodoValues = [
         { name: 'EFECTIVO', code: 'EF' },
@@ -261,7 +276,7 @@ export class AddVentaPage implements OnInit {
     private crearVentaForm(): FormGroup {
         return this.formBuilder.group({
             clienteId: [null, Validators.required],
-            codigo: ['V-12', Validators.required],
+            codigo: ['V-1', Validators.required],
             glosa: [''],
             estado: [''],
             detalle: this.formBuilder.array([]),
@@ -308,6 +323,29 @@ export class AddVentaPage implements OnInit {
                 }
 
             });
+        this.loadConfigColumns();
+    }
+    private loadConfigColumns(): void {
+        const config =
+            this.storageService.getViewConfig<ViewConfig>(
+                'tenant-110',
+                'user-1',
+                'view-venta-add'
+            );
+
+        if (config) {
+            this.viewConfig = config;
+        } else {
+            this.viewConfig = {
+                columns: [{ field: 'code', header: 'Código', width: 'min-width: 2rem', visible: true },
+                { field: 'producto', header: 'Producto', width: 'min-width: 18rem', visible: true },
+                { field: 'estadoStock', header: 'Status', width: 'min-width:8rem', visible: true },
+                { field: 'precioVenta', header: 'Precio', width: 'min-width: 4rem', visible: true },
+                { field: 'cantidad', header: 'Cantidad', width: 'min-width:4rem', visible: true },
+                { field: 'subtotal', header: 'Subtotal', width: 'min-width: 4rem', visible: true },
+                { field: '', header: 'Acciones', width: 'min-width: 8rem', visible: true }],
+            };
+        }
     }
 
     private crearDetalle(presentacionProducto?: PresentacionOuput, stocks?: FormArray,): FormGroup {
@@ -441,6 +479,18 @@ export class AddVentaPage implements OnInit {
         https://dev.to/ankitprajapati/angular-export-to-pdf-using-pdfmake-client-side-pdf-generation-1jlk
 
         */
+    }
+
+    saveConfigColumns() {
+        console.log('saveConfigColumns()');
+        console.log('se va guardar configuracion columnas ', this.viewConfig);
+        this.storageService.setViewConfig<ViewConfig>(
+            'tenant-110',
+            'user-1',
+            'view-venta-add',
+            this.viewConfig
+        );
+        this.columnasSpan = this.viewConfig.columns.filter(col => col.visible).length - 2;
     }
 
 }

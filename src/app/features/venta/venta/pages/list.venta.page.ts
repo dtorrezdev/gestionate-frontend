@@ -18,9 +18,15 @@ import { VentaOutput } from "../dto/venta.output";
 import { ConfirmationService, MessageService } from "primeng/api";
 import { VentaDelete } from "../dto/venta.delete";
 import { DatePipe } from "@angular/common";
+import { DrawerModule } from "primeng/drawer";
+import { CheckboxModule } from "primeng/checkbox";
+import { FormsModule } from "@angular/forms";
+import { ViewConfig } from "../../../../core/interface/view-config";
+import { StorageService } from "../../../../core/services/storage-service";
 
 @Component({
     imports: [
+        FormsModule,
         BreadcrumbModule,
         ToolbarModule,
         ButtonModule,
@@ -35,7 +41,9 @@ import { DatePipe } from "@angular/common";
         TooltipModule,
         ToastModule,
         ConfirmDialogModule,
-        DatePipe
+        DatePipe,
+        DrawerModule,
+        CheckboxModule
     ],
     standalone: true,
     template: `
@@ -51,6 +59,7 @@ import { DatePipe } from "@angular/common";
         </ng-template>
 
         <ng-template #end>
+            <p-button icon="pi pi-arrow-left" (click)="visibleRight = true" [style]="{ marginRight: '0.25em' }" />
             <p-button label="Export" icon="pi pi-upload" severity="secondary"/>
         </ng-template>
     </p-toolbar>
@@ -75,7 +84,16 @@ import { DatePipe } from "@angular/common";
     </ng-template>
     <ng-template #header>
         <tr>
-            <th style="min-width: 2rem; text-align: center;">Nro</th>
+            @for (col of viewConfig.columns; track col.field) {
+                @if(col.visible) {
+                <th [style]="col.width"
+                    [pSortableColumn]="col.field">
+                    {{ col.header }}
+                    <p-sortIcon [field]="col.field" />
+                </th>
+                }
+            }
+            <!-- <th style="min-width: 2rem; text-align: center;">Nro</th>
             <th pSortableColumn="fechaRegistro" style="min-width:3rem">
                 Fecha Registro
                 <p-sortIcon field="fechaRegistro" />
@@ -96,40 +114,78 @@ import { DatePipe } from "@angular/common";
                 Estado
                 <p-sortIcon field="estado"/>
             </th>
-            <th></th>
+            <th></th> -->
         </tr>
     </ng-template>
     <ng-template #body let-venta>
         <tr>
-            <td style="text-align: center">{{ venta.codigo }}</td>
-            <td>{{ venta.fechaRegistro | date: 'dd/MM/yyyy HH:mm' }}</td>
-            <td>{{ venta.cliente }}</td>
-            <td>{{ venta.vendedor ?? 'admin' }}</td>
-            <td>{{ venta.total | currency: 'Bs' }}</td>
-            <td>
-                <p-tag [value]="venta.estado" [severity]="getSeverityEstado(venta.estado)"/>
-            </td>
-            <td>
-                <p-button icon="pi pi-eye" severity="info" class="mr-2"
-                        pTooltip="Ver detalle" tooltipPosition="top"
-                        routerLink="/venta/show/{{venta.id}}"
-                        [rounded]="true" [outlined]="true"/>
-                @if(venta.estado === 'VENTA') {
-                    <p-button icon="pi pi-trash" severity="danger"
-                        pTooltip="Anular" tooltipPosition="top"
-                        (onClick)="deleteVenta(venta)"
-                        [rounded]="true" [outlined]="true"/>
+            @for (col of viewConfig.columns; track col) {
+                @if(col.visible) {
+                    @switch (col.field) {
+                        @case ('fechaRegistro') {
+                            <td>{{ venta.fechaRegistro | date: 'dd/MM/yyyy HH:mm' }}</td>
+                        }
+                        @case ('vendedor') {
+                            <td>{{ venta.vendedor ?? 'admin' }}</td>
+                        }
+                        @case ('total') {
+                            <td>{{ venta.total | currency: 'Bs' }}</td>
+                        }
+                        @case ('estado') {
+                            <td>
+                                <p-tag [value]="venta.estado" [severity]="getSeverityEstado(venta.estado)"/>
+                            </td>
+                        }
+                        @case ('') {
+                            <td>
+                                <p-button icon="pi pi-eye" severity="info" class="mr-2"
+                                        pTooltip="Ver detalle" tooltipPosition="top"
+                                        routerLink="/venta/show/{{venta.id}}"
+                                        [rounded]="true" [outlined]="true"/>
+                                @if(venta.estado === 'VENTA') {
+                                    <p-button icon="pi pi-trash" severity="danger"
+                                        pTooltip="Anular" tooltipPosition="top"
+                                        (onClick)="deleteVenta(venta)"
+                                        [rounded]="true" [outlined]="true"/>
+                                }
+                                @if(venta.estado === 'PREVENTA') {
+                                    <p-button icon="pi pi-pencil"
+                                        pTooltip="Editar detalle" tooltipPosition="top"
+                                        routerLink="/venta/edit/{{venta.id}}"
+                                        [rounded]="true" [outlined]="true"/>
+                                }
+                            </td>
+                        }
+                        @default {
+                        <td [style]="col.width">
+                            {{ venta[col.field] }}
+                        </td>
+                        }
+                    }
                 }
-                @if(venta.estado === 'PREVENTA') {
-                    <p-button icon="pi pi-pencil"
-                        pTooltip="Editar detalle" tooltipPosition="top"
-                        routerLink="/venta/edit/{{venta.id}}"
-                        [rounded]="true" [outlined]="true"/>
-                }
-            </td>
+
+            }
         </tr>
     </ng-template>
     </p-table>
+
+    <p-drawer [(visible)]="visibleRight" header="Columnas Visibles" position="right" (onHide)="saveConfigColumns()">
+        <!-- <div class="font-semibold text-xl">Columnas</div> -->
+        <div class="flex flex-col gap-4">
+                @for(col of viewConfig.columns; track col.field) {
+                    <!-- @if(col.field !== '') { -->
+                    <div class="flex items-center flex-jc-se">
+                        <label [for]="col.field" class="ml-2">{{col.header}}</label>
+                        <p-checkbox
+
+                            [id]="col.field"
+                            [binary]="true"
+                            [(ngModel)]="col.visible" />
+                    </div>
+                    <!-- } -->
+                }
+            </div>
+    </p-drawer>
 
     <p-toast />
     <p-confirmdialog [style]="{ width: '450px' }" />
@@ -148,18 +204,21 @@ import { DatePipe } from "@angular/common";
             border-radius: 0;
         }
     `,
-    providers: [VentaService, ConfirmationService, MessageService]
+    providers: [VentaService, StorageService, ConfirmationService, MessageService]
 
 })
 export class ListVentaPage implements OnInit {
 
     private ventaServive = inject(VentaService);
+    private storageService = inject(StorageService);
     private confirmationService = inject(ConfirmationService);
     private messageService = inject(MessageService);
 
     ventas = signal<VentaOutput[]>([]);
-
     venta!: VentaOutput;
+
+    viewConfig!: ViewConfig;
+    visibleRight: boolean = false;
 
     // MenuBar BreadcrumbModule
     breadcrumbHome = { icon: 'pi pi-home', to: '/' };
@@ -179,6 +238,29 @@ export class ListVentaPage implements OnInit {
                 this.ventas.set(ventas);
             });
 
+        this.loadConfigColumns();
+    }
+
+    private loadConfigColumns(): void {
+        const config =
+            this.storageService.getViewConfig<ViewConfig>(
+                'tenant-110',
+                'user-1',
+                'view-venta-list'
+            );
+
+        if (config) {
+            this.viewConfig = config;
+        } else {
+            this.viewConfig = {
+                columns: [{ field: 'codigo', header: 'Nro', width: 'min-width: 2rem; text-align: center;', visible: true },
+                { field: 'fechaRegistro', header: 'Fecha Registro', width: 'min-width: 3rem', visible: true },
+                { field: 'cliente', header: 'Cliente', width: 'min-width: 6rem', visible: true },
+                { field: 'vendedor', header: 'Vendedor', width: 'min-width: 6rem', visible: true },
+                { field: 'total', header: 'Total', width: 'min-width:2rem', visible: false },
+                { field: 'estado', header: 'Estado', width: 'min-width: 4rem', visible: true }],
+            };
+        }
     }
 
     onGlobalFilter(table: Table, event: Event) {
@@ -241,5 +323,16 @@ export class ListVentaPage implements OnInit {
             clienteId: venta.clienteId,
             movimientoId: venta.movimientoId
         };
+    }
+
+    saveConfigColumns() {
+        console.log('saveConfigColumns()');
+        console.log('se va guardar configuracion columnas ', this.viewConfig);
+        this.storageService.setViewConfig<ViewConfig>(
+            'tenant-110',
+            'user-1',
+            'view-venta-list',
+            this.viewConfig
+        );
     }
 }
