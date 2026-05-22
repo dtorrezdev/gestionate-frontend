@@ -20,11 +20,19 @@ import { RippleModule } from "primeng/ripple";
 import { ToastModule } from "primeng/toast";
 import { StatusStock } from "../../../../shared/enums/status-stock.enum";
 import { TooltipModule } from "primeng/tooltip";
+import { StorageService } from "../../../../core/services/storage-service";
+import { ViewConfig } from "../../../../core/interface/view-config";
+import { BreadcrumbModule } from "primeng/breadcrumb";
+import { ToolbarModule } from "primeng/toolbar";
+import { DrawerModule } from "primeng/drawer";
+import { CheckboxModule } from "primeng/checkbox";
+import { FormsModule } from "@angular/forms";
 
 @Component({
     imports: [
         CommonModule,
         RouterModule,
+        FormsModule,
         TableModule,
         ButtonModule,
         InputIconModule,
@@ -35,28 +43,63 @@ import { TooltipModule } from "primeng/tooltip";
         BadgeModule,
         RippleModule,
         ToastModule,
-        TooltipModule
+        TooltipModule,
+        BreadcrumbModule,
+        ToolbarModule,
+        DrawerModule,
+        CheckboxModule
     ],
     standalone: true,
     template: `
-    <div class="card">
-        <div class="font-semibold text-xl mb-4">List Stock works!</div>
+    <div class="card mb-0 pb-1">
+        <div class="font-semibold text-xl mb-4">Listado Stocks Productos</div>
+        <p-breadcrumb [model]="breadcrumbItems" [home]="breadcrumbHome"></p-breadcrumb>
     </div>
+
+    <p-toolbar styleClass="mb-6  n-border n-border-r">
+        <ng-template #start>
+            <p-button label="New Producto" icon="pi pi-plus" severity="secondary" class="mr-2"/>
+            <p-button severity="secondary" label="Delete" icon="pi pi-trash" outlined />
+        </ng-template>
+
+        <ng-template #end>
+            <p-button icon="pi pi-arrow-left" (click)="visibleRight = true" [style]="{ marginRight: '0.25em' }" />
+            <p-drawer [(visible)]="visibleRight" header="Columnas Visibles" position="right" (onHide)="saveConfigColumns()">
+                <!-- <div class="font-semibold text-xl">Columnas</div> -->
+                <div class="flex flex-col gap-4">
+                        @for(col of viewConfig.columns; track col.field) {
+                            <!-- @if(col.field !== '') { -->
+                            <div class="flex items-center flex-jc-se">
+                                <label [for]="col.field" class="ml-2">{{col.header}}</label>
+                                <p-checkbox
+                                    [id]="col.field"
+                                    [binary]="true"
+                                    [(ngModel)]="col.visible" />
+                            </div>
+                            <!-- } -->
+                        }
+                    </div>
+            </p-drawer>
+            <p-button label="Export" icon="pi pi-upload" severity="secondary"/>
+        </ng-template>
+    </p-toolbar>
+
     <p-table
         #dt
         [value]="products()"
+        [columns]="viewConfig.columns"
         [rows]="10"
         [rowHover]="false"
         [paginator]="true"
         [tableStyle]="{ 'min-width': '65rem' }"
         dataKey="id"
-        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
+        currentPageReportTemplate="Mostrar {first} a {last} del {totalRecords} productos"
         [showCurrentPageReport]="true"
         [rowsPerPageOptions]="[10, 20, 30]"
     >
         <ng-template #caption>
             <div class="flex items-center justify-between">
-                <h5 class="m-0">Manage Products</h5>
+                <h5 class="m-0">Stock Productos</h5>
                 <p-iconfield>
                     <p-inputicon styleClass="pi pi-search" />
                     <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Search..." />
@@ -65,74 +108,65 @@ import { TooltipModule } from "primeng/tooltip";
         </ng-template>
         <ng-template #header>
             <tr>
-                <th style="min-width: 3rem">Code</th>
-                <th pSortableColumn="productoId" style="min-width: 7rem">
-                    Marca
-                    <p-sortIcon field="productoId" />
+            @for (col of viewConfig.columns; track col.field) {
+                @if(col.visible) {
+                <th [style]="col.width"
+                    [pSortableColumn]="col.field">
+                    {{ col.header }}
+                    <p-sortIcon [field]="col.field" />
                 </th>
-                <th pSortableColumn="marcaId" style="min-width:14rem">
-                    Nombre
-                    <p-sortIcon field="marcaId" />
-                </th>
-                <!-- <th>Image</th> -->
-                <th pSortableColumn="unidadMedidaId" style="min-width: 5rem">
-                    U. Medida
-                    <p-sortIcon field="unidadMedidaId" />
-                </th>
-                <th pSortableColumn="marcaId" style="min-width: 5rem">
-                    Dias Expiracion
-                    <p-sortIcon field="marcaId" />
-                </th>
-                <th pSortableColumn="nombre" style="min-width:5rem">
-                    Stock Min.
-                    <p-sortIcon field="nombre" />
-                </th>
-                <th pSortableColumn="stock" style="min-width: 5rem">
-                    Status
-                    <p-sortIcon field="stock" />
-                </th>
-                <th pSortableColumn="precioVenta" style="min-width: 7rem">
-                    Stock Disponible
-                </th>
-                <th style="min-width: 4rem"></th>
+                }
+            }
             </tr>
         </ng-template>
         <ng-template #body let-product let-expanded="expanded">
             <tr>
-                <td>PR-{{ product.id }}</td>
-                <td>{{ product.marca }}</td>
-                <td>{{ product.presentacion }}</td>
-                <!-- <td>
-                    <img [src]="'https://primefaces.org/cdn/primeng/images/demo/product/' + product.image" [alt]="product.name" style="width: 64px" class="rounded" />
-                </td> -->
-                <td>{{ product.unidadMedidaShort }}</td>
-                <td>{{ product.diasAntesExpiracion }}</td>
-                <td>{{ product.cantidadMinimoStock }}</td>
-                <td>
-                    <p-tag [value]="product.estadoStock" [severity]="getStockStatusClass(product.estadoStock)" />
-                </td>
-                <td>
-                     <p-badge [value]="product.cantidadDisponibleStock" [severity]="getStockStatusClass(product.estadoStock)" />
-                </td>
-                <td>
-                    @if(product.stocks?.length){
-                    <p-button
-                        pTooltip="Ver detalle Stock" tooltipPosition="top"
-                        class="mr-2"
-                        pRipple
-                        [pRowToggler]="product"
-                        [rounded]="true"
-                        [outlined]="true"
-                        severity="info"
-                        [icon]="expanded ? 'pi pi-eye-slash' : 'pi pi-eye'"
-                    />
+            @for (col of viewConfig.columns; track col) {
+                @if(col.visible) {
+                    @switch (col.field) {
+                        @case ('codigo') {
+                        <td>PR-{{ product.id }}</td>
+                        }
+                        @case ('estadoStock') {
+                        <td>
+                            <p-tag [value]="product.estadoStock"
+                                [severity]="getStockStatusClass(product.estadoStock)" />
+                        </td>
+                        }
+                        @case ('cantidadDisponibleStock') {
+                        <td>
+                            <p-badge [value]="product.cantidadDisponibleStock" [severity]="getStockStatusClass(product.estadoStock)" />
+                        </td>
+                        }
+                        @case('') {
+                        <td>
+                            @if(product.stocks?.length){
+                            <p-button
+                                pTooltip="Ver detalle Stock" tooltipPosition="top"
+                                class="mr-2"
+                                pRipple
+                                [pRowToggler]="product"
+                                [rounded]="true"
+                                [outlined]="true"
+                                severity="info"
+                                [icon]="expanded ? 'pi pi-eye-slash' : 'pi pi-eye'"
+                            />
+                            }
+                            <p-button icon="pi pi-pencil"
+                                pTooltip="Editar Stock" tooltipPosition="top"
+                                [rounded]="true"
+                                [outlined]="true"
+                            />
+                        </td>
+                        }
+                        @default {
+                        <td>
+                            {{ product[col.field] }}
+                        </td>
+                        }
                     }
-                    <p-button icon="pi pi-pencil"
-                        pTooltip="Editar Stock" tooltipPosition="top"
-                        [rounded]="true"
-                        [outlined]="true"
-                    />
-                </td>
+                }
+            }
             </tr>
         </ng-template>
         <ng-template #expandedrow let-product>
@@ -182,13 +216,22 @@ import { TooltipModule } from "primeng/tooltip";
         </ng-template>
     </p-table>
     `,
-    providers: [ProductService, StockService]
+    providers: [ProductService, StockService, StorageService]
 })
 export class ListStockPage implements OnInit {
     private productService = inject(ProductService);
     private stockService = inject(StockService);
+    private storageService = inject(StorageService);
     // private messageService = inject(MessageService);
     products = signal<ProductoStockOutput[]>([]);
+
+    viewConfig!: ViewConfig;
+
+    visibleRight: boolean = false;
+
+    // MenuBar BreadcrumbModule
+    breadcrumbHome = { icon: 'pi pi-home', to: '/' };
+    breadcrumbItems = [{ label: 'Inventario' }, { label: 'Productos en Stocks' }, { label: 'Todos' }];
 
     constructor() { }
 
@@ -219,6 +262,33 @@ export class ListStockPage implements OnInit {
 
                 this.products.set(productosConStock);
             });
+
+        this.loadConfigColumns();
+    }
+
+    private loadConfigColumns(): void {
+        const config =
+            this.storageService.getViewConfig<ViewConfig>(
+                'tenant-110',
+                'user-1',
+                'view-stock-producto'
+            );
+
+        if (config) {
+            this.viewConfig = config;
+        } else {
+            this.viewConfig = {
+                columns: [{ field: 'codigo', header: 'Código', width: 'min-width: 5rem', visible: true },
+                { field: 'marca', header: 'Macra', width: 'min-width: 10rem', visible: true },
+                { field: 'presentacion', header: 'Nombre', width: 'min-width:16rem', visible: true },
+                { field: 'unidadMedida', header: 'En', width: 'min-width: 4rem', visible: true },
+                { field: 'diasAntesExpiracion', header: 'Dias Expiracion', width: 'min-width:6rem', visible: false },
+                { field: 'cantidadMinimoStock', header: 'Stock Min.', width: 'min-width: 5rem', visible: true },
+                { field: 'estadoStock', header: 'Status', width: 'min-width: 5rem', visible: true },
+                { field: 'cantidadDisponibleStock', header: 'Stock Disponible', width: 'min-width: 5rem', visible: true },
+                { field: '', header: 'Acciones', width: 'min-width: 8rem', visible: true }],
+            };
+        }
     }
 
     onGlobalFilter(table: Table, event: Event) {
@@ -236,5 +306,16 @@ export class ListStockPage implements OnInit {
             default:
                 return 'info';
         }
+    }
+
+    saveConfigColumns() {
+        console.log('saveConfigColumns()');
+        console.log('se va guardar configuracion columnas ', this.viewConfig);
+        this.storageService.setViewConfig<ViewConfig>(
+            'tenant-110',
+            'user-1',
+            'view-stock-producto',
+            this.viewConfig
+        );
     }
 }

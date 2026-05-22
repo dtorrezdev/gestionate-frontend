@@ -137,8 +137,7 @@ export class AddVentaPage implements OnInit {
                         this.mostrarMsg('success', this.ventaForm.get('estado')?.value + ' registrado correctamente');
                         this.navigateToListVentas();
                     },
-                    error: (e) => this.mostrarMsg(
-                        'error','Error al guardar venta ' + e.error?.message),
+                    error: (err) => this.mostrarMsg('error', err),
                 });
     }
 

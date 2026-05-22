@@ -16,6 +16,7 @@ export class PresentacionOuput {
     marca: string;
     estadoStock: string;
     seControlaStock: boolean;
+    nombre: string;
 
     constructor(
         id: number,
@@ -33,7 +34,8 @@ export class PresentacionOuput {
         marcaId: number,
         marca: string,
         estadoStock: string,
-        seControlaStock: boolean
+        seControlaStock: boolean,
+        nombre: string
     ) {
         this.id = id;
         this.productoId = productoId;
@@ -51,10 +53,11 @@ export class PresentacionOuput {
         this.marca = marca;
         this.estadoStock = estadoStock;
         this.seControlaStock = seControlaStock;
+        this.nombre = nombre;
     }
 
     public static getInstance(): PresentacionOuput {
-        return new PresentacionOuput(0, 0, '', '', '', 0, false, 0, 0, 0, 0, 0, 0, '', '', false);
+        return new PresentacionOuput(0, 0, '', '', '', 0, false, 0, 0, 0, 0, 0, 0, '', '', false, '');
     }
 
 }

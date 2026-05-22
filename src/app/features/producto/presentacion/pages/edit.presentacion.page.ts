@@ -265,7 +265,7 @@ export class EditPresentacionPage implements OnInit {
                     this.navigateToListPresentacion();
                 },
                 error: (err) => {
-                    this.mostrarMsg('error', `${err.error?.message} - fallo`)
+                    this.mostrarMsg('error', err)
                     console.log(err);
                 },
             });
@@ -318,6 +318,7 @@ export class EditPresentacionPage implements OnInit {
             cantidadDisponibleStock: [null],
             cantidadMinimoStock: [1],
             diasAntesExpiracion: [null],
+            seControlaStock: [false]
         });
         // change detection para cambios en Forms
         this.productoForm.valueChanges
@@ -386,15 +387,12 @@ export class EditPresentacionPage implements OnInit {
 
     private setValuesProductoForm(presentacion: PresentacionOuput): void {
         const marca = this.marcaOptions.find(marca => marca.id == presentacion.marcaId);
-        console.log('marca setValuesProductoForm', marca);
         const productoBase = this.productoBaseOption.find(producto => producto.id == presentacion.productoId);
-        console.log('productoBase setValuesProductoForm', productoBase);
         const unidadMedida = this.unidadMedidaOption.find(unidaMedida => unidaMedida.id == presentacion.unidadMedidaId);
-        console.log('unidadMedida setValuesProductoForm', unidadMedida);
         this.productoForm.patchValue({
             id: presentacion.id,
             productoId: productoBase,
-            nombre: presentacion.presentacion,
+            nombre: presentacion.nombre,
             concepto: presentacion.concepto,
             descripcion: presentacion.descripcion,
             unidadMedidaId: unidadMedida,
@@ -404,9 +402,9 @@ export class EditPresentacionPage implements OnInit {
             marcaId: marca,
             cantidadDisponibleStock: presentacion.cantidadDisponibleStock,
             cantidadMinimoStock: presentacion.cantidadMinimoStock,
-            diasAntesExpiracion: presentacion.diasAntesExpiracion
+            diasAntesExpiracion: presentacion.diasAntesExpiracion,
+            seControlaStock: presentacion.seControlaStock
         });
-
     }
     navigateToListPresentacion(): void {
         setTimeout(() =>
