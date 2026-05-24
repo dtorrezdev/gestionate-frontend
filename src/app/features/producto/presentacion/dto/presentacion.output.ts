@@ -17,6 +17,7 @@ export class PresentacionOuput {
     estadoStock: string;
     seControlaStock: boolean;
     nombre: string;
+    imagen: string
 
     constructor(
         id: number,
@@ -35,7 +36,8 @@ export class PresentacionOuput {
         marca: string,
         estadoStock: string,
         seControlaStock: boolean,
-        nombre: string
+        nombre: string,
+        imagen: string
     ) {
         this.id = id;
         this.productoId = productoId;
@@ -54,10 +56,11 @@ export class PresentacionOuput {
         this.estadoStock = estadoStock;
         this.seControlaStock = seControlaStock;
         this.nombre = nombre;
+        this.imagen = imagen;
     }
 
     public static getInstance(): PresentacionOuput {
-        return new PresentacionOuput(0, 0, '', '', '', 0, false, 0, 0, 0, 0, 0, 0, '', '', false, '');
+        return new PresentacionOuput(0, 0, '', '', '', 0, false, 0, 0, 0, 0, 0, 0, '', '', false, '', '');
     }
 
 }

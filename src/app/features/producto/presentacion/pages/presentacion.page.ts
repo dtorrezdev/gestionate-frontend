@@ -53,23 +53,6 @@ import { CheckboxModule } from 'primeng/checkbox';
 
         <ng-template #end>
             <p-button icon="pi pi-arrow-left" (click)="visibleRight = true" [style]="{ marginRight: '0.25em' }" />
-            <p-drawer [(visible)]="visibleRight" header="Columnas Visibles" position="right" (onHide)="saveConfigColumns()">
-                <!-- <div class="font-semibold text-xl">Columnas</div> -->
-                <div class="flex flex-col gap-4">
-                        @for(col of viewConfig.columns; track col.field) {
-                            <!-- @if(col.field !== '') { -->
-                            <div class="flex items-center flex-jc-se">
-                                <label [for]="col.field" class="ml-2">{{col.header}}</label>
-                                <p-checkbox
-
-                                    [id]="col.field"
-                                    [binary]="true"
-                                    [(ngModel)]="col.visible" />
-                            </div>
-                            <!-- } -->
-                        }
-                    </div>
-            </p-drawer>
             <p-button label="Export" icon="pi pi-upload" severity="secondary"/>
         </ng-template>
     </p-toolbar>
@@ -126,6 +109,11 @@ import { CheckboxModule } from 'primeng/checkbox';
                         @case ('precioVenta') {
                         <td>{{ product.precioVenta | currency: 'Bs' }}</td>
                         }
+                        @case ('imagen') {
+                            <td>
+                                <img [src]="product.imagen?? 'https://lh3.googleusercontent.com/d/1x4clt_-PRnx7QfU0fX7pitzgpy4lOMjZ'" [alt]="product.nombre" style="width: 64px" class="rounded" />
+                            </td>
+                        }
                         @case('') {
                         <td>
                             <p-button icon="pi pi-pencil"
@@ -154,6 +142,24 @@ import { CheckboxModule } from 'primeng/checkbox';
             </tr>
         </ng-template>
     </p-table>
+
+    <p-drawer [(visible)]="visibleRight" header="Columnas Visibles" position="right" (onHide)="saveConfigColumns()">
+        <!-- <div class="font-semibold text-xl">Columnas</div> -->
+        <div class="flex flex-col gap-4">
+                @for(col of viewConfig.columns; track col.field) {
+                    <!-- @if(col.field !== '') { -->
+                    <div class="flex items-center flex-jc-se">
+                        <label [for]="col.field" class="ml-2">{{col.header}}</label>
+                        <p-checkbox
+
+                            [id]="col.field"
+                            [binary]="true"
+                            [(ngModel)]="col.visible" />
+                    </div>
+                    <!-- } -->
+                }
+            </div>
+    </p-drawer>
     <p-toast />
     <p-confirmdialog [style]="{ width: '450px' }" />
     `,
@@ -197,7 +203,6 @@ export class PresentacionPage implements OnInit {
     constructor() { }
 
     ngOnInit() {
-
         this.loadDataTable();
     }
 
@@ -252,6 +257,7 @@ export class PresentacionPage implements OnInit {
             this.viewConfig = {
                 columns: [{ field: 'codigo', header: 'Código', width: 'min-width: 5rem', visible: true },
                     { field: 'marca', header: 'Macra', width: 'min-width: 10rem', visible: true },
+                    { field: 'imagen', header: 'Img', width: 'min-width: 8rem', visible: true },
                     { field: 'presentacion', header: 'Nombre', width: 'min-width:16rem', visible: true },
                     { field: 'unidadMedida', header: 'En', width: 'min-width: 4rem', visible: true },
                     { field: 'categoria', header: 'Categoria', width: 'min-width:8rem', visible: false },
