@@ -6,7 +6,7 @@ import { CommonModule } from '@angular/common';
 
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
-import { TableModule, TableRowCollapseEvent, TableRowExpandEvent } from 'primeng/table';
+import { TableModule } from 'primeng/table';
 import { RippleModule } from 'primeng/ripple';
 import { ButtonModule } from 'primeng/button';
 import { BreadcrumbModule } from 'primeng/breadcrumb';
@@ -32,6 +32,7 @@ import { ViewConfig } from '../../../../../core/interface/view-config';
 import { StorageService } from '../../../../../core/services/storage-service';
 import { DrawerModule } from 'primeng/drawer';
 import { CheckboxModule } from 'primeng/checkbox';
+import { VentaOutput } from '../../dto/venta.output';
 
 (pdfMake as any).vfs = pdfFonts.vfs;
 
@@ -142,6 +143,7 @@ export class AddVentaPage implements OnInit {
         const clienteSelected = this.ventaForm.get('clienteId')?.value;
         this.ventaForm.get('estado')?.setValue(estado);
         this.ventaForm.get('clienteId')?.setValue(clienteSelected.id);
+        this.ventaForm.get('cliente')?.setValue(clienteSelected.nombre);
     }
 
     private saveVentaForm(): void {
@@ -150,6 +152,8 @@ export class AddVentaPage implements OnInit {
                     next: (resp) => {
                         console.log(resp);
                         this.mostrarMsg('success', this.ventaForm.get('estado')?.value + ' registrado correctamente');
+                        this.ventaForm.get('id')?.setValue(resp.data.id);
+                        this.exportPdf(this.ventaForm.value as VentaOutput);
                         this.navigateToListVentas();
                     },
                     error: (err) => this.mostrarMsg('error', err),
@@ -275,6 +279,7 @@ export class AddVentaPage implements OnInit {
 
     private crearVentaForm(): FormGroup {
         return this.formBuilder.group({
+            id: [null],
             clienteId: [null, Validators.required],
             codigo: ['V-1', Validators.required],
             glosa: [''],
@@ -451,23 +456,103 @@ export class AddVentaPage implements OnInit {
         ;
     }
 
-    exportPdf() {
-        const docDefinition = {
+    exportPdf(venta: VentaOutput) {
+        const docDefinition: any = {
+            pageSize: { width: 226.77, height: 'auto' }, // 80mm -> 226.77 70mm -> 215.43
+            pageMargins: [10, 10, 10, 10],
             content: [
-                { text: 'Invoice', style: 'header' },
+                { text: 'NOTA DE VENTA', style: 'titulo', alignment: 'center' },
+                { text: 'PASTORAL SOCIAL CARITAS BENI', style: 'titulo', alignment: 'center' },
+                { text: 'FARMACIA CARITAS', style: 'titulo', alignment: 'center' },
+                { text: 'Av. Rogaguado Esq. Isiboro s/n', alignment: 'center', fontSize: 8 },
+                { text: 'Celular: 72810976', alignment: 'center', fontSize: 8 },
+                { text: 'Trinidad - Bolivia', alignment: 'center', fontSize: 8 },
+                { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 205, y2: 0, lineWidth: 0.8 }] },
+                { text: '\n' },
+                { text: `Fecha de compra: ${venta.fechaRegistro}`, fontSize: 8 },
+                { text: `Cliente: ${venta.cliente}`, fontSize: 8 },
+                { text: `Nro Venta: ${venta.id}`, fontSize: 8 },
+                { text: 'Detalle de venta', style: 'subtitulo' },
                 {
+                    layout: {
+                        hLineWidth: function (i: any, node: any) {
+                            // Línea superior del header (i === 1)
+                            if (i === 1) return 0.5;
+
+                            // No dibujar línea después de la última fila
+                            if (i === node.table.body.length) return 0;
+
+                            // Para las filas de detalle
+                            return 0.5;
+                        },
+                        vLineWidth: function () {
+                            return 0; // Sin líneas verticales
+                        },
+                        hLineColor: function () {
+                            return '#ccc'; // Color suave
+                        }
+                    },
                     table: {
-                        widths: ['*', 'auto', 'auto'],
+                        widths: ['50%', '10%', '20%', '20%'],
                         body: [
-                            ['Item', 'Quantity', 'Price'],
-                            ['Service A', '1', '$100'],
-                            ['Product B', '2', '$50']
+                            [
+                                { text: 'Producto', style: 'tableHeader', fontSize: 8 },
+                                { text: 'Cantidad', style: 'tableHeader', fontSize: 8 },
+                                { text: 'Precio', style: 'tableHeader', alignment: 'right', fontSize: 8 },
+                                { text: 'Total', style: 'tableHeader', alignment: 'right', fontSize: 8 }
+                            ],
+                            ...(venta.detalle || []).map(item => [
+                                { text: item.productoId, fontSize: 8 },
+                                { text: item.cantidad, fontSize: 8 },
+                                { text: item.precio.toFixed(2), alignment: 'right', fontSize: 8 },
+                                { text: item.subtotal.toFixed(2), alignment: 'right', fontSize: 8 }
+                            ])
                         ]
                     }
-                }
+                },
+                // Línea divisoria antes del total
+                { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 205, y2: 0, lineWidth: 0.5 }] },
+                // Fila total general
+                {
+                    layout: 'noBorders',
+                    table: {
+                        widths: ['*', 'auto'],
+                        body: [
+                            [
+                                { text: 'SUB TOTAL BS.', bold: true, fontSize: 9 },
+                                { text: venta.total.toFixed(2), bold: true, fontSize: 9, alignment: 'right' }
+                            ],
+                            [
+                                { text: 'DESCUENTO BS.', bold: true, fontSize: 9 },
+                                { text: (0).toFixed(2), bold: true, fontSize: 9, alignment: 'right' }
+                            ],
+                            [
+                                { text: 'TOTAL BS.', bold: true, fontSize: 9 },
+                                { text: venta.total.toFixed(2), bold: true, fontSize: 9, alignment: 'right' }
+                            ]
+                        ]
+                    }
+                },
+                { text: '\n' },
+                { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 205, y2: 0, lineWidth: 0.5 }] },
+                { text: 'NO VALIDO PARA CRÉDITO FISCAL', style: 'subtitulo', alignment: 'center' },
+                { text: '\nGracias por su preferencia!', alignment: 'center', fontSize: 8 },
             ],
             styles: {
-                header: { fontSize: 18, bold: true }
+                titulo: {
+                    fontSize: 12,
+                    bold: true
+                },
+                subtitulo: {
+                    fontSize: 9,
+                    bold: true,
+                    margin: [0, 5, 0, 2]
+                },
+                tableHeader: {
+                    bold: true,
+                    fontSize: 9,
+                    alignment: 'center'
+                }
             }
         };
         pdfMake.createPdf(docDefinition).download('invoice.pdf');

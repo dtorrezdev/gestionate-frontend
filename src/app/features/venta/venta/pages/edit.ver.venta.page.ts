@@ -718,7 +718,7 @@ export class EditVerVentaPage implements OnInit {
                 const prodPresentacion = resp.data.content;
                 this.productoPresentacionOptions.push(...prodPresentacion);
             });
-        setTimeout(() => { this.getVenta(ventaId) }, 0);
+        setTimeout(() => { this.getVenta(ventaId) }, 500);
     }
 
     removeDetalle(index: number) {

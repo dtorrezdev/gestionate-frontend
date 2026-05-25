@@ -24,6 +24,13 @@ import { FormsModule } from "@angular/forms";
 import { ViewConfig } from "../../../../core/interface/view-config";
 import { StorageService } from "../../../../core/services/storage-service";
 
+// @ts-ignore
+import pdfMake from 'pdfmake/build/pdfmake';
+// @ts-ignore
+import pdfFonts from 'pdfmake/build/vfs_fonts';
+import { CommonResponse } from "../../cliente/dto/interface";
+(pdfMake as any).vfs = pdfFonts.vfs;
+
 @Component({
     imports: [
         FormsModule,
@@ -143,9 +150,14 @@ import { StorageService } from "../../../../core/services/storage-service";
                                         routerLink="/venta/show/{{venta.id}}"
                                         [rounded]="true" [outlined]="true"/>
                                 @if(venta.estado === 'VENTA') {
-                                    <p-button icon="pi pi-trash" severity="danger"
+                                    <p-button icon="pi pi-trash" severity="danger" class="mr-2"
                                         pTooltip="Anular" tooltipPosition="top"
                                         (onClick)="deleteVenta(venta)"
+                                        [rounded]="true" [outlined]="true"/>
+
+                                    <p-button icon="pi pi-file" severity="info"
+                                        pTooltip="Nota Venta" tooltipPosition="top"
+                                        (onClick)="exportPdf(venta)"
                                         [rounded]="true" [outlined]="true"/>
                                 }
                                 @if(venta.estado === 'PREVENTA') {
@@ -163,7 +175,6 @@ import { StorageService } from "../../../../core/services/storage-service";
                         }
                     }
                 }
-
             }
         </tr>
     </ng-template>
@@ -258,7 +269,8 @@ export class ListVentaPage implements OnInit {
                 { field: 'cliente', header: 'Cliente', width: 'min-width: 6rem', visible: true },
                 { field: 'vendedor', header: 'Vendedor', width: 'min-width: 6rem', visible: true },
                 { field: 'total', header: 'Total', width: 'min-width:2rem', visible: false },
-                { field: 'estado', header: 'Estado', width: 'min-width: 4rem', visible: true }],
+                    { field: 'estado', header: 'Estado', width: 'min-width: 4rem', visible: true },
+                    { field: '', header: 'Acciones', width: 'min-width: 6rem', visible: true }],
             };
         }
     }
@@ -334,5 +346,123 @@ export class ListVentaPage implements OnInit {
             'view-venta-list',
             this.viewConfig
         );
+    }
+
+    exportPdf(venta: VentaOutput) {
+        this.ventaServive.get(venta.id).subscribe({
+            next: (resp: CommonResponse<VentaOutput>) => {
+                venta = resp.data;
+                const docDefinition: any = {
+                    pageSize: { width: 226.77, height: 'auto' }, // 80mm -> 226.77 70mm -> 215.43
+                    pageMargins: [10, 10, 10, 10],
+                    content: [
+                        { text: 'NOTA DE VENTA', style: 'titulo', alignment: 'center' },
+                        { text: 'PASTORAL SOCIAL CARITAS BENI', style: 'titulo', alignment: 'center' },
+                        { text: 'FARMACIA CARITAS', style: 'titulo', alignment: 'center' },
+                        { text: 'Av. Rogaguado Esq. Isiboro s/n', alignment: 'center', fontSize: 8 },
+                        { text: 'Celular: 72810976', alignment: 'center', fontSize: 8 },
+                        { text: 'Trinidad - Bolivia', alignment: 'center', fontSize: 8 },
+                        { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 205, y2: 0, lineWidth: 0.8 }] },
+                        { text: '\n' },
+                        { text: `Fecha de compra: ${venta.fechaRegistro}`, fontSize: 8 },
+                        { text: `Cliente: ${venta.cliente}`, fontSize: 8 },
+                        { text: `Nro Venta: ${venta.id}`, fontSize: 8 },
+                        { text: 'Detalle de venta', style: 'subtitulo' },
+                        {
+                            layout: {
+                                hLineWidth: function (i: any, node: any) {
+                                    // Línea superior del header (i === 1)
+                                    if (i === 1) return 0.5;
+
+                                    // No dibujar línea después de la última fila
+                                    if (i === node.table.body.length) return 0;
+
+                                    // Para las filas de detalle
+                                    return 0.5;
+                                },
+                                vLineWidth: function () {
+                                    return 0; // Sin líneas verticales
+                                },
+                                hLineColor: function () {
+                                    return '#ccc'; // Color suave
+                                }
+                            },
+                            table: {
+                                widths: ['49%', '20%', '17%', '14%'],
+                                body: [
+                                    [
+                                        { text: 'Producto', style: 'tableHeader', fontSize: 8 },
+                                        { text: 'Cantidad', style: 'tableHeader', fontSize: 8 },
+                                        { text: 'Precio', style: 'tableHeader', alignment: 'right', fontSize: 8 },
+                                        { text: 'Total', style: 'tableHeader', alignment: 'right', fontSize: 8 }
+                                    ],
+                                    ...(venta.detalle || []).map(item => [
+                                        { text: item.productoId, fontSize: 8 },
+                                        { text: item.cantidad, fontSize: 8 },
+                                        { text: item.precio.toFixed(2), alignment: 'right', fontSize: 8 },
+                                        { text: item.subtotal.toFixed(2), alignment: 'right', fontSize: 8 }
+                                    ])
+                                ]
+                            }
+                        },
+                        // Línea divisoria antes del total
+                        { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 205, y2: 0, lineWidth: 0.5 }] },
+                        // Fila total general
+                        {
+                            layout: 'noBorders',
+                            table: {
+                                widths: ['*', 'auto'],
+                                body: [
+                                    [
+                                        { text: 'SUB TOTAL BS.', bold: true, fontSize: 9 },
+                                        { text: venta.total.toFixed(2), bold: true, fontSize: 9, alignment: 'right' }
+                                    ],
+                                    [
+                                        { text: 'DESCUENTO BS.', bold: true, fontSize: 9 },
+                                        { text: (0).toFixed(2), bold: true, fontSize: 9, alignment: 'right' }
+                                    ],
+                                    [
+                                        { text: 'TOTAL BS.', bold: true, fontSize: 9 },
+                                        { text: venta.total.toFixed(2), bold: true, fontSize: 9, alignment: 'right' }
+                                    ]
+                                ]
+                            }
+                        },
+                        { text: '\n' },
+                        { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 205, y2: 0, lineWidth: 0.5 }] },
+                        { text: 'NO VALIDO PARA CRÉDITO FISCAL', style: 'subtitulo', alignment: 'center' },
+                        { text: '\nGracias por su preferencia!', alignment: 'center', fontSize: 8 },
+                    ],
+                    styles: {
+                        titulo: {
+                            fontSize: 12,
+                            bold: true
+                        },
+                        subtitulo: {
+                            fontSize: 9,
+                            bold: true,
+                            margin: [0, 5, 0, 2]
+                        },
+                        tableHeader: {
+                            bold: true,
+                            fontSize: 9,
+                            alignment: 'center'
+                        }
+                    }
+                };
+                // pdfMake.createPdf(docDefinition).download('invoice.pdf');
+                pdfMake.createPdf(docDefinition).open();
+            },
+            error: (err: any) => console.error(err)
+        });
+
+        /*
+        Revisar esta codigo
+        https://stackblitz.com/edit/ng-pdfmake-invoice-generator-dwsxa2?file=package.json
+        https://stackblitz.com/edit/export-pdf-angular?file=package.json
+        https://stackblitz.com/edit/angular-pdfmake-example-ntk7up?file=src%2Fapp%2Fapp.component.ts
+        https://dev.to/ankitprajapati/angular-export-to-pdf-using-pdfmake-client-side-pdf-generation-1jlk
+
+        */
     }
 }

@@ -9,8 +9,9 @@ export interface VentaInput {
 
 export interface DetalleVenta {
     presentacionId: number;
+    nombre?: string;
     productoId: number;
     cantidad: number;
     precio: number;
-    subtotal?: number;
+    subtotal: number;
 }

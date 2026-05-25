@@ -273,7 +273,7 @@
             <p-button label="Guardar" [disabled]="ventaForm.invalid" type="submit" />
             <p-button label="Preventa" [disabled]="isPreventaDisable()" severity="info" (onClick)="submitForm()" />
             <p-button label="Cancelar" severity="secondary" routerLink="/venta" />
-            <p-button label="Imprimir" severity="secondary" (onClick)="exportPdf()" />
+            <!-- <p-button label="Imprimir" severity="secondary" (onClick)="exportPdf(null)" /> -->
         </div>
     </div>
     <p-toast />
