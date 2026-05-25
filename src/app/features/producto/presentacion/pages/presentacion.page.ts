@@ -111,7 +111,7 @@ import { CheckboxModule } from 'primeng/checkbox';
                         }
                         @case ('imagen') {
                             <td>
-                                <img [src]="product.imagen?? 'https://lh3.googleusercontent.com/d/1x4clt_-PRnx7QfU0fX7pitzgpy4lOMjZ'" [alt]="product.nombre" style="width: 64px" class="rounded" />
+                                <img [src]="product.imagen?? './assets/img/default-box.png'" [alt]="product.nombre" style="width: 64px" class="rounded" />
                             </td>
                         }
                         @case('') {
@@ -151,7 +151,6 @@ import { CheckboxModule } from 'primeng/checkbox';
                     <div class="flex items-center flex-jc-se">
                         <label [for]="col.field" class="ml-2">{{col.header}}</label>
                         <p-checkbox
-
                             [id]="col.field"
                             [binary]="true"
                             [(ngModel)]="col.visible" />
@@ -256,8 +255,8 @@ export class PresentacionPage implements OnInit {
         } else {
             this.viewConfig = {
                 columns: [{ field: 'codigo', header: 'Código', width: 'min-width: 5rem', visible: true },
-                    { field: 'marca', header: 'Macra', width: 'min-width: 10rem', visible: true },
                     { field: 'imagen', header: 'Img', width: 'min-width: 8rem', visible: true },
+                    { field: 'marca', header: 'Marca', width: 'min-width: 10rem', visible: true },
                     { field: 'presentacion', header: 'Nombre', width: 'min-width:16rem', visible: true },
                     { field: 'unidadMedida', header: 'En', width: 'min-width: 4rem', visible: true },
                     { field: 'categoria', header: 'Categoria', width: 'min-width:8rem', visible: false },

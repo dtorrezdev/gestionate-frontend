@@ -112,6 +112,10 @@ import { ProductoBaseOutput } from "../../base/dto/producto.base.output";
                                         <small class="text-red">Presentacion no debe ser vacio.</small>
                                     }
                                 </div>
+                                <div class="flex flex-col grow basis-0 gap-2">
+                                    <label for="imagen" class="font-semibold">Imagen:</label>
+                                    <input pInputText id="imagen" formControlName="imagen" type="text" />
+                                </div>
                             </div>
                             <div class="flex flex-wrap gap-6">
                                 <div class="flex flex-col grow-m basis-0 gap-2">
@@ -546,6 +550,7 @@ export class AddPresentacionPage implements OnInit {
 
             productoId: [null, Validators.required],
             nombre: ['', [Validators.required, Validators.maxLength(60)]],
+            imagen: [null],
             concepto: [null, Validators.maxLength(255)],
             descripcion: [null, Validators.maxLength(255)],
             unidadMedidaId: [null, Validators.required],
