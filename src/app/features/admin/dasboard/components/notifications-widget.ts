@@ -4,11 +4,12 @@ import { MenuModule } from 'primeng/menu';
 import { EventoNotificacionService } from '../../../events/notificacion/service/evento-notificacion.service';
 import { EventoNotificacion } from '../../../events/notificacion/dtos/evento-notificacion.output';
 import { CommonModule } from '@angular/common';
+import { ToastModule } from 'primeng/toast';
 
 @Component({
     standalone: true,
     selector: 'app-notifications-widget',
-    imports: [ButtonModule, MenuModule, CommonModule],
+    imports: [ButtonModule, MenuModule, ToastModule, CommonModule],
     template: `<div class="card">
         <div class="flex items-center justify-between mb-6">
             <div class="font-semibold text-xl">Notifications</div>
@@ -84,7 +85,8 @@ import { CommonModule } from '@angular/common';
                 <span class="text-surface-900 dark:text-surface-0 leading-normal"><span class="text-primary font-bold">12</span> users have added your products to their wishlist.</span>
             </li>
         </ul> -->
-    </div>`,
+    </div>
+    `,
     providers: [EventoNotificacionService]
 })
 export class NotificationsWidget implements OnInit {
@@ -108,9 +110,6 @@ export class NotificationsWidget implements OnInit {
                 //this.notificaciones.push(...resp.data.content);
                 this.notificaciones.set(resp.data.content);
                 console.log('init ', this.notificaciones);
-            },
-            error: (err) => {
-                console.error(err);
             }
         })
 

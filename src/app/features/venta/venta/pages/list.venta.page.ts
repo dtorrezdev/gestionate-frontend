@@ -5,7 +5,6 @@ import { Table, TableModule } from "primeng/table";
 import { ToolbarModule } from "primeng/toolbar";
 import { ButtonModule } from "primeng/button";
 import { CommonModule } from "@angular/common";
-import { ToastModule } from "primeng/toast";
 import { InputTextModule } from "primeng/inputtext";
 import { TooltipModule } from 'primeng/tooltip';
 import { InputNumberModule } from "primeng/inputnumber";
@@ -15,7 +14,7 @@ import { IconFieldModule } from "primeng/iconfield";
 import { ConfirmDialogModule } from "primeng/confirmdialog";
 import { RouterModule } from "@angular/router";
 import { VentaOutput } from "../dto/venta.output";
-import { ConfirmationService, MessageService } from "primeng/api";
+import { ConfirmationService } from "primeng/api";
 import { VentaDelete } from "../dto/venta.delete";
 import { DatePipe } from "@angular/common";
 import { DrawerModule } from "primeng/drawer";
@@ -29,6 +28,7 @@ import pdfMake from 'pdfmake/build/pdfmake';
 // @ts-ignore
 import pdfFonts from 'pdfmake/build/vfs_fonts';
 import { CommonResponse } from "../../cliente/dto/interface";
+import { ToastService } from "../../../../core/services/toast.service";
 (pdfMake as any).vfs = pdfFonts.vfs;
 
 @Component({
@@ -46,7 +46,6 @@ import { CommonResponse } from "../../cliente/dto/interface";
         IconFieldModule,
         RouterModule,
         TooltipModule,
-        ToastModule,
         ConfirmDialogModule,
         DatePipe,
         DrawerModule,
@@ -198,7 +197,6 @@ import { CommonResponse } from "../../cliente/dto/interface";
             </div>
     </p-drawer>
 
-    <p-toast />
     <p-confirmdialog [style]="{ width: '450px' }" />
     `,
     styles: `
@@ -215,7 +213,7 @@ import { CommonResponse } from "../../cliente/dto/interface";
             border-radius: 0;
         }
     `,
-    providers: [VentaService, StorageService, ConfirmationService, MessageService]
+    providers: [VentaService, StorageService, ConfirmationService]
 
 })
 export class ListVentaPage implements OnInit {
@@ -223,7 +221,7 @@ export class ListVentaPage implements OnInit {
     private ventaServive = inject(VentaService);
     private storageService = inject(StorageService);
     private confirmationService = inject(ConfirmationService);
-    private messageService = inject(MessageService);
+    private toastService = inject(ToastService);
 
     ventas = signal<VentaOutput[]>([]);
     venta!: VentaOutput;
@@ -303,22 +301,12 @@ export class ListVentaPage implements OnInit {
                     .subscribe({
                         next: (resp) => {
                             console.log('Venta anulada: ', resp);
-                            this.messageService.add({
-                                severity: 'success',
-                                summary: 'Successful',
-                                detail: 'Venta Anulada correctamente!',
-                                life: 3000
-                            });
+                            this.toastService.success('Venta anulada correctamente!');
                             this.loadData();
                         },
                         error: (e) => {
                             console.log('Error al anular venta: ', e);
-                            this.messageService.add({
-                                severity: 'error',
-                                summary: 'Error',
-                                detail: 'Error al anulada venta: \n' + e.error?.message,
-                                life: 3000
-                            });
+                            this.toastService.error('Error al anulada venta: \n' + e.error?.message);
                         }
                     })
             },

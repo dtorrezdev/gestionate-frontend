@@ -15,9 +15,7 @@ import { StockByProductoOutput } from "../dtos/stock-by-producto.output";
 import { CommonResponse, ListResponse } from "../../../venta/cliente/dto/interface";
 import { InputTextModule } from "primeng/inputtext";
 import { BadgeModule } from "primeng/badge";
-import { MessageService } from "primeng/api";
 import { RippleModule } from "primeng/ripple";
-import { ToastModule } from "primeng/toast";
 import { StatusStock } from "../../../../shared/enums/status-stock.enum";
 import { TooltipModule } from "primeng/tooltip";
 import { StorageService } from "../../../../core/services/storage-service";
@@ -42,7 +40,6 @@ import { FormsModule } from "@angular/forms";
         InputIconModule,
         BadgeModule,
         RippleModule,
-        ToastModule,
         TooltipModule,
         BreadcrumbModule,
         ToolbarModule,
@@ -222,7 +219,7 @@ export class ListStockPage implements OnInit {
     private productService = inject(ProductService);
     private stockService = inject(StockService);
     private storageService = inject(StorageService);
-    // private messageService = inject(MessageService);
+
     products = signal<ProductoStockOutput[]>([]);
 
     viewConfig!: ViewConfig;

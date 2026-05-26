@@ -4,7 +4,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule, DatePipe } from '@angular/common';
 
-import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { TableModule } from 'primeng/table';
 import { RippleModule } from 'primeng/ripple';
@@ -35,6 +34,7 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { UbicacionStockService } from '../../../inventario/ubicacion-stock/service/ubicacion-stock.service';
 import { UbicacionStockOption } from '../../../inventario/ubicacion-stock/dtos/ubicacion-stock.option';
 import { UbicacionStockOutput } from '../../../inventario/ubicacion-stock/dtos/ubicacion-stock.outpu';
+import { ToastService } from '../../../../core/services/toast.service';
 
 
 @Component({
@@ -332,7 +332,7 @@ import { UbicacionStockOutput } from '../../../inventario/ubicacion-stock/dtos/u
             <p-button label="Cancelar" severity="secondary" routerLink="/compra" />
         </div>
     </div>
-     <p-toast />
+
 </form>
     `,
     styles: `
@@ -367,8 +367,7 @@ import { UbicacionStockOutput } from '../../../inventario/ubicacion-stock/dtos/u
         CompraService,
         ProductService,
         ProveedorService,
-        UbicacionStockService,
-        MessageService
+        UbicacionStockService
     ]
 })
 export class AddRecepcionPage {
@@ -378,7 +377,7 @@ export class AddRecepcionPage {
     private proveedorService = inject(ProveedorService);
     private ubicacionStockService = inject(UbicacionStockService);
     private formBuilder = inject(FormBuilder);
-    private messageService = inject(MessageService);
+    private toastService = inject(ToastService);
     private readonly cdr = inject(ChangeDetectorRef);
     private router = inject(Router);
 
@@ -414,9 +413,9 @@ export class AddRecepcionPage {
             this.cargarDatosToCompraForm();
             console.log(JSON.stringify(this.compraForm.value));
             this.saveCompraForm();
-            this.mostrarMsg('success', 'Recepcion Compra Formulario exito');
+            this.toastService.mostrarMsg('success', 'Recepcion Compra Formulario exito');
         } else {
-            this.mostrarMsg('warn', 'Compra Formulario es invalido');
+            this.toastService.mostrarMsg('warn', 'Compra Formulario es invalido');
         }
     }
 
@@ -446,10 +445,10 @@ export class AddRecepcionPage {
             .subscribe({
                 next: (resp) => {
                     console.log(resp);
-                    this.mostrarMsg('success', this.compraForm.get('estado')?.value + ' registrado correctamente');
+                    this.toastService.mostrarMsg('success', this.compraForm.get('estado')?.value + ' registrado correctamente');
                     this.navigateToListVentas();
                 },
-                error: (e) => this.mostrarMsg(
+                error: (e) => this.toastService.mostrarMsg(
                     'error', 'Error al guardar venta ' + e.error?.message),
             });
     }
@@ -524,7 +523,7 @@ export class AddRecepcionPage {
         if (productoPre.id == 0) return false;
         const findIndexInDetalle = this.findIndexDelProductoEnDetalle(productoPre);
         if (findIndexInDetalle > -1) {
-            this.mostrarMsg('info', 'El producto ' + productoPre.presentacion
+            this.toastService.mostrarMsg('info', 'El producto ' + productoPre.presentacion
                 + ' esta en la fila nro ' + (findIndexInDetalle + 1));
             return false;
         }
@@ -648,15 +647,6 @@ export class AddRecepcionPage {
             .reduce((acc, d) => acc + d.value.subtotal, 0);
         this.compraForm.patchValue({ total });
         return total;
-    }
-
-    private mostrarMsg(tipo: string, detail: string) {
-        this.messageService.add({
-            severity: tipo,
-            summary: 'Mensaje',
-            detail: detail,
-            life: 3000
-        });
     }
 
     getStockStatusClass(estadoStock: StatusStock) {

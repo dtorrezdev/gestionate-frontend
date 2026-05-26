@@ -1,18 +1,18 @@
 import { Component, inject, signal } from "@angular/core";
 import { form, FormField, maxLength, minLength, required } from '@angular/forms/signals';
-import { ConfirmationService, MessageService } from "primeng/api";
+import { ConfirmationService } from "primeng/api";
 import { ConfirmDialogModule } from "primeng/confirmdialog";
 import { BreadcrumbModule } from "primeng/breadcrumb";
 import { InputTextModule } from 'primeng/inputtext';
 import { ToolbarModule } from "primeng/toolbar";
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from "primeng/dialog";
-import { ToastModule } from "primeng/toast";
 import { TableModule } from "primeng/table";
 
 import { ClienteService } from "../../services/cliente.service";
 import { ClienteOutput } from "../dto/cliente.output";
 import { ClienteInput } from "../dto/cliente.input";
+import { ToastService } from "../../../../core/services/toast.service";
 
 @Component({
     imports: [
@@ -20,7 +20,6 @@ import { ClienteInput } from "../dto/cliente.input";
         InputTextModule,
         ButtonModule,
         TableModule,
-        ToastModule,
         ToolbarModule,
         DialogModule,
         ConfirmDialogModule,
@@ -54,11 +53,11 @@ import { ClienteInput } from "../dto/cliente.input";
 
 
     `,
-    providers: [ClienteService, MessageService, ConfirmationService]
+    providers: [ClienteService, ConfirmationService]
 })
 export class ClientePage {
     private service = inject(ClienteService);
-    private messageService = inject(MessageService);
+    private toastService = inject(ToastService);
     private confirmationService = inject(ConfirmationService);
 
     clientes = signal<ClienteOutput[]>([]);
@@ -120,7 +119,7 @@ export class ClientePage {
                 next: (resp) => {
                     const newMarca = resp.data;
                     this.clientes.set([newMarca, ...this.clientes()]);
-                    this.mostrarMsg('success', 'Cliente ' + resp.message);
+                    this.toastService.mostrarMsg('success', 'Cliente ' + resp.message);
                     this.clienteForm().reset({
                         ci: '',
                         nombre: '',
@@ -128,7 +127,7 @@ export class ClientePage {
                     });
                 },
                 error: (err) => {
-                    this.mostrarMsg('error',
+                    this.toastService.mostrarMsg('error',
                         `Cliente  + ${err.error ? JSON.stringify(err.error.message) : 'error al crear.'}`);
                 }
             });
@@ -139,7 +138,7 @@ export class ClientePage {
         this.service.update(data, id)
             .subscribe({
                 next: (resp) => {
-                    this.mostrarMsg('success', 'Cliente ' + resp.message);
+                    this.toastService.mostrarMsg('success', 'Cliente ' + resp.message);
                     this.clienteForm().reset({
                         ci: '',
                         nombre: '',
@@ -147,7 +146,7 @@ export class ClientePage {
                     });
                 },
                 error: (err: any) => {
-                    this.mostrarMsg('error', err);
+                    this.toastService.mostrarMsg('error', err);
                     this.loadData();
                 }
             });
@@ -158,9 +157,9 @@ export class ClientePage {
         this.service.deleteCliente(cliente)
             .subscribe({
                 next: () =>
-                    this.mostrarMsg('success', 'Cliente eliminada correctamente.'),
+                    this.toastService.mostrarMsg('success', 'Cliente eliminada correctamente.'),
                 error: (e) => {
-                    this.mostrarMsg('error', 'Error al eliminar Cliente: \n' + e.error?.message);
+                    this.toastService.mostrarMsg('error', 'Error al eliminar Cliente: \n' + e.error?.message);
                 }
             });
     }
@@ -181,15 +180,6 @@ export class ClientePage {
     private loadData() {
         this.service.list()
             .subscribe(items => this.clientes.set(items.data.content));
-    }
-
-    private mostrarMsg(tipo: string, detalle: string): void {
-        this.messageService.add({
-            severity: tipo,
-            summary: 'Mensaje',
-            detail: detalle,
-            life: 5000
-        });
     }
 
     constructor() { }

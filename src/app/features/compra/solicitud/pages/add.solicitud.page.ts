@@ -4,7 +4,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
-import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { TableModule } from 'primeng/table';
 import { RippleModule } from 'primeng/ripple';
@@ -16,12 +15,12 @@ import { TagModule } from 'primeng/tag';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 
 import { ProductService } from '../../../producto/presentacion/services/producto.service';
-import { VentaService } from '../../../venta/services/venta.service';
 import { PresentacionOuput } from '../../../producto/presentacion/dto/presentacion.output';
 import { StatusStock } from '../../../../shared/enums/status-stock.enum';
 import { ProveedorService } from '../../proveedor';
 import { ProveedorOutput } from '../../proveedor/dto/proveedor.output';
 import { CompraService } from '../../compra/service/compra.service';
+import { ToastService } from '../../../../core/services/toast.service';
 
 @Component({
     imports: [
@@ -206,7 +205,7 @@ import { CompraService } from '../../compra/service/compra.service';
             <p-button label="Cancelar" severity="secondary" routerLink="/compra" />
         </div>
     </div>
-     <p-toast />
+
 </form>
     `,
     styles: `
@@ -236,14 +235,14 @@ import { CompraService } from '../../compra/service/compra.service';
             display: none;
         }
     `,
-    providers: [CompraService, ProductService, ProveedorService, MessageService]
+    providers: [CompraService, ProductService, ProveedorService]
 })
 export class AddSolicitudPage {
     private service = inject(CompraService);
     private productService = inject(ProductService);
     private proveedorService = inject(ProveedorService);
     private formBuilder = inject(FormBuilder);
-    private messageService = inject(MessageService);
+    private toastService = inject(ToastService);
     private readonly cdr = inject(ChangeDetectorRef);
     private router = inject(Router);
 
@@ -270,9 +269,9 @@ export class AddSolicitudPage {
             console.log(JSON.stringify(this.compraForm.value));
             this.saveCompraForm();
             //this.navigateToListVentas();
-            this.mostrarMsg('success', 'Solicitud Compra Formulario exito');
+            this.toastService.mostrarMsg('success', 'Solicitud Compra Formulario exito');
         } else {
-            this.mostrarMsg('warn', 'Compra Formulario es invalido');
+            this.toastService.mostrarMsg('warn', 'Compra Formulario es invalido');
         }
     }
 
@@ -288,10 +287,10 @@ export class AddSolicitudPage {
             .subscribe({
                 next: (resp) => {
                     console.log(resp);
-                    this.mostrarMsg('success', this.compraForm.get('estado')?.value + ' registrado correctamente');
+                    this.toastService.mostrarMsg('success', this.compraForm.get('estado')?.value + ' registrado correctamente');
                     this.navigateToListVentas();
                 },
-                error: (e) => this.mostrarMsg(
+                error: (e) => this.toastService.mostrarMsg(
                     'error', 'Error al guardar venta ' + e.error?.message),
             });
     }
@@ -317,7 +316,7 @@ export class AddSolicitudPage {
         if (productoPre.id == 0) return false;
         const findIndexInDetalle = this.findIndexDelProductoEnDetalle(productoPre);
         if (findIndexInDetalle > -1) {
-            this.mostrarMsg('info', 'El producto ' + productoPre.presentacion
+            this.toastService.mostrarMsg('info', 'El producto ' + productoPre.presentacion
                 + ' esta en la fila nro ' + (findIndexInDetalle + 1));
             return false;
         }
@@ -418,15 +417,6 @@ export class AddSolicitudPage {
             .reduce((acc, d) => acc + d.value.subtotal, 0);
         this.compraForm.patchValue({ total });
         return total;
-    }
-
-    private mostrarMsg(tipo: string, detail: string) {
-        this.messageService.add({
-            severity: tipo,
-            summary: 'Mensaje',
-            detail: detail,
-            life: 3000
-        });
     }
 
     getStockStatusClass(estadoStock: StatusStock) {

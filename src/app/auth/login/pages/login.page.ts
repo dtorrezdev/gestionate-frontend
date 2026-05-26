@@ -10,7 +10,7 @@ import { AppFloatingConfigurator } from '../../../layout/components/app.floating
 import { AuthService } from '../services/auth-service';
 import { LoginInput } from '../interface/login.input';
 import { ToastModule } from 'primeng/toast';
-import { MessageService } from 'primeng/api';
+import { ToastService } from '../../../core/services/toast.service';
 
 
 @Component({
@@ -76,15 +76,14 @@ import { MessageService } from 'primeng/api';
                 </div>
             </form>
         </div>
-        <p-toast />
+
     `,
-    providers: [MessageService]
 })
 export class LoginPage {
 
     private auth = inject(AuthService);
     private router = inject(Router);
-    private messageService = inject(MessageService);
+    private toastService = inject(ToastService);
 
     loginForm = new FormGroup({
         nombreUsuario: new FormControl(''),
@@ -103,18 +102,9 @@ export class LoginPage {
                 }
             },
             error: (error) => {
-                this.mostrarMsg('error', `${JSON.stringify(error)} Error al iniciar sesión. Por favor, verifica tus credenciales.`);
+                this.toastService.mostrarMsg('error', `${JSON.stringify(error)} Error al iniciar sesión. Por favor, verifica tus credenciales.`);
                 console.error('Error during authentication:', error);
             }
-        });
-    }
-
-    private mostrarMsg(tipo: string, detalle: string): void {
-        this.messageService.add({
-            severity: tipo,
-            summary: 'Mensaje',
-            detail: detalle,
-            life: 5000
         });
     }
 }

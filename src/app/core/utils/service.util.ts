@@ -1,13 +1,11 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { HttpResponseUtil } from './http.response.util';
 import { Paginacion } from '../interface/paginacion';
-import { catchError, Observable, } from 'rxjs';
+import { Observable, } from 'rxjs';
 
 export class ServiceUtil {
 
     public static get<T>(http: HttpClient, url: string): Observable<T> {
-        return http.get<T>(url)
-            .pipe(catchError(HttpResponseUtil.handleErrorGeneric));
+        return http.get<T>(url);
     }
 
     public static list<T>(http: HttpClient, url: string,
@@ -20,22 +18,18 @@ export class ServiceUtil {
                 .set('sort', input.sort.col + ',' + input.sort.type);
         }
 
-        return http.get<T>(url, { params: hp })
-            .pipe(catchError(HttpResponseUtil.handleErrorGeneric));
+        return http.get<T>(url, { params: hp });
     }
 
     public static create<I, T>(http: HttpClient, url: string, input: I): Observable<T> {
-        return http.post<T>(url, input)
-            .pipe(catchError(HttpResponseUtil.handleErrorGeneric));
+        return http.post<T>(url, input);
     }
 
     public static update<I, T>(http: HttpClient, url: string, input: I): Observable<T> {
-        return http.put<T>(url, input)
-            .pipe(catchError(HttpResponseUtil.handleErrorGeneric));
+        return http.put<T>(url, input);
     }
 
     public static delete(http: HttpClient, url: string): Observable<any> {
-        return http.delete(url)
-            .pipe(catchError(HttpResponseUtil.handleErrorGeneric));
+        return http.delete(url);
     }
 }

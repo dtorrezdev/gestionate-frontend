@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, signal } from "@angular/core";
 import { form, required, FormField } from "@angular/forms/signals";
-import { ConfirmationService, MessageService } from "primeng/api";
+import { ConfirmationService } from "primeng/api";
 import { ConfirmDialogModule } from "primeng/confirmdialog";
 import { BreadcrumbModule } from "primeng/breadcrumb";
 import { ButtonModule } from "primeng/button";
@@ -13,6 +13,7 @@ import { DialogModule } from "primeng/dialog";
 import { MarcaService } from "../service/marca.service";
 import { MarcaOutput } from "../dto/marca.output";
 import { MarcaInput } from "../dto/marca.input";
+import { ToastService } from "../../../../core/services/toast.service";
 
 
 @Component({
@@ -120,7 +121,7 @@ import { MarcaInput } from "../dto/marca.input";
     </p-dialog>
 
     <p-confirmdialog [style]="{ width: '450px' }" />
-    <p-toast />
+
     `,
     styles: `
         .mb-0 {
@@ -146,12 +147,12 @@ import { MarcaInput } from "../dto/marca.input";
             margin-top: 1.5rem;
         }
     `,
-    providers: [MarcaService, MessageService, ConfirmationService]
+    providers: [MarcaService, ConfirmationService]
 })
 export class Marca implements OnInit {
     private service = inject(MarcaService);
     private confirmationService = inject(ConfirmationService);
-    private messageService = inject(MessageService);
+    private toastService = inject(ToastService);
 
     marcas = signal<MarcaOutput[]>([]);
     marca = signal<MarcaInput>({
@@ -208,7 +209,7 @@ export class Marca implements OnInit {
                 next: (resp) => {
                     const newMarca = resp.data as MarcaOutput;
                     this.marcas.set([newMarca, ...this.marcas()]);
-                    this.mostrarMsg('success', 'Marca ' + resp.message);
+                    this.toastService.mostrarMsg('success', 'Marca ' + resp.message);
                     this.marcaForm().reset({
                         nombre: '',
                         descripcion: ''
@@ -216,7 +217,7 @@ export class Marca implements OnInit {
                 },
                 error: (err) => {
                     console.log('Error: ', err);
-                    this.mostrarMsg('error',
+                    this.toastService.mostrarMsg('error',
                         `Marca ${err ? err : 'error al crear.'}`);
                 }
             });
@@ -226,14 +227,14 @@ export class Marca implements OnInit {
         this.service.update(marca, id)
             .subscribe({
                 next: (resp) => {
-                    this.mostrarMsg('success', resp.message);
+                    this.toastService.mostrarMsg('success', resp.message);
                     this.marcaForm().reset({
                         nombre: '',
                         descripcion: ''
                     });
                 },
                 error: (err) => {
-                    this.mostrarMsg('error', err);
+                    this.toastService.mostrarMsg('error', err);
                     this.loadData();
                 }
             });
@@ -254,9 +255,9 @@ export class Marca implements OnInit {
         this.service.delete(marca.id)
             .subscribe({
                 next: () =>
-                    this.mostrarMsg('success', 'Marca eliminada correctamente!'),
+                    this.toastService.mostrarMsg('success', 'Marca eliminada correctamente!'),
                 error: (err) => {
-                    this.mostrarMsg('error', err);
+                    this.toastService.mostrarMsg('error', err);
                 }
             });
     }
@@ -273,17 +274,8 @@ export class Marca implements OnInit {
                     console.log('Load Data ', resp);
                     this.marcas.set(resp.data.content);
                 },
-                error: (err) => this.mostrarMsg('error', err)
+                error: (err) => this.toastService.mostrarMsg('error', err)
             });
-    }
-
-    private mostrarMsg(tipo: string, detalle: string): void {
-        this.messageService.add({
-            severity: tipo,
-            summary: 'Mensaje',
-            detail: detalle,
-            life: 5000
-        });
     }
 
     constructor() { }

@@ -18,8 +18,6 @@ import { TextareaModule } from 'primeng/textarea';
 import { UnidadMedidaService } from "../../unidad-medida/service/unidad-medida.service";
 import { UnidadMedidaOption } from "../../unidad-medida/dto/unidad-medida.option";
 import { ProductService } from "../services/producto.service";
-import { MessageService } from "primeng/api";
-import { ToastModule } from "primeng/toast";
 import { InputNumberModule } from "primeng/inputnumber";
 import { TableModule } from "primeng/table";
 import { UbicacionStockService } from "../../../inventario/ubicacion-stock/service/ubicacion-stock.service";
@@ -32,6 +30,7 @@ import { MarcaOutput } from "../../marca/dto/marca.output";
 import { UnidadMedidaOuput } from "../../unidad-medida/dto/unidad-medida.output";
 import { UbicacionStockOutput } from "../../../inventario/ubicacion-stock/dtos/ubicacion-stock.outpu";
 import { ProductoBaseOutput } from "../../base/dto/producto.base.output";
+import { ToastService } from "../../../../core/services/toast.service";
 
 @Component({
     imports: [
@@ -45,7 +44,6 @@ import { ProductoBaseOutput } from "../../base/dto/producto.base.output";
         SelectModule,
         ToggleSwitchModule,
         TextareaModule,
-        ToastModule,
         DatePickerModule,
         TableModule,
         DatePipe
@@ -280,7 +278,7 @@ import { ProductoBaseOutput } from "../../base/dto/producto.base.output";
                 <p-button label="Cancelar" severity="secondary" [routerLink]="'/producto/presentacion'" />
             </div>
         </div>
-        <p-toast />
+
     </form>`,
     styles: `
         .mt-1 {
@@ -358,7 +356,6 @@ import { ProductoBaseOutput } from "../../base/dto/producto.base.output";
         ProductService,
         UnidadMedidaService,
         MovimientoService,
-        MessageService,
         UbicacionStockService
     ]
 })
@@ -372,7 +369,7 @@ export class AddPresentacionPage implements OnInit {
     private ubicacionStockService = inject(UbicacionStockService);
     private formBuilder = inject(FormBuilder);
     private readonly cdr = inject(ChangeDetectorRef);
-    private messageService = inject(MessageService);
+    private toastService = inject(ToastService);
     private router = inject(Router);
 
     productoPresentacionForm!: FormGroup;
@@ -418,7 +415,7 @@ export class AddPresentacionPage implements OnInit {
             }
         } else {
             console.log('Formulario inValido');
-            this.mostrarMsg('warn', 'Producto Formulario es invalido');
+            this.toastService.mostrarMsg('warn', 'Producto Formulario es invalido');
         }
     }
 
@@ -432,13 +429,13 @@ export class AddPresentacionPage implements OnInit {
         let esValido = true;
 
         if (!this.esValidoCantidadDisponibleStock()) {
-            this.mostrarMsg('warn', 'En Inv. Existencia \n Debe ingresar Existencia Disponible.');
+            this.toastService.mostrarMsg('warn', 'En Inv. Existencia \n Debe ingresar Existencia Disponible.');
             return false;
         }
         if (!this.esVacioDetalleMovimiento()) {
             esValido = this.totalCantidadDetalle == this.cantidadDisponibleStock.value;
             if (!esValido) {
-                this.mostrarMsg('warn', 'En Inv. Existencia \n Debe ser iguales Existencia Disponible \n y total Cantidad del Detalle.');
+                this.toastService.mostrarMsg('warn', 'En Inv. Existencia \n Debe ser iguales Existencia Disponible \n y total Cantidad del Detalle.');
             }
         }
 
@@ -450,10 +447,10 @@ export class AddPresentacionPage implements OnInit {
             .save(this.productoPresentacionForm.value)
             .pipe(
                 tap(resp => {
-                    this.mostrarMsg('success', `${resp.message} la Presentacion PR-${resp.data.id}`);
+                    this.toastService.mostrarMsg('success', `${resp.message} la Presentacion PR-${resp.data.id}`);
                 }),
                 catchError(err => {
-                    this.mostrarMsg('error', err.error?.message || 'Error al crear producto');
+                    this.toastService.mostrarMsg('error', err.error?.message || 'Error al crear producto');
                     return of(null);
                 }),
                 switchMap(resp => {
@@ -467,13 +464,13 @@ export class AddPresentacionPage implements OnInit {
                 }),
                 catchError(err => {
                     console.error('Error en flujo:', err);
-                    this.mostrarMsg('error', err.error?.message || 'Error en movimiento');
+                    this.toastService.mostrarMsg('error', err.error?.message || 'Error en movimiento');
                     return of(null);
                 })
             ).subscribe(resp => {
                 if (resp) {
                     console.log('Finalizo todo bien ', resp);
-                    this.mostrarMsg('success', 'Se creo correctamente Producto con inventario.')
+                    this.toastService.mostrarMsg('success', 'Se creo correctamente Producto con inventario.')
                     this.navigateToListPresentacion();
                 }
             });
@@ -484,11 +481,11 @@ export class AddPresentacionPage implements OnInit {
             .subscribe({
                 next: (value) => {
                     console.log(value);
-                    this.mostrarMsg('success', `${value.message} la Presentacion PR-${value.data.id}`)
+                    this.toastService.mostrarMsg('success', `${value.message} la Presentacion PR-${value.data.id}`)
                     this.navigateToListPresentacion();
                 },
                 error: (err: string) => {
-                    this.mostrarMsg('error', err)
+                    this.toastService.mostrarMsg('error', err)
                     console.log(err);
                 },
             });
@@ -608,18 +605,18 @@ export class AddPresentacionPage implements OnInit {
     private validarDetalleMovimiento(lote: string, fechaExpiracion: Date, cantidad: number): boolean {
 
         if (!lote || !fechaExpiracion || (!cantidad || cantidad == 0)) { // si es vacio | null | undifiend
-            this.mostrarMsg('warn', 'Detalle Stock invalido.');
+            this.toastService.mostrarMsg('warn', 'Detalle Stock invalido.');
             return false;
         }
 
         const findIndexLote = this.detalleMovimiento.controls
             .findIndex(det => det.value.lote === lote);
         if (findIndexLote > 0) {
-            this.mostrarMsg('warn', 'Nro Lote ya se encuentra registrado.')
+            this.toastService.mostrarMsg('warn', 'Nro Lote ya se encuentra registrado.')
             return false;
         }
         if ((this.totalCantidadDetalle + cantidad) > this.cantidadDisponibleStock.value) {
-            this.mostrarMsg('warn', 'La Cantidad Total Detalle debe ser \n igual a Existencia Disponible.')
+            this.toastService.mostrarMsg('warn', 'La Cantidad Total Detalle debe ser \n igual a Existencia Disponible.')
             return false;
         }
         return true;
@@ -717,15 +714,6 @@ export class AddPresentacionPage implements OnInit {
 
     esVacioDetalleMovimiento(): boolean {
         return this.detalleMovimiento.length === 0;
-    }
-
-    private mostrarMsg(tipo: string, detalle: string): void {
-        this.messageService.add({
-            severity: tipo,
-            summary: 'Mensaje',
-            detail: detalle,
-            life: 5000
-        });
     }
 
     private esValidoFormulario(): boolean {

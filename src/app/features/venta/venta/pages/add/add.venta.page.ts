@@ -4,7 +4,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
-import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { TableModule } from 'primeng/table';
 import { RippleModule } from 'primeng/ripple';
@@ -33,6 +32,7 @@ import { StorageService } from '../../../../../core/services/storage-service';
 import { DrawerModule } from 'primeng/drawer';
 import { CheckboxModule } from 'primeng/checkbox';
 import { VentaOutput } from '../../dto/venta.output';
+import { ToastService } from '../../../../../core/services/toast.service';
 
 (pdfMake as any).vfs = pdfFonts.vfs;
 
@@ -83,7 +83,7 @@ import { VentaOutput } from '../../dto/venta.output';
             display: none;
         }
     `,
-    providers: [ProductService, ClienteService, VentaService, StockService, StorageService, MessageService]
+    providers: [ProductService, ClienteService, VentaService, StockService, StorageService]
 })
 export class AddVentaPage implements OnInit {
     private productService = inject(ProductService);
@@ -92,7 +92,7 @@ export class AddVentaPage implements OnInit {
     private stockService = inject(StockService);
     private storageService = inject(StorageService);
     private formBuilder = inject(FormBuilder);
-    private messageService = inject(MessageService);
+    private toastService = inject(ToastService);
     private readonly cdr = inject(ChangeDetectorRef);
 
     private router = inject(Router);
@@ -134,7 +134,7 @@ export class AddVentaPage implements OnInit {
             console.log(JSON.stringify(this.ventaForm.value));
             this.saveVentaForm();
         } else {
-            this.mostrarMsg('warn','Venta Formulario es invalido');
+            this.toastService.mostrarMsg('warn', 'Venta Formulario es invalido');
         }
     }
 
@@ -151,12 +151,12 @@ export class AddVentaPage implements OnInit {
                 .subscribe({
                     next: (resp) => {
                         console.log(resp);
-                        this.mostrarMsg('success', this.ventaForm.get('estado')?.value + ' registrado correctamente');
+                        this.toastService.mostrarMsg('success', this.ventaForm.get('estado')?.value + ' registrado correctamente');
                         this.ventaForm.get('id')?.setValue(resp.data.id);
                         this.exportPdf(this.ventaForm.value as VentaOutput);
                         this.navigateToListVentas();
                     },
-                    error: (err) => this.mostrarMsg('error', err),
+                    error: (err) => this.toastService.mostrarMsg('error', err),
                 });
     }
 
@@ -189,12 +189,12 @@ export class AddVentaPage implements OnInit {
         if (productoPre.id == 0) return false;
         const findIndexInDetalle = this.findIndexDelProductoEnDetalle(productoPre);
         if(findIndexInDetalle > -1) {
-            this.mostrarMsg('info', 'El producto ' + productoPre.presentacion
+            this.toastService.mostrarMsg('info', 'El producto ' + productoPre.presentacion
                 + ' esta en la fila nro ' + (findIndexInDetalle + 1));
             return false;
         }
         if(productoPre.estadoStock === 'AGOTADO') {
-            this.mostrarMsg(
+            this.toastService.mostrarMsg(
                 'warn',
                 'El producto ' + productoPre.presentacion + ' esta AGOTADO.'
             );
@@ -219,21 +219,21 @@ export class AddVentaPage implements OnInit {
 
     private esValidoDetallePago(tipo: string, monto: number) {
         if (tipo == '' || !tipo) {
-            this.mostrarMsg('info', 'El tipo pago no ingresado.');
+            this.toastService.mostrarMsg('info', 'El tipo pago no ingresado.');
             return false;
         }
         const findIndexDetallePago = this.detallePagos.controls
             .findIndex(ele => ele.value.tipo === tipo);
         if (findIndexDetallePago > -1) {
-            this.mostrarMsg('info', 'El tipo pago ya esta registrado.');
+            this.toastService.mostrarMsg('info', 'El tipo pago ya esta registrado.');
             return false;
         }
         if (monto == 0 || monto > this.total) {
-            this.mostrarMsg('info', 'El monto debe ser mayor a 0, \ny menor igual al total venta.');
+            this.toastService.mostrarMsg('info', 'El monto debe ser mayor a 0, \ny menor igual al total venta.');
             return false;
         }
         if ((this.totalPago + monto) > this.total) {
-            this.mostrarMsg('info', 'El monto debe ser igual al total venta.');
+            this.toastService.mostrarMsg('info', 'El monto debe ser igual al total venta.');
             return false;
         }
         return true;
@@ -426,15 +426,6 @@ export class AddVentaPage implements OnInit {
             }
         });
         return totalPago;
-    }
-
-    private mostrarMsg(tipo: string, detail: string) {
-        this.messageService.add({
-            severity: tipo,
-            summary: 'Mensaje',
-            detail: detail,
-            life: 3000
-        });
     }
 
     getStockStatusClass(estadoStock: StatusStock) {

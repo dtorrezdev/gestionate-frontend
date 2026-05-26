@@ -5,7 +5,6 @@ import { Table, TableModule } from "primeng/table";
 import { ToolbarModule } from "primeng/toolbar";
 import { ButtonModule } from "primeng/button";
 import { CommonModule } from "@angular/common";
-import { ToastModule } from "primeng/toast";
 import { InputTextModule } from "primeng/inputtext";
 import { TooltipModule } from 'primeng/tooltip';
 import { InputNumberModule } from "primeng/inputnumber";
@@ -15,9 +14,10 @@ import { IconFieldModule } from "primeng/iconfield";
 import { ConfirmDialogModule } from "primeng/confirmdialog";
 import { RouterModule } from "@angular/router";
 import { VentaOutput } from "../dto/venta.output";
-import { ConfirmationService, MessageService } from "primeng/api";
+import { ConfirmationService } from "primeng/api";
 import { VentaDelete } from "../dto/venta.delete";
 import { DatePipe } from "@angular/common";
+import { ToastService } from "../../../../core/services/toast.service";
 
 @Component({
     imports: [
@@ -33,7 +33,6 @@ import { DatePipe } from "@angular/common";
         IconFieldModule,
         RouterModule,
         TooltipModule,
-        ToastModule,
         ConfirmDialogModule,
         DatePipe
     ],
@@ -131,7 +130,7 @@ import { DatePipe } from "@angular/common";
     </ng-template>
     </p-table>
 
-    <p-toast />
+
     <p-confirmdialog [style]="{ width: '450px' }" />
     `,
     styles: `
@@ -148,14 +147,14 @@ import { DatePipe } from "@angular/common";
             border-radius: 0;
         }
     `,
-    providers: [VentaService, ConfirmationService, MessageService]
+    providers: [VentaService, ConfirmationService]
 
 })
 export class HistorialVentaPage implements OnInit {
 
     private ventaServive = inject(VentaService);
     private confirmationService = inject(ConfirmationService);
-    private messageService = inject(MessageService);
+    private toastService = inject(ToastService);
 
     ventas = signal<VentaOutput[]>([]);
 
@@ -209,22 +208,12 @@ export class HistorialVentaPage implements OnInit {
                     .subscribe({
                         next: (resp) => {
                             console.log('Venta anulada: ', resp);
-                            this.messageService.add({
-                                severity: 'success',
-                                summary: 'Successful',
-                                detail: 'Venta Anulada correctamente!',
-                                life: 3000
-                            });
+                            this.toastService.success('Venta anulada correctamente!');
                             this.loadData();
                         },
                         error: (e) => {
                             console.log('Error al anular venta: ', e);
-                            this.messageService.add({
-                                severity: 'error',
-                                summary: 'Error',
-                                detail: 'Error al anulada venta: \n' + e.error?.message,
-                                life: 3000
-                            });
+                            this.toastService.error('Error al anular venta: ' + (e.error?.message ?? 'Error desconocido'));
                         }
                     })
             },

@@ -12,7 +12,6 @@ import { MarcaService } from "../../marca/service/marca.service";
 import { ProductoBaseService } from "../../base/service/producto.base.service";
 import { UnidadMedidaService } from "../../unidad-medida/service/unidad-medida.service";
 import { UbicacionStockService } from "../../../inventario/ubicacion-stock/service/ubicacion-stock.service";
-import { MessageService } from "primeng/api";
 import { BreadcrumbModule } from "primeng/breadcrumb";
 import { SelectModule } from "primeng/select";
 import { InputTextModule } from "primeng/inputtext";
@@ -24,6 +23,7 @@ import { MarcaOutput } from "../../marca/dto/marca.output";
 import { UnidadMedidaOuput } from "../../unidad-medida/dto/unidad-medida.output";
 import { UbicacionStockOutput } from "../../../inventario/ubicacion-stock/dtos/ubicacion-stock.outpu";
 import { ProductoBaseOutput } from "../../base/dto/producto.base.output";
+import { ToastService } from "../../../../core/services/toast.service";
 
 
 @Component({
@@ -150,7 +150,6 @@ import { ProductoBaseOutput } from "../../base/dto/producto.base.output";
         ProductoBaseService,
         ProductService,
         UnidadMedidaService,
-        MessageService,
         UbicacionStockService
     ],
     styles: `
@@ -213,7 +212,7 @@ import { ProductoBaseOutput } from "../../base/dto/producto.base.output";
 export class EditPresentacionPage implements OnInit {
     private formBuilder = inject(FormBuilder);
     private activatedRoute = inject(ActivatedRoute);
-    private messageService = inject(MessageService);
+    private toastService = inject(ToastService);
     private readonly cdr = inject(ChangeDetectorRef);
     private router = inject(Router);
 
@@ -265,11 +264,11 @@ export class EditPresentacionPage implements OnInit {
             .subscribe({
                 next: (resp) => {
                     console.log(resp);
-                    this.mostrarMsg('success', resp.message);
+                    this.toastService.mostrarMsg('success', resp.message);
                     this.navigateToListPresentacion();
                 },
                 error: (err) => {
-                    this.mostrarMsg('error', err)
+                    this.toastService.mostrarMsg('error', err)
                     console.log(err);
                 },
             });
@@ -415,14 +414,5 @@ export class EditPresentacionPage implements OnInit {
     navigateToListPresentacion(): void {
         setTimeout(() =>
             this.router.navigate(['/producto/presentacion']), 3000);
-    }
-
-     private mostrarMsg(tipo: string, detalle: string): void {
-        this.messageService.add({
-            severity: tipo,
-            summary: 'Mensaje',
-            detail: detalle,
-            life: 5000
-        });
     }
 }

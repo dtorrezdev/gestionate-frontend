@@ -9,6 +9,8 @@ import { authGuard } from './core/guards/auth.guard';
 import { guestGuard } from './core/guards/guest.guard';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { requestInterceptor } from './core/interceptors/request.interceptor';
+import { errorInterceptor } from './core/interceptors/error.interceptor';
+import { MessageService } from 'primeng/api';
 
 @Component({
     standalone: true,
@@ -54,8 +56,9 @@ export const routes: Routes = [
 
 export const appConfig: ApplicationConfig = {
     providers: [
+        MessageService,
         provideBrowserGlobalErrorListeners(),
-        provideHttpClient(withInterceptors([requestInterceptor])),
+        provideHttpClient(withInterceptors([requestInterceptor, errorInterceptor])),
         provideRouter(routes, withInMemoryScrolling({ anchorScrolling: 'enabled', scrollPositionRestoration: 'enabled' }), withEnabledBlockingInitialNavigation()),
     ]
 };

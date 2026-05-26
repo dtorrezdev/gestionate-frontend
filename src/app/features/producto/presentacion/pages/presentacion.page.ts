@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmationService } from 'primeng/api';
 import { Table, TableModule } from 'primeng/table';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -20,6 +20,7 @@ import { StorageService } from '../../../../core/services/storage-service';
 import { ViewConfig } from '../../../../core/interface/view-config';
 import { DrawerModule } from 'primeng/drawer';
 import { CheckboxModule } from 'primeng/checkbox';
+import { ToastService } from '../../../../core/services/toast.service';
 
 @Component({
     imports: [
@@ -159,7 +160,7 @@ import { CheckboxModule } from 'primeng/checkbox';
                 }
             </div>
     </p-drawer>
-    <p-toast />
+
     <p-confirmdialog [style]="{ width: '450px' }" />
     `,
     styles: `
@@ -179,12 +180,12 @@ import { CheckboxModule } from 'primeng/checkbox';
             justify-content: space-between;
         }
     `,
-    providers: [ProductService, StorageService, MessageService, ConfirmationService]
+    providers: [ProductService, StorageService, ConfirmationService]
 })
 export class PresentacionPage implements OnInit {
 
     private productService = inject(ProductService);
-    private messageService = inject(MessageService);
+    private toastService = inject(ToastService);
     private confirmationService = inject(ConfirmationService);
     private storageService = inject(StorageService);
 
@@ -216,12 +217,7 @@ export class PresentacionPage implements OnInit {
                         next: (value) => {
                             console.log(value);
                             console.log('Se va eliminar ');
-                            this.messageService.add({
-                                severity: 'success',
-                                summary: 'Successful',
-                                detail: `Producto PR-${product.id} eliminado correctamente!`,
-                                life: 3000
-                            });
+                            this.toastService.success(`Producto PR-${product.id} eliminado correctamente!`);
                             this.loadDataTable();
                         }
                     });

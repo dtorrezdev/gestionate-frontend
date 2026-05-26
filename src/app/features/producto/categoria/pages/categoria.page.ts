@@ -6,12 +6,12 @@ import { ToolbarModule } from "primeng/toolbar";
 import { ButtonModule } from "primeng/button";
 import { TableModule } from "primeng/table";
 import { DialogModule } from "primeng/dialog";
-import { ToastModule } from "primeng/toast";
 import { InputTextModule } from "primeng/inputtext";
 import { ConfirmDialogModule } from "primeng/confirmdialog";
 import { form, required, FormField } from "@angular/forms/signals";
-import { ConfirmationService, MessageService } from "primeng/api";
+import { ConfirmationService } from "primeng/api";
 import { CategoriaOutput } from "../dto/categoria-output";
+import { ToastService } from "../../../../core/services/toast.service";
 
 @Component({
     imports: [
@@ -21,7 +21,6 @@ import { CategoriaOutput } from "../dto/categoria-output";
         ButtonModule,
         TableModule,
         DialogModule,
-        ToastModule,
         InputTextModule,
         ConfirmDialogModule,
         FormField
@@ -122,16 +121,16 @@ import { CategoriaOutput } from "../dto/categoria-output";
 
     <p-confirmdialog [style]="{ width: '450px' }" />
 
-    <p-toast />
+
     `,
     styles: ``,
-    providers: [CategoriaService, ConfirmationService, MessageService]
+    providers: [CategoriaService, ConfirmationService]
 })
 export class CategoriaPage implements OnInit {
 
     private categoriaService = inject(CategoriaService);
     private confirmationService = inject(ConfirmationService);
-    private messageService = inject(MessageService);
+    private toastService = inject(ToastService);
 
     categorias = signal<CategoriaOutput[]>([]);
     categoria = signal<CategoriaOutput>({
@@ -178,14 +177,14 @@ export class CategoriaPage implements OnInit {
                 next: (resp) => {
                     const newData = resp.data;
                     this.categorias.set([newData, ...this.categorias()]);
-                    this.mostrarMsg('success', 'Categoria ' + resp.message);
+                    this.toastService.mostrarMsg('success', 'Categoria ' + resp.message);
                     this.categoriaForm().reset({
                         nombre: '',
                         descripcion: ''
                     });
                 },
                 error: (err) => {
-                    this.mostrarMsg('error', err);
+                    this.toastService.mostrarMsg('error', err);
                     this.loadData();
                 }
             });
@@ -196,14 +195,14 @@ export class CategoriaPage implements OnInit {
         this.categoriaService.update(categoria, id)
             .subscribe({
                 next: (resp) => {
-                    this.mostrarMsg('success', resp.message);
+                    this.toastService.mostrarMsg('success', resp.message);
                     this.categoriaForm().reset({
                         nombre: '',
                         descripcion: ''
                     });
                 },
                 error: (err: string) => {
-                    this.mostrarMsg('error', err);
+                    this.toastService.mostrarMsg('error', err);
                     this.loadData();
                 }
             });
@@ -219,10 +218,10 @@ export class CategoriaPage implements OnInit {
                 this.categoriaService.deleteCategoria(categoria)
                     .subscribe({
                         next: () => {
-                            this.mostrarMsg('success', 'Categoria eliminada correctamente!');
+                            this.toastService.mostrarMsg('success', 'Categoria eliminada correctamente!');
                         },
                         error: (err) => {
-                            this.mostrarMsg('error', 'Error al eliminar categoria: \n' + err.error?.message);
+                            this.toastService.mostrarMsg('error', 'Error al eliminar categoria: \n' + err.error?.message);
                         }
                     })
             }
@@ -250,15 +249,6 @@ export class CategoriaPage implements OnInit {
             .subscribe({
                 next: (resp) => this.categorias.set(resp.data.content)
             });
-    }
-
-    private mostrarMsg(tipo: string, detalle: string): void {
-        this.messageService.add({
-            severity: tipo,
-            summary: 'Mensaje',
-            detail: detalle,
-            life: 5000
-        });
     }
 
     constructor() { }

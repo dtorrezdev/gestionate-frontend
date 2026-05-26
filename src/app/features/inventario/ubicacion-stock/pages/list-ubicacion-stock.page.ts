@@ -8,8 +8,8 @@ import { BreadcrumbModule } from "primeng/breadcrumb";
 import { form, required, FormField } from "@angular/forms/signals";
 import { DialogModule } from "primeng/dialog";
 import { ConfirmDialogModule } from "primeng/confirmdialog";
-import { ToastModule } from "primeng/toast";
-import { ConfirmationService, MessageService } from "primeng/api";
+import { ConfirmationService } from "primeng/api";
+import { ToastService } from "../../../../core/services/toast.service";
 
 
 @Component({
@@ -21,7 +21,6 @@ import { ConfirmationService, MessageService } from "primeng/api";
         FormField,
         DialogModule,
         ConfirmDialogModule,
-        ToastModule
     ],
     standalone: true,
     template: `
@@ -130,15 +129,15 @@ import { ConfirmationService, MessageService } from "primeng/api";
         </ng-template>
     </p-dialog>
 
-    <p-toast />
+
     <p-confirmdialog [style]="{ width: '450px' }" />
     `,
-    providers: [UbicacionStockService, ConfirmationService, MessageService]
+    providers: [UbicacionStockService, ConfirmationService]
 })
 export class ListUbicacionStockPage implements OnInit {
     private service = inject(UbicacionStockService);
     private confirmationService = inject(ConfirmationService);
-    private messageService = inject(MessageService);
+    private toastService = inject(ToastService);
 
     ubicacionStock = signal<UbicacionStockOutput[]>([]);
     ubicacionStockInput = signal<UbicacionStockInput>({
@@ -197,7 +196,7 @@ export class ListUbicacionStockPage implements OnInit {
         this.service.update(data, id)
             .subscribe({
                 next: (resp) => {
-                    this.mostrarMsg('success', 'Categoria ' + resp.message);
+                    this.toastService.mostrarMsg('success', 'Categoria ' + resp.message);
                     this.ubicacionForm().reset({
                         seccion: '',
                         estante: '',
@@ -205,7 +204,7 @@ export class ListUbicacionStockPage implements OnInit {
                     });
                 },
                 error: (err) => {
-                    this.mostrarMsg('error',
+                    this.toastService.mostrarMsg('error',
                         `Marca  + ${err.error ? JSON.stringify(err.error.message) : 'error al crear.'}`);
                     this.loadData();
                 }
@@ -227,9 +226,9 @@ export class ListUbicacionStockPage implements OnInit {
         this.service.deleteUbicacionStock(ubicacion)
             .subscribe({
                 next: () =>
-                    this.mostrarMsg('success', 'Ubicacion Stock eliminada correctamente!'),
+                    this.toastService.mostrarMsg('success', 'Ubicacion Stock eliminada correctamente!'),
                 error: (e) => {
-                    this.mostrarMsg('error', 'Error al eliminar Ubicacion Stock: \n' + e.error?.message);
+                    this.toastService.mostrarMsg('error', 'Error al eliminar Ubicacion Stock: \n' + e.error?.message);
                 }
             });
     }
@@ -247,7 +246,7 @@ export class ListUbicacionStockPage implements OnInit {
                     console.log('Add ubicacion', resp);
                     const newUbicacionStock = resp.data;
                     this.ubicacionStock.set([newUbicacionStock, ...this.ubicacionStock()]);
-                    this.mostrarMsg('success', 'Marca ' + resp.message);
+                    this.toastService.mostrarMsg('success', 'Marca ' + resp.message);
                     this.ubicacionForm().reset({
                         seccion: '',
                         estante: '',
@@ -263,15 +262,6 @@ export class ListUbicacionStockPage implements OnInit {
             .subscribe({
                 next: (resp) => this.ubicacionStock.set(resp.data.content)
             });
-    }
-
-    private mostrarMsg(tipo: string, detalle: string): void {
-        this.messageService.add({
-            severity: tipo,
-            summary: 'Mensaje',
-            detail: detalle,
-            life: 5000
-        });
     }
 
     constructor() { }

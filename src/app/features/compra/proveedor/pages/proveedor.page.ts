@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, signal } from "@angular/core";
 import { form, required, FormField } from "@angular/forms/signals";
-import { ConfirmationService, MessageService } from "primeng/api";
+import { ConfirmationService } from "primeng/api";
 import { ConfirmDialogModule } from "primeng/confirmdialog";
 import { BreadcrumbModule } from "primeng/breadcrumb";
 import { ButtonModule } from "primeng/button";
@@ -15,6 +15,7 @@ import { ProveedorOutput } from "../dto/proveedor.output";
 import { ProveedorInput } from "../dto/proveedor.input";
 import { CommonResponse } from "../../../venta/cliente/dto/interface";
 import { Paginacion } from "../../../../core/interface/paginacion";
+import { ToastService } from "../../../../core/services/toast.service";
 
 
 @Component({
@@ -122,7 +123,7 @@ import { Paginacion } from "../../../../core/interface/paginacion";
     </p-dialog>
 
     <p-confirmdialog [style]="{ width: '450px' }" />
-    <p-toast />
+
     `,
     styles: `
         .mb-0 {
@@ -148,12 +149,12 @@ import { Paginacion } from "../../../../core/interface/paginacion";
             margin-top: 1.5rem;
         }
     `,
-    providers: [ProveedorService, MessageService, ConfirmationService]
+    providers: [ProveedorService, ConfirmationService]
 })
 export class ProveedorPage implements OnInit {
 
     private service = inject(ProveedorService);
-    private messageService = inject(MessageService);
+    private toastService = inject(ToastService);
     private confirmationService = inject(ConfirmationService);
 
     proveedores = signal<ProveedorOutput[]>([]);
@@ -188,7 +189,7 @@ export class ProveedorPage implements OnInit {
                     this.proveedores.set(response.data.content);
                 }
             },
-            error: (err) => this.mostrarMsg('error', err)
+            error: (err) => this.toastService.mostrarMsg('error', err)
         });
     }
 
@@ -227,11 +228,11 @@ export class ProveedorPage implements OnInit {
         this.setUpdateProveedores(data, id);
         this.service.update(data, id).subscribe({
             next: (resp) => {
-                this.mostrarMsg('success', resp.message);
+                this.toastService.mostrarMsg('success', resp.message);
                 this.resetForm();
                     },
             error: (err) => {
-                this.mostrarMsg('error', err);
+                this.toastService.mostrarMsg('error', err);
                 this.loadProveedores();
                     }
                 });
@@ -252,10 +253,10 @@ export class ProveedorPage implements OnInit {
             next: (resp) => {
                 const newProveedor = resp.data as ProveedorOutput;
                 this.proveedores.set([newProveedor, ...this.proveedores()]);
-                this.mostrarMsg('success', resp.message);
+                this.toastService.mostrarMsg('success', resp.message);
                 this.resetForm();
             },
-            error: (err) => this.mostrarMsg('error', err)
+            error: (err) => this.toastService.mostrarMsg('error', err)
         });
     }
 
@@ -273,11 +274,11 @@ export class ProveedorPage implements OnInit {
     deleteProveedor(proveedor: ProveedorOutput): void {
         this.service.deleteProveedor(proveedor).subscribe({
             next: (response: any) => {
-                this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Proveedor eliminado correctamente' });
+                this.toastService.mostrarMsg('success', 'Proveedor eliminado correctamente');
                 this.loadProveedores();
             },
             error: (error: any) => {
-                this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Error al eliminar el proveedor' });
+                this.toastService.mostrarMsg('error', 'Error al eliminar el proveedor');
             }
         });
     }
@@ -288,15 +289,6 @@ export class ProveedorPage implements OnInit {
             descripcion: ''
         });
         this.proveedorForm().reset();
-    }
-
-    private mostrarMsg(tipo: string, detalle: string): void {
-        this.messageService.add({
-            severity: tipo,
-            summary: 'Mensaje',
-            detail: detalle,
-            life: 4000
-        });
     }
 
     private getPagination(): Paginacion {

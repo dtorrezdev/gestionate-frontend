@@ -6,7 +6,6 @@ import { ProductService } from "../../../producto/presentacion/services/producto
 import { ClienteService } from "../../services/cliente.service";
 import { VentaService } from "../../services/venta.service";
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from "@angular/forms";
-import { MessageService } from "primeng/api";
 import { SelectModule } from 'primeng/select';
 import { CommonModule } from "@angular/common";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
@@ -20,12 +19,12 @@ import { PresentacionOuput } from "../../../producto/presentacion/dto/presentaci
 import { VentaOutput } from "../dto/venta.output";
 import { DetalleVenta } from "../dto/venta.input";
 import { StockByProductoOutput } from "../../../inventario/stock/dtos/stock-by-producto.output";
-import { ToastModule } from "primeng/toast";
 import { RippleModule } from "primeng/ripple";
 import { PagoOutput } from "../../pago/dto/pago.output";
 import { StockService } from "../../../inventario/stock/service/stock.service";
 import { ClienteOutput } from "../../cliente/dto/cliente.output";
 import { CommonResponse } from "../../cliente/dto/interface";
+import { ToastService } from "../../../../core/services/toast.service";
 
 
 @Component({
@@ -40,7 +39,6 @@ import { CommonResponse } from "../../cliente/dto/interface";
         TableModule,
         TagModule,
         InputNumberModule,
-        ToastModule,
         RippleModule
     ],
     standalone: true,
@@ -379,7 +377,7 @@ import { CommonResponse } from "../../cliente/dto/interface";
     </div>
 
 
-        <p-toast />
+
     </form>
     `,
     styles: `
@@ -400,7 +398,7 @@ import { CommonResponse } from "../../cliente/dto/interface";
             display: block;
         }
     `,
-    providers: [ProductService, ClienteService, VentaService, StockService, MessageService]
+    providers: [ProductService, ClienteService, VentaService, StockService]
 })
 export class EditVerVentaPage implements OnInit {
     // Providers
@@ -410,7 +408,7 @@ export class EditVerVentaPage implements OnInit {
     private stockService = inject(StockService);
     private activatedRoute = inject(ActivatedRoute);
     private formBuilder = inject(FormBuilder);
-    private messageService = inject(MessageService);
+    private toastService = inject(ToastService);
     private readonly cdr = inject(ChangeDetectorRef);
     private router = inject(Router);
 
@@ -454,7 +452,7 @@ export class EditVerVentaPage implements OnInit {
             console.log(JSON.stringify(this.ventaForm.value));
             this.saveVentaForm();
         } else {
-            this.mostrarMsg('warn', 'Venta Formulario es invalido');
+            this.toastService.mostrarMsg('warn', 'Venta Formulario es invalido');
         }
     }
 
@@ -469,10 +467,10 @@ export class EditVerVentaPage implements OnInit {
             .subscribe({
                 next: (resp) => {
                     console.log(resp);
-                    this.mostrarMsg('success', this.ventaForm.get('estado')?.value + ' registrado correctamente');
+                    this.toastService.mostrarMsg('success', this.ventaForm.get('estado')?.value + ' registrado correctamente');
                     this.navigateToListVentas();
                 },
-                error: (e) => this.mostrarMsg(
+                error: (e) => this.toastService.mostrarMsg(
                     'error', 'Error al guardar venta ' + e.error?.message),
             });
     }
@@ -561,23 +559,23 @@ export class EditVerVentaPage implements OnInit {
 
     private esValidoDetallePago(tipo: string, monto: number) {
         if (tipo == '' || !tipo) {
-            this.mostrarMsg('info', 'El tipo pago no ingresado.');
+            this.toastService.mostrarMsg('info', 'El tipo pago no ingresado.');
             return false;
         }
         const findIndexDetallePago = this.detallePagos.controls
             .findIndex(ele => ele.value.tipo === tipo);
         if (findIndexDetallePago > -1) {
-            this.mostrarMsg('info', 'El tipo pago ya esta registrado.');
+            this.toastService.mostrarMsg('info', 'El tipo pago ya esta registrado.');
             return false;
         }
         if (monto == 0 || monto > this.total) {
-            this.mostrarMsg('info', 'El monto debe ser mayor a 0, \ny menor igual al total venta.');
+            this.toastService.mostrarMsg('info', 'El monto debe ser mayor a 0, \ny menor igual al total venta.');
             return false;
         }
         // console.log((this.totalPago + monto), typeof (this.totalPago + monto));
 
         if ((this.totalPago + monto) > this.total) {
-            this.mostrarMsg('info', 'El monto debe ser igual al total venta.');
+            this.toastService.mostrarMsg('info', 'El monto debe ser igual al total venta.');
             return false;
         }
         return true;
@@ -640,12 +638,12 @@ export class EditVerVentaPage implements OnInit {
         if (productoPre && productoPre.id == 0) return false;
         const findIndexInDetalle = this.findIndexDelProductoEnDetalle(productoPre);
         if (findIndexInDetalle > -1) {
-            this.mostrarMsg('info', 'El producto ' + productoPre.presentacion
+            this.toastService.mostrarMsg('info', 'El producto ' + productoPre.presentacion
                 + ' esta en la fila nro ' + (findIndexInDetalle + 1));
             return false;
         }
         if (productoPre.estadoStock === 'AGOTADO') {
-            this.mostrarMsg(
+            this.toastService.mostrarMsg(
                 'warn',
                 'El producto ' + productoPre.presentacion + ' esta AGOTADO.'
             );
@@ -732,15 +730,6 @@ export class EditVerVentaPage implements OnInit {
 
     removeDetallePago(index: number) {
         this.detallePagos.removeAt(index);
-    }
-
-    private mostrarMsg(tipo: string, detail: string) {
-        this.messageService.add({
-            severity: tipo,
-            summary: 'Mensaje',
-            detail: detail,
-            life: 3000
-        });
     }
 
     // Getters

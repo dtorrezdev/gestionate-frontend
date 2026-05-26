@@ -4,7 +4,6 @@ import { Table, TableModule } from "primeng/table";
 import { ToolbarModule } from "primeng/toolbar";
 import { ButtonModule } from "primeng/button";
 import { CommonModule } from "@angular/common";
-import { ToastModule } from "primeng/toast";
 import { InputTextModule } from "primeng/inputtext";
 import { TooltipModule } from 'primeng/tooltip';
 import { InputNumberModule } from "primeng/inputnumber";
@@ -13,13 +12,11 @@ import { InputIconModule } from "primeng/inputicon";
 import { IconFieldModule } from "primeng/iconfield";
 import { ConfirmDialogModule } from "primeng/confirmdialog";
 import { RouterModule } from "@angular/router";
-import { ConfirmationService, MessageService } from "primeng/api";
+import { ConfirmationService } from "primeng/api";
 import { DatePipe } from "@angular/common";
-import { VentaService } from "../../../venta/services/venta.service";
-import { VentaOutput } from "../../../venta/venta/dto/venta.output";
-import { VentaDelete } from "../../../venta/venta/dto/venta.delete";
 import { CompraOutput } from "../../solicitud/dto/compra.output";
 import { CompraService } from "../service/compra.service";
+import { ToastService } from "../../../../core/services/toast.service";
 
 
 @Component({
@@ -36,7 +33,6 @@ import { CompraService } from "../service/compra.service";
         IconFieldModule,
         RouterModule,
         TooltipModule,
-        ToastModule,
         ConfirmDialogModule,
         DatePipe
     ],
@@ -131,16 +127,16 @@ import { CompraService } from "../service/compra.service";
     </ng-template>
     </p-table>
 
-    <p-toast />
+
     <p-confirmdialog [style]="{ width: '450px' }" />
     `,
-    providers: [CompraService, ConfirmationService, MessageService]
+    providers: [CompraService, ConfirmationService]
 })
 export class ListCompraPage {
 
     private service = inject(CompraService);
     private confirmationService = inject(ConfirmationService);
-    private messageService = inject(MessageService);
+    private toastService = inject(ToastService);
 
     compras = signal<CompraOutput[]>([]);
 
@@ -179,22 +175,12 @@ export class ListCompraPage {
                     .subscribe({
                         next: (resp) => {
                             console.log('Venta anulada: ', resp);
-                            this.messageService.add({
-                                severity: 'success',
-                                summary: 'Successful',
-                                detail: 'Venta Anulada correctamente!',
-                                life: 3000
-                            });
+                            this.toastService.success('Compra anulada correctamente!');
                             this.loadData();
                         },
                         error: (e) => {
-                            console.log('Error al anular venta: ', e);
-                            this.messageService.add({
-                                severity: 'error',
-                                summary: 'Error',
-                                detail: 'Error al anulada venta: \n' + e.error?.message,
-                                life: 3000
-                            });
+                            console.log('Error al anular compra: ', e);
+                            this.toastService.error('Error al anular compra: ' + e.error?.message);
                         }
                     })
             },

@@ -101,6 +101,6 @@ export class AppTopbar {
     logout() {
         console.log('Logout');
         this.auth.logoutFake();
-        this.router.navigate(['/login']);
+        setTimeout(() => this.router.navigate(['/login']), 700);
     }
 }

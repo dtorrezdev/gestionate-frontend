@@ -2,6 +2,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 
+// clase para traducir errores HTTP → mensajes amigables
 export class HttpResponseUtil {
 
     public static handleErrorGeneric(response: HttpErrorResponse): Observable<never> {
@@ -13,7 +14,7 @@ export class HttpResponseUtil {
     }
 
 
-    private static resolveErrorMessage(response: HttpErrorResponse): string {
+    public static resolveErrorMessage(response: HttpErrorResponse): string {
 
         // Error de red o servidor
         if (response.status === 0 || response.status >= 500) {

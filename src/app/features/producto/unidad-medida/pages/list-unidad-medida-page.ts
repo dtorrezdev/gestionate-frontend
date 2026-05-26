@@ -6,11 +6,11 @@ import { ToolbarModule } from "primeng/toolbar";
 import { TableModule } from "primeng/table";
 import { ButtonModule } from "primeng/button";
 import { ConfirmDialogModule } from "primeng/confirmdialog";
-import { ToastModule } from "primeng/toast";
 import { DialogModule } from "primeng/dialog";
-import { ConfirmationService, MessageService } from "primeng/api";
+import { ConfirmationService } from "primeng/api";
 import { UnidadMedidaInput } from "../dto/unidad-medida.input";
 import { form, required, FormField } from "@angular/forms/signals";
+import { ToastService } from "../../../../core/services/toast.service";
 
 
 @Component({
@@ -20,7 +20,6 @@ import { form, required, FormField } from "@angular/forms/signals";
         TableModule,
         ButtonModule,
         ConfirmDialogModule,
-        ToastModule,
         DialogModule,
         FormField
     ],
@@ -125,14 +124,14 @@ import { form, required, FormField } from "@angular/forms/signals";
     </p-dialog>
     <p-confirmdialog [style]="{ width: '450px' }" />
 
-    <p-toast />
+
     `,
-    providers: [UnidadMedidaService, ConfirmationService, MessageService]
+    providers: [UnidadMedidaService, ConfirmationService]
 })
 export class ListUnidadMedidaPage implements OnInit {
     private service = inject(UnidadMedidaService);
     private confirmationService = inject(ConfirmationService);
-    private messageService = inject(MessageService);
+    private toastService = inject(ToastService);
 
     unidadesMedidas = signal<UnidadMedidaOuput[]>([]);
     unidadMedida = signal<UnidadMedidaInput>({
@@ -190,7 +189,7 @@ export class ListUnidadMedidaPage implements OnInit {
         this.service.update(unidadMedida, id)
             .subscribe({
                 next: (resp) => {
-                    this.mostrarMsg('success', `Unidad Medidad ${resp.message}`);
+                    this.toastService.mostrarMsg('success', `Unidad Medidad ${resp.message}`);
                     this.unidadMedidaForm().reset({
                         nombre: '',
                         abreviatura: '',
@@ -198,7 +197,7 @@ export class ListUnidadMedidaPage implements OnInit {
                     });
                 },
                 error: (err: any) => {
-                    this.mostrarMsg('error', err);
+                    this.toastService.mostrarMsg('error', err);
                     this.loadData();
                 }
             });
@@ -218,7 +217,7 @@ export class ListUnidadMedidaPage implements OnInit {
                 next: (resp) => {
                     const newData = resp.data;
                     this.unidadesMedidas.set([newData, ...this.unidadesMedidas()]);
-                    this.mostrarMsg('success', `Unidad Medida ${resp.message}`);
+                    this.toastService.mostrarMsg('success', `Unidad Medida ${resp.message}`);
                     this.unidadMedidaForm().reset({
                         nombre: '',
                         abreviatura: '',
@@ -226,7 +225,7 @@ export class ListUnidadMedidaPage implements OnInit {
                     });
                 },
                 error: (err) =>
-                    this.mostrarMsg('error',
+                    this.toastService.mostrarMsg('error',
                         `Unidad Medida  + ${err.error ? JSON.stringify(err.error.message) : 'error al crear.'}`)
             });
     }
@@ -245,24 +244,15 @@ export class ListUnidadMedidaPage implements OnInit {
         this.service.deleteUnidadMedida(data)
             .subscribe({
                 next: () =>
-                    this.mostrarMsg('success', 'Unidad Medida eliminada correctamente.'),
+                    this.toastService.mostrarMsg('success', 'Unidad Medida eliminada correctamente.'),
                 error: (e) =>
-                    this.mostrarMsg('error', 'Error al eliminar Unidad Medida: \n' + e.error?.message),
+                    this.toastService.mostrarMsg('error', 'Error al eliminar Unidad Medida: \n' + e.error?.message),
             });
     }
 
     private setDeleteTablaMarcas(unidadMedida: UnidadMedidaOuput) {
         const unidadesMedidaActuales = this.unidadesMedidas().filter((val) => unidadMedida.id !== val.id);
         this.unidadesMedidas.set(unidadesMedidaActuales);
-    }
-
-    private mostrarMsg(tipo: string, detalle: string): void {
-        this.messageService.add({
-            severity: tipo,
-            summary: 'Mensaje',
-            detail: detalle,
-            life: 5000
-        });
     }
 
     constructor() { }

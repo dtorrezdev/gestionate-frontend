@@ -4,7 +4,6 @@ import { Table, TableModule } from "primeng/table";
 import { ToolbarModule } from "primeng/toolbar";
 import { ButtonModule } from "primeng/button";
 import { CommonModule } from "@angular/common";
-import { ToastModule } from "primeng/toast";
 import { InputTextModule } from "primeng/inputtext";
 import { TooltipModule } from 'primeng/tooltip';
 import { InputNumberModule } from "primeng/inputnumber";
@@ -13,10 +12,11 @@ import { InputIconModule } from "primeng/inputicon";
 import { IconFieldModule } from "primeng/iconfield";
 import { ConfirmDialogModule } from "primeng/confirmdialog";
 import { RouterModule } from "@angular/router";
-import { ConfirmationService, MessageService } from "primeng/api";
+import { ConfirmationService } from "primeng/api";
 import { DatePipe } from "@angular/common";
 import { CompraOutput } from "../../solicitud/dto/compra.output";
 import { RecepcionService } from "../service/recepcion.service";
+import { ToastService } from "../../../../core/services/toast.service";
 
 
 @Component({
@@ -32,11 +32,10 @@ import { RecepcionService } from "../service/recepcion.service";
             InputIconModule,
             IconFieldModule,
             RouterModule,
-            TooltipModule,
-            ToastModule,
+        TooltipModule,
             ConfirmDialogModule,
             DatePipe
-        ],
+    ],
     template: `
 
     <div class="card mb-0 pb-1">
@@ -129,15 +128,15 @@ import { RecepcionService } from "../service/recepcion.service";
     </ng-template>
     </p-table>
 
-    <p-toast />
+
     <p-confirmdialog [style]="{ width: '450px' }" />
     `,
-    providers: [RecepcionService, ConfirmationService, MessageService]
+    providers: [RecepcionService, ConfirmationService]
 })
 export class ListRecepcionPage implements OnInit {
     private service = inject(RecepcionService);
     private confirmationService = inject(ConfirmationService);
-    private messageService = inject(MessageService);
+    private toastService = inject(ToastService);
 
     compras = signal<CompraOutput[]>([]);
 
@@ -173,23 +172,13 @@ export class ListRecepcionPage implements OnInit {
                 this.service.delete((compra.id))
                     .subscribe({
                         next: (resp) => {
-                            console.log('Venta anulada: ', resp);
-                            this.messageService.add({
-                                severity: 'success',
-                                summary: 'Successful',
-                                detail: 'Venta Anulada correctamente!',
-                                life: 3000
-                            });
+                            console.log('Recepcion anulada: ', resp);
+                            this.toastService.success('Recepcion anulada correctamente!');
                             this.loadData();
                         },
                         error: (e) => {
                             console.log('Error al anular venta: ', e);
-                            this.messageService.add({
-                                severity: 'error',
-                                summary: 'Error',
-                                detail: 'Error al anulada venta: \n' + e.error?.message,
-                                life: 3000
-                            });
+                            this.toastService.error('Error al anular recepcion: \n' + e.error?.message);
                         }
                     })
             }

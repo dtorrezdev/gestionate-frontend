@@ -5,14 +5,14 @@ import { BreadcrumbModule } from "primeng/breadcrumb";
 import { ToolbarModule } from "primeng/toolbar";
 import { TableModule } from "primeng/table";
 import { ButtonModule } from "primeng/button";
-import { ConfirmationService, MessageService } from "primeng/api";
-import { ToastModule } from "primeng/toast";
+import { ConfirmationService } from "primeng/api";
 import { ConfirmDialogModule } from "primeng/confirmdialog";
 import { DialogModule } from "primeng/dialog";
 import { CategoriaService } from "../../categoria/service/categoria.service";
 import { SelectModule } from "primeng/select";
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from "@angular/forms";
 import { CategoriaOutput } from "../../categoria/dto/categoria-output";
+import { ToastService } from "../../../../core/services/toast.service";
 
 @Component({
     imports: [
@@ -20,7 +20,6 @@ import { CategoriaOutput } from "../../categoria/dto/categoria-output";
         ToolbarModule,
         TableModule,
         ButtonModule,
-        ToastModule,
         ConfirmDialogModule,
         DialogModule,
         SelectModule,
@@ -136,15 +135,15 @@ import { CategoriaOutput } from "../../categoria/dto/categoria-output";
 
     <p-confirmdialog [style]="{ width: '450px' }" />
 
-    <p-toast />
+
     `,
-    providers: [ProductoBaseService, CategoriaService, MessageService, ConfirmationService]
+    providers: [ProductoBaseService, CategoriaService, ConfirmationService]
 })
 export class ListProductoPage implements OnInit {
     private service = inject(ProductoBaseService);
     private categoriaService = inject(CategoriaService);
     private confirmationService = inject(ConfirmationService);
-    private messageService = inject(MessageService);
+    private toastService = inject(ToastService);
     private formBuilder = inject(FormBuilder);
 
     productos = signal<ProductoBaseOutput[]>([]);
@@ -191,7 +190,7 @@ export class ListProductoPage implements OnInit {
                     console.log('create resp: ', resp);
                     const newProducto = resp.data as ProductoBaseOutput;
                     this.productos.set([newProducto, ...this.productos()]);
-                    this.mostrarMsg('success', 'Producto creado correctamente.');
+                    this.toastService.mostrarMsg('success', 'Producto creado correctamente.');
                     this.productoForm.patchValue({
                         id: null,
                         nombre: '',
@@ -200,7 +199,7 @@ export class ListProductoPage implements OnInit {
                     });
                 },
                 error: (err) => {
-                    this.mostrarMsg('error',
+                    this.toastService.mostrarMsg('error',
                         `Producto  + ${err.error ? JSON.stringify(err.error.message) : 'error al crear.'}`);
                 }
             });
@@ -214,7 +213,7 @@ export class ListProductoPage implements OnInit {
                 next: (resp) => {
                     console.log('update resp: ', resp);
 
-                    this.mostrarMsg('success', 'Categoria actualizado correctamente.');
+                    this.toastService.mostrarMsg('success', 'Categoria actualizado correctamente.');
                     this.productoForm.patchValue({
                         id: null,
                         nombre: '',
@@ -223,7 +222,7 @@ export class ListProductoPage implements OnInit {
                     });
                 },
                 error: (err) => {
-                    this.mostrarMsg('error',
+                    this.toastService.mostrarMsg('error',
                         `Producto ${err.error ? JSON.stringify(err.error.message) : 'error al crear.'}`);
                     this.loadData();
                 }
@@ -270,9 +269,9 @@ export class ListProductoPage implements OnInit {
         this.service.deleteProducto(producto)
             .subscribe({
                 next: () =>
-                    this.mostrarMsg('success', 'Producto eliminada correctamente!'),
+                    this.toastService.mostrarMsg('success', 'Producto eliminada correctamente!'),
                 error: (e) => {
-                    this.mostrarMsg('error', 'Error al eliminar Producto: \n' + e.error?.message);
+                    this.toastService.mostrarMsg('error', 'Error al eliminar Producto: \n' + e.error?.message);
                 }
             });
     }
@@ -293,7 +292,7 @@ export class ListProductoPage implements OnInit {
                     console.log('Categorias cargadas: ', this.categoriasOptions)
                 },
                 error: (err: string) =>
-                    this.mostrarMsg('error', err)
+                    this.toastService.mostrarMsg('error', err)
             });
 
         this.service.list()
@@ -303,19 +302,10 @@ export class ListProductoPage implements OnInit {
                     this.productos.set(resp.data.content as ProductoBaseOutput[]);
                 },
                 error: (err) =>
-                    this.mostrarMsg('error', 'Error al cargar los datos: ' + err.error.message)
+                    this.toastService.mostrarMsg('error', 'Error al cargar los datos: ' + err.error.message)
 
 
             });
-    }
-
-    private mostrarMsg(tipo: string, detalle: string): void {
-        this.messageService.add({
-            severity: tipo,
-            summary: 'Mensaje',
-            detail: detalle,
-            life: 3500
-        });
     }
 
 }
