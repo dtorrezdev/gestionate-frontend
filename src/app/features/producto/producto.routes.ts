@@ -9,5 +9,5 @@ export default [
     { path: 'marca', loadComponent: () => import('./marca/pages/marca.page').then(p => p.Marca) },
     { path: 'categoria', loadComponent: () => import('./categoria/pages/categoria.page').then(p => p.CategoriaPage) },
     { path: 'unidad-medida', loadComponent: () => import('./unidad-medida/pages/list-unidad-medida-page').then(p => p.ListUnidadMedidaPage) },
-    { path: '**', redirectTo: '/about' }
+    { path: '**', redirectTo: '/notfound' }
 ] as Routes;

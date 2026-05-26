@@ -9,5 +9,5 @@ export default [
     { path: 'history', loadComponent: () => import('./venta/pages/historial.venta.page').then(v => v.HistorialVentaPage) },
     { path: 'dia', loadComponent: () => import('./venta/pages/list.venta.dia.page').then(v => v.ListVentaDiaPage) },
     // { path: 'pago', loadComponent: () => import('./pages').then(p => p.Pago) },
-    { path: '**', redirectTo: '/about' }
+    { path: '**', redirectTo: '/notfound' }
 ] as Routes;

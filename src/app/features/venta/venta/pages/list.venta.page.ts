@@ -131,9 +131,6 @@ import { ToastService } from "../../../../core/services/toast.service";
                         @case ('fechaRegistro') {
                             <td>{{ venta.fechaRegistro | date: 'dd/MM/yyyy HH:mm' }}</td>
                         }
-                        @case ('vendedor') {
-                            <td>{{ venta.vendedor ?? 'admin' }}</td>
-                        }
                         @case ('total') {
                             <td>{{ venta.total | currency: 'Bs' }}</td>
                         }

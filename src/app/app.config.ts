@@ -11,12 +11,8 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { requestInterceptor } from './core/interceptors/request.interceptor';
 import { errorInterceptor } from './core/interceptors/error.interceptor';
 import { MessageService } from 'primeng/api';
-
-@Component({
-    standalone: true,
-    template: `<p>About works!</p>`
-})
-export class About { }
+import { NotFoundPage } from './auth/Error/not-found.page';
+import { AccessDeniedPage } from './auth/Error/access-denied.page';
 
 
 export const routes: Routes = [
@@ -46,7 +42,9 @@ export const routes: Routes = [
             }
         ]
     },
-    { path: 'about', component: About },
+    { path: 'notfound', component: NotFoundPage },
+    { path: 'access-denied', component: AccessDeniedPage },
+    //AccessDeniedPage
     {
         path: '**',
         redirectTo: 'login'

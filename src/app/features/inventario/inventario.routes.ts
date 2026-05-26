@@ -8,5 +8,5 @@ export default [
 
     { path: 'reception', loadComponent: () => import('./pages').then(p => p.Reception) },
     { path: 'otros', loadComponent: () => import('./pages').then(p => p.Otros) },
-    { path: '**', redirectTo: '/about' }
+    { path: '**', redirectTo: '/notfound' }
 ] as Routes;

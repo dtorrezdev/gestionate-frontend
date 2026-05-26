@@ -11,6 +11,7 @@ export interface VentaOutput {
     estado: string;
     movimientoId: number;
     clienteId: number;
-    detalle?: DetalleVenta[],
-    pagos?: PagoOutput[]
+    detalle?: DetalleVenta[];
+    pagos?: PagoOutput[];
+    vendedor: string;
 }

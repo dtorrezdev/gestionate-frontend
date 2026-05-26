@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -52,17 +52,21 @@ import { ToastService } from '../../../core/services/toast.service';
                                     />
                                 </g>
                             </svg>
-                            <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-4">Welcome to PrimeLand!</div>
+                            <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-4">Bienvenido a PrimeLand!</div>
                             <span class="text-muted-color font-medium">Sign in to continue</span>
                         </div>
 
                         <div>
-                            <label for="usuario" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">Ususario</label>
-                            <input pInputText id="usuario" type="text" placeholder="Ingrese usuario" class="w-full md:w-120 mb-8" formControlName="nombreUsuario" />
-
-                            <label for="password1" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">Password</label>
+                            <label for="usuario" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">Usuario:</label>
+                            <input pInputText id="usuario" type="text" placeholder="Ingrese usuario" class="w-full md:w-120 mb-4" formControlName="nombreUsuario"/>
+                            @if (loginForm.get('nombreUsuario')?.hasError('required') && loginForm.get('nombreUsuario')?.touched) {
+                                <small class="block ml-2 mb-4 text-red-500 ">El campo usuario es requerido.</small>
+                            }
+                            <label for="password1" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">Contraseña:</label>
                             <p-password id="password1" formControlName="contrasena" placeholder="Password" [toggleMask]="true" styleClass="mb-4" [fluid]="true" [feedback]="false"></p-password>
-
+                            @if (loginForm.get('contrasena')?.hasError('required') && loginForm.get('contrasena')?.touched) {
+                                <small class="block mb-4 ml-2 text-red-500">El campo contraseña es requerido.</small>
+                            }
                             <!-- <div class="flex items-center justify-between mt-2 mb-8 gap-8">
                                 <div class="flex items-center">
                                     <p-checkbox formControlName="checked" id="rememberme1" binary class="mr-2"></p-checkbox>
@@ -70,7 +74,7 @@ import { ToastService } from '../../../core/services/toast.service';
                                 </div>
                                 <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">Forgot password?</span>
                             </div> -->
-                            <p-button type="submit" label="Login" styleClass="w-full"></p-button>
+                            <p-button type="submit" [disabled]="loginForm.invalid" label="Login" styleClass="w-full"></p-button>
                         </div>
                     </div>
                 </div>
@@ -83,28 +87,30 @@ export class LoginPage {
 
     private auth = inject(AuthService);
     private router = inject(Router);
-    private toastService = inject(ToastService);
+    private fb = inject(FormBuilder);
 
-    loginForm = new FormGroup({
-        nombreUsuario: new FormControl(''),
-        contrasena: new FormControl(''),
+    // loginForm = new FormGroup({
+    //     nombreUsuario: new FormControl(''),
+    //     contrasena: new FormControl(''),
+    // });
+
+    loginForm = this.fb.group({
+        nombreUsuario: ['', [Validators.required]],
+        contrasena: ['', [Validators.required]]
     });
 
     onLogin() {
-        console.log('submit form login: ', this.loginForm.value);
-        const dataLogin = this.loginForm.value as LoginInput;
-        this.auth.login(dataLogin)
-        .subscribe({
-            next: (success: Boolean) => {
-                console.log('resp: success ', success);
-                if(success) {
-                    this.router.navigate(['/dashboard'])
-                }
-            },
-            error: (error) => {
-                this.toastService.mostrarMsg('error', `${JSON.stringify(error)} Error al iniciar sesión. Por favor, verifica tus credenciales.`);
-                console.error('Error during authentication:', error);
-            }
-        });
+        if (this.loginForm.valid) {
+            const dataLogin = this.loginForm.value as LoginInput;
+
+            this.auth.login(dataLogin)
+                .subscribe({
+                    next: (success: Boolean) => {
+                        if (success) {
+                            this.router.navigate(['/dashboard'])
+                        }
+                    },
+                });
+        }
     }
 }

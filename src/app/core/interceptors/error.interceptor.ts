@@ -30,6 +30,9 @@ export function errorInterceptor(
                 case 403:
                     router.navigate(['/access-denied']);
                     break;
+                case 404:
+                    router.navigate(['/notfound']);
+                    break;
                 case 500:
                     router.navigate(['/error']);
                     break;

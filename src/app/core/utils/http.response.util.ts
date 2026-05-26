@@ -28,6 +28,8 @@ export class HttpResponseUtil {
 
             case 401:
                 let responseMsg = 'Sesión expirada. Token inválido.'
+                console.log('error ', response.error);
+
                 if (response.error) {
                     responseMsg = `${response.error.error}: ${response.error.message}`
                 }

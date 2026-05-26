@@ -13,7 +13,6 @@ import { DialogModule } from "primeng/dialog";
 import { ProveedorService } from "../service/proveedor.service";
 import { ProveedorOutput } from "../dto/proveedor.output";
 import { ProveedorInput } from "../dto/proveedor.input";
-import { CommonResponse } from "../../../venta/cliente/dto/interface";
 import { Paginacion } from "../../../../core/interface/paginacion";
 import { ToastService } from "../../../../core/services/toast.service";
 
@@ -188,8 +187,7 @@ export class ProveedorPage implements OnInit {
                 if (response.success && response.data && response.data.content) {
                     this.proveedores.set(response.data.content);
                 }
-            },
-            error: (err) => this.toastService.mostrarMsg('error', err)
+            }
         });
     }
 
@@ -230,12 +228,12 @@ export class ProveedorPage implements OnInit {
             next: (resp) => {
                 this.toastService.mostrarMsg('success', resp.message);
                 this.resetForm();
-                    },
+            },
             error: (err) => {
                 this.toastService.mostrarMsg('error', err);
                 this.loadProveedores();
-                    }
-                });
+            }
+        });
     }
 
     private setUpdateProveedores(data: ProveedorInput, id: number) {

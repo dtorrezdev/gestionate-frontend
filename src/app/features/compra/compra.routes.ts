@@ -9,5 +9,6 @@ export default [
     {
         path: 'proveedor',
         loadComponent: () => import('./proveedor/pages/proveedor.page').then(p => p.ProveedorPage),
-    }
+    },
+    { path: '**', redirectTo: '/notfound' }
 ] as Routes;
