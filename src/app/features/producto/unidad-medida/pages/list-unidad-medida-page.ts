@@ -26,35 +26,35 @@ import { ToastService } from "../../../../core/services/toast.service";
     standalone: true,
     template: `
     <div class="card mb-0 pb-1">
-        <div class="font-semibold text-xl mb-4">Listar Unidad Medida</div>
+        <div class="font-bold text-2xl mb-2">Gestion de Unidad de Medida</div>
         <p-breadcrumb
             [model]="breadcrumbItems"
             [home]="breadcrumbHome">
         </p-breadcrumb>
     </div>
-    <p-toolbar styleClass="mb-6 n-border n-border-r">
+    <p-toolbar styleClass="mb-4 border-no rounded-no">
         <ng-template #start>
-            <p-button label="New" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="openNew()"/>
-            <p-button severity="secondary" label="Import" icon="pi pi-download" outlined/>
+            <p-button label="New" icon="pi pi-plus" class="m-2" (onClick)="openNew()"/>
+            <p-button severity="secondary" label="Importar" icon="pi pi-upload" outlined/>
         </ng-template>
 
         <ng-template #end>
-            <p-button label="Export" icon="pi pi-upload" severity="secondary"/>
+            <p-button label="Exportar" icon="pi pi-download" severity="secondary"/>
         </ng-template>
     </p-toolbar>
 
     <p-table #dt
         [value]="unidadesMedidas()"
         [paginator]="true"
-        [rowsPerPageOptions]="[10, 20, 50,100]"
+        [rowsPerPageOptions]="[10, 20, 30, 50, 100]"
         [rows]="10"
-        [tableStyle]="{ 'min-width': '75rem' }"
+        [tableStyle]="{ 'min-width': '55rem' }"
         [rowHover]="true"
         dataKey="id"
     >
         <ng-template #caption>
             <div class="flex items-center justify-between">
-                <h5 class="pl-1">Unidades de Medida registradas</h5>
+                <h5 class="pl-1">Unidades de Medida</h5>
             </div>
         </ng-template>
         <ng-template #header>

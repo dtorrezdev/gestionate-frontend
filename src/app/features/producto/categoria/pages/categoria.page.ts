@@ -27,21 +27,21 @@ import { ToastService } from "../../../../core/services/toast.service";
     ],
     standalone: true,
     template: `
-    <div class="card mb-0 pb-1">
-        <div class="font-semibold text-xl mb-4">Listar Categorias</div>
+    <div class="card mb-0 pb-0">
+        <div class="font-bold text-xl mb-4">Gestion de Categorias</div>
         <p-breadcrumb
             [model]="breadcrumbItems"
             [home]="breadcrumbHome">
         </p-breadcrumb>
     </div>
-    <p-toolbar styleClass="mb-6 n-border n-border-r">
+    <p-toolbar styleClass="mb-4 border-no rounded-no">
         <ng-template #start>
-            <p-button label="New" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="openDialog()"/>
-            <p-button severity="secondary" label="Import" icon="pi pi-download" outlined/>
+            <p-button label="Nuevo" icon="pi pi-plus" class="m-2" (onClick)="openDialog()"/>
+            <p-button severity="secondary" label="Importar" icon="pi pi-upload" outlined/>
         </ng-template>
 
         <ng-template #end>
-            <p-button label="Export" icon="pi pi-upload" severity="secondary"/>
+            <p-button label="Exportar" icon="pi pi-download" severity="secondary"/>
         </ng-template>
     </p-toolbar>
     <p-table #dt
@@ -49,14 +49,14 @@ import { ToastService } from "../../../../core/services/toast.service";
         [paginator]="true"
         [rowsPerPageOptions]="[10, 20, 50,100]"
         [rows]="10"
-        [tableStyle]="{ 'min-width': '75rem' }"
+        [tableStyle]="{ 'min-width': '55rem' }"
         [rowHover]="true"
         dataKey="id"
         [showCurrentPageReport]="true"
     >
         <ng-template #caption>
             <div class="flex items-center justify-between">
-                <h5 class="pl-1">Categorias registradas</h5>
+                <h5 class="pl-1">Categorias</h5>
             </div>
         </ng-template>
         <ng-template #header>
@@ -120,10 +120,7 @@ import { ToastService } from "../../../../core/services/toast.service";
     </p-dialog>
 
     <p-confirmdialog [style]="{ width: '450px' }" />
-
-
     `,
-    styles: ``,
     providers: [CategoriaService, ConfirmationService]
 })
 export class CategoriaPage implements OnInit {

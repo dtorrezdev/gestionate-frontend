@@ -1,1 +1,18 @@
 /* You can add global styles to this file, and also import other style files */
+
+/* somo margin */
+.mb-0 {
+    margin-bottom: 0;
+}
+
+.pb-0 {
+    padding-bottom: 0;
+}
+
+.border-no {
+    border: none !important;
+}
+
+.rounded-no {
+    border-radius: 0 !important;
+}

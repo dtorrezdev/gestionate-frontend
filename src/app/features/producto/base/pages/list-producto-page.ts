@@ -27,51 +27,51 @@ import { ToastService } from "../../../../core/services/toast.service";
     ],
     standalone: true,
     template: `
-    <div class="card mb-0 pb-1">
-        <div class="font-semibold text-xl mb-4">Listar Productos</div>
+    <div class="card mb-0 pb-0">
+        <div class="font-bold text-2xl mb-2">Gestion de Productos</div>
         <p-breadcrumb [model]="breadcrumbItems" [home]="breadcrumbHome"/>
     </div>
 
-    <p-toolbar styleClass="mb-6 n-border n-border-r">
+    <p-toolbar styleClass="mb-4 border-no rounded-no">
         <ng-template #start>
-            <p-button label="New" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="openDialogProducto()"/>
-            <p-button severity="secondary" label="Import" icon="pi pi-download" outlined/>
+            <p-button label="Nuevo" icon="pi pi-plus" class="mr-2" (onClick)="openDialogProducto()"/>
+            <p-button severity="secondary" label="Importar" icon="pi pi-upload" outlined/>
         </ng-template>
 
         <ng-template #end>
-            <p-button label="Export" icon="pi pi-upload" severity="secondary"/>
+            <p-button label="Exportar" icon="pi pi-download" severity="secondary"/>
         </ng-template>
     </p-toolbar>
 
     <p-table #dt
         [value]="productos()"
         [paginator]="true"
-        [rowsPerPageOptions]="[10, 20, 50,100]"
+        [rowsPerPageOptions]="[10, 20, 30, 50,100]"
         [rows]="10"
-        [tableStyle]="{ 'min-width': '75rem' }"
+        [tableStyle]="{ 'min-width': '55rem' }"
         [rowHover]="true"
         dataKey="id"
     >
         <ng-template #caption>
             <div class="flex items-center justify-between">
-                <h5 class="pl-1">Productos Base registrados</h5>
+                <h5 class="pl-1">Productos</h5>
             </div>
         </ng-template>
         <ng-template #header>
             <tr>
-                <th style="min-width: 3rem; text-align: center;">ID</th>
-                <th pSortableColumn="nombre" style="min-width:8rem">
+
+                <th pSortableColumn="codigo" style="min-width:6rem; text-align: center;">
                     Codigo
-                    <p-sortIcon field="nombre" />
+                    <p-sortIcon field="codigo" />
                 </th>
 
-                <th pSortableColumn="descripcion" style="min-width:12rem">
+                <th pSortableColumn="nombre" style="min-width:10rem">
                     Nombre
-                    <p-sortIcon field="descripcion" />
+                    <p-sortIcon field="nombre" />
                 </th>
-                <th pSortableColumn="descripcion" style="min-width:12rem">
+                <th pSortableColumn="categoriaId" style="min-width:7rem">
                     Categoria
-                    <p-sortIcon field="descripcion" />
+                    <p-sortIcon field="categoriaId" />
                 </th>
                 <th pSortableColumn="descripcion" style="min-width:12rem">
                     Descripcion
@@ -82,10 +82,9 @@ import { ToastService } from "../../../../core/services/toast.service";
         </ng-template>
         <ng-template #body let-producto>
             <tr>
-                <td style="min-width: 3rem; text-align: center;">{{ producto.id }}</td>
-                <td style="min-width: 8rem">{{ producto.codigo }}</td>
+                <td style="min-width: 6rem; text-align: center;">{{ producto.codigo }}</td>
                 <td style="min-width: 12rem">{{ producto.nombre }}</td>
-                <td style="min-width: 12rem">{{ producto.categoriaId }}</td>
+                <td style="min-width: 12rem">{{ producto.categoria }}</td>
                 <td style="min-width: 12rem">{{ producto.descripcion }}</td>
                 <td style="min-width: 4rem">
                     <p-button icon="pi pi-pencil" class="mr-2" [rounded]="true" (onClick)="editProducto(producto)" [outlined]="true" />
@@ -117,7 +116,8 @@ import { ToastService } from "../../../../core/services/toast.service";
                         formControlName="categoriaId"
                         [options]="categoriasOptions"
                         optionLabel="label"
-                        placeholder="Seleccionar Categoria" />
+                        placeholder="Seleccionar Categoria"
+                        appendTo="body"/>
                     @if(productoForm.get('categoriaId')?.invalid &&
                         productoForm.get('categoriaId')?.touched ) {
                         <small class="text-red-500">Categoria no debe ser nulo.</small>
@@ -134,8 +134,6 @@ import { ToastService } from "../../../../core/services/toast.service";
     </p-dialog>
 
     <p-confirmdialog [style]="{ width: '450px' }" />
-
-
     `,
     providers: [ProductoBaseService, CategoriaService, ConfirmationService]
 })

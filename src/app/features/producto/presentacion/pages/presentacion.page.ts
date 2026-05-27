@@ -42,19 +42,19 @@ import { ToastService } from '../../../../core/services/toast.service';
     ],
     standalone: true,
     template: `
-    <div class="card mb-0 pb-1">
-        <div class="font-semibold text-xl mb-4">Listado de Productos Presentacion</div>
+    <div class="card mb-0 pb-0">
+        <div class="font-bold text-2xl mb-2">Catálogo de Productos</div>
         <p-breadcrumb [model]="breadcrumbItems" [home]="breadcrumbHome"></p-breadcrumb>
     </div>
-    <p-toolbar styleClass="mb-6  n-border n-border-r">
+    <p-toolbar styleClass="mb-4 border-no rounded-no">
         <ng-template #start>
-            <p-button label="New Producto" routerLink="/producto/add-producto" icon="pi pi-plus" severity="secondary" class="mr-2"/>
-            <p-button severity="secondary" label="Delete" icon="pi pi-trash" outlined />
+            <p-button label="Nuevo" routerLink="/producto/add-producto" icon="pi pi-plus" class="m-2"/>
+            <p-button severity="secondary" label="Importar" icon="pi pi-upload" outlined />
         </ng-template>
 
         <ng-template #end>
-            <p-button icon="pi pi-arrow-left" (click)="visibleRight = true" [style]="{ marginRight: '0.25em' }" />
-            <p-button label="Export" icon="pi pi-upload" severity="secondary"/>
+            <p-button label="Exportar" icon="pi pi-download" severity="secondary" class="mr-2"/>
+            <p-button icon="pi pi-bars" (click)="visibleRight = true" class="mr-2" />
         </ng-template>
     </p-toolbar>
 
@@ -67,13 +67,13 @@ import { ToastService } from '../../../../core/services/toast.service';
         [tableStyle]="{ 'min-width': '55rem' }"
         [rowHover]="true"
         dataKey="id"
-        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
+        currentPageReportTemplate="Mostrando {first} al {last} de {totalRecords} productos"
         [showCurrentPageReport]="true"
-        [rowsPerPageOptions]="[10, 20, 30]"
+        [rowsPerPageOptions]="[10, 20, 30, 50, 100]"
     >
         <ng-template #caption>
             <div class="flex items-center justify-between">
-                <h5 class="m-0">Manage Products</h5>
+                <h5 class="m-0">Mis Productos</h5>
                 <p-iconfield>
                     <p-inputicon styleClass="pi pi-search" />
                     <input pInputText type="text" (input)="onGlobalFilter(dt, $event)" placeholder="Search..." />
@@ -98,7 +98,7 @@ import { ToastService } from '../../../../core/services/toast.service';
             @for (col of viewConfig.columns; track col) {
                 @if(col.visible) {
                     @switch (col.field) {
-                        @case ('codigo') {
+                        @case ('id') {
                         <td>PR-{{ product.id }}</td>
                         }
                         @case ('estadoStock') {
@@ -145,40 +145,20 @@ import { ToastService } from '../../../../core/services/toast.service';
     </p-table>
 
     <p-drawer [(visible)]="visibleRight" header="Columnas Visibles" position="right" (onHide)="saveConfigColumns()">
-        <!-- <div class="font-semibold text-xl">Columnas</div> -->
         <div class="flex flex-col gap-4">
-                @for(col of viewConfig.columns; track col.field) {
-                    <!-- @if(col.field !== '') { -->
-                    <div class="flex items-center flex-jc-se">
-                        <label [for]="col.field" class="ml-2">{{col.header}}</label>
-                        <p-checkbox
-                            [id]="col.field"
-                            [binary]="true"
-                            [(ngModel)]="col.visible" />
-                    </div>
-                    <!-- } -->
-                }
+            @for(col of viewConfig.columns; track col.field) {
+            <div class="flex items-center justify-between">
+                <label [for]="col.field" class="ml-2">{{col.header}}</label>
+                <p-checkbox
+                    [id]="col.field"
+                    [binary]="true"
+                    [(ngModel)]="col.visible" />
             </div>
+            }
+        </div>
     </p-drawer>
 
     <p-confirmdialog [style]="{ width: '450px' }" />
-    `,
-    styles: `
-        .mb-0 {
-            margin-bottom: 0;
-        }
-        .pb-1 {
-            padding-bottom: 1rem;
-        }
-        .n-border {
-            border: none;
-        }
-        .n-border-r {
-            border-radius: 0;
-        }
-        .flex-jc-se {
-            justify-content: space-between;
-        }
     `,
     providers: [ProductService, StorageService, ConfirmationService]
 })
@@ -190,7 +170,6 @@ export class PresentacionPage implements OnInit {
     private storageService = inject(StorageService);
 
     products = signal<PresentacionOuput[]>([]);
-    //columns!: TableColumnConfig[];
 
     viewConfig!: ViewConfig;
 
@@ -198,7 +177,7 @@ export class PresentacionPage implements OnInit {
 
     // MenuBar BreadcrumbModule
     breadcrumbHome = { icon: 'pi pi-home', to: '/' };
-    breadcrumbItems = [{ label: 'Producto' }, { label: 'Listar Presentaciones' }, { label: 'Todos' }];
+    breadcrumbItems = [{ label: 'Productos' }, { label: 'Listado de Productos' }, { label: 'Todos' }];
 
     constructor() { }
 
@@ -215,15 +194,10 @@ export class PresentacionPage implements OnInit {
                 this.productService.deletePresentacion(product.id).
                     subscribe({
                         next: (value) => {
-                            console.log(value);
-                            console.log('Se va eliminar ');
                             this.toastService.success(`Producto PR-${product.id} eliminado correctamente!`);
                             this.loadDataTable();
                         }
                     });
-            },
-            reject: () => {
-                console.log('Reject Solicitud');
             }
         });
     }
@@ -250,12 +224,12 @@ export class PresentacionPage implements OnInit {
             this.viewConfig = config;
         } else {
             this.viewConfig = {
-                columns: [{ field: 'codigo', header: 'Código', width: 'min-width: 5rem', visible: true },
+                columns: [{ field: 'id', header: 'Código', width: 'min-width: 7rem', visible: true },
                     { field: 'imagen', header: 'Img', width: 'min-width: 8rem', visible: true },
                     { field: 'marca', header: 'Marca', width: 'min-width: 10rem', visible: true },
                     { field: 'presentacion', header: 'Nombre', width: 'min-width:16rem', visible: true },
                     { field: 'unidadMedida', header: 'En', width: 'min-width: 4rem', visible: true },
-                    { field: 'categoria', header: 'Categoria', width: 'min-width:8rem', visible: false },
+                    { field: 'categoria', header: 'Categoria', width: 'min-width:8rem', visible: true },
                     { field: 'estadoStock', header: 'Stock', width: 'min-width: 5rem', visible: true },
                     { field: 'precioVenta', header: 'Precio Venta', width: 'min-width: 5rem', visible: true },
                     { field: '', header: 'Acciones', width: 'min-width: 8rem', visible: true }],

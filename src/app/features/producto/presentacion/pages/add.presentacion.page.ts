@@ -51,7 +51,7 @@ import { ToastService } from "../../../../core/services/toast.service";
     standalone: true,
     template: `
     <div class="card mb-0 pb-0">
-        <div class="font-bold text-xl mb-4">Add Productos Presentacion</div>
+        <div class="font-bold text-xl mb-4">Nuevo Variante Producto</div>
         <p-breadcrumb [model]="breadcrumbItems" [home]="breadcrumbHome"></p-breadcrumb>
     </div>
     <form [formGroup]="productoPresentacionForm" (submit)="submit()" class="card">
@@ -284,12 +284,13 @@ import { ToastService } from "../../../../core/services/toast.service";
         .mt-1 {
             margin-bottom: 1.5rem;
         }
+        /*
         .mb-0 {
             margin-bottom: 0;
         }
         .pb-0 {
             padding-bottom: 0;
-        }
+        }*/
         .pl-1 {
             padding-left: 1.5rem;
         }

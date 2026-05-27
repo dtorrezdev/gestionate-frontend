@@ -143,12 +143,12 @@ export class AppMenu {
                         routerLink: ['/producto/marca']
                     },
                     {
-                        label: 'Prod Base',
+                        label: 'Productos',
                         icon: 'pi pi-fw pi-sitemap',
                         routerLink: ['/producto/producto-base']
                     },
                     {
-                        label: 'Prod Presentacion',
+                        label: 'Variante Productos',
                         icon: 'pi pi-fw pi-th-large',
                         routerLink: ['/producto/presentacion']
                     },

@@ -30,34 +30,34 @@ import { ToastService } from "../../../../core/services/toast.service";
     ],
     standalone: true,
     template: `
-    <div class="card mb-0 pb-1">
-        <div class="font-semibold text-xl mb-4">Listar Marcas</div>
+    <div class="card mb-0 pb-0">
+        <div class="font-bold text-2xl mb-2">Gestion de  Marcas</div>
         <p-breadcrumb [model]="breadcrumbItems" [home]="breadcrumbHome"/>
     </div>
-    <p-toolbar styleClass="mb-6 n-border n-border-r">
+    <p-toolbar styleClass="mb-4 border-no rounded-no">
         <ng-template #start>
-            <p-button label="New" icon="pi pi-plus" severity="secondary" class="mr-2" (onClick)="openDialogMarca()"/>
-            <p-button severity="secondary" label="Import" icon="pi pi-download" outlined/>
+            <p-button label="Nuevo" icon="pi pi-plus" class="mr-2" (onClick)="openDialogMarca()"/>
+            <p-button severity="secondary" label="Importar" icon="pi pi-upload" outlined/>
         </ng-template>
 
         <ng-template #end>
-            <p-button label="Export" icon="pi pi-upload" severity="secondary"/>
+            <p-button label="Exportar" icon="pi pi-download" severity="secondary"/>
         </ng-template>
     </p-toolbar>
 
     <p-table #dt
         [value]="marcas()"
         [paginator]="true"
-        [rowsPerPageOptions]="[10, 20, 50,100]"
+        [rowsPerPageOptions]="[10, 20, 30, 50, 100]"
         [rows]="10"
-        [tableStyle]="{ 'min-width': '75rem' }"
+        [tableStyle]="{ 'min-width': '55rem' }"
         [rowHover]="true"
         dataKey="id"
         [showCurrentPageReport]="true"
     >
         <ng-template #caption>
             <div class="flex items-center justify-between">
-                <h5 class="pl-1">Marcas registradas</h5>
+                <h5 class="pl-1">Marcas</h5>
             </div>
         </ng-template>
         <ng-template #header>
@@ -121,31 +121,6 @@ import { ToastService } from "../../../../core/services/toast.service";
     </p-dialog>
 
     <p-confirmdialog [style]="{ width: '450px' }" />
-
-    `,
-    styles: `
-        .mb-0 {
-            margin-bottom: 0;
-        }
-
-        .pb-0 {
-            padding-bottom: 0;
-        }
-
-        .pb-1 {
-            padding-bottom: 1rem;
-        }
-
-        .n-border {
-            border: none;
-        }
-        .n-border-r {
-            border-radius: 0;
-        }
-
-        .mt-1 {
-            margin-top: 1.5rem;
-        }
     `,
     providers: [MarcaService, ConfirmationService]
 })
